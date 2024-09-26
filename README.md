@@ -1,12 +1,12 @@
 # Project Libraries
 
-Pip install Pandas
-Pip install Gspread
-Pip install google-api-python-client
-Pip install python-dotenv
-Pip install google-auth-httplib2
-Pip install slackclient
-Pip install watchdog
+Pip install Pandas / 
+Pip install Gspread / 
+Pip install google-api-python-client / 
+Pip install python-dotenv / 
+Pip install google-auth-httplib2 / 
+Pip install slackclient / 
+Pip install watchdog / 
 Pip install APScheduler
 
 # Credentials.json
