@@ -51,7 +51,3 @@ Insert This Into .env Located In the Main Directory
 
 SLACK_TOKEN = "Your Token"
 
-# logs
-
-Create a Logging Template
-
