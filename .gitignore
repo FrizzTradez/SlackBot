@@ -1,0 +1,7 @@
+.venv*
+.env*
+/SlackBot/External/Credentials.json
+/SlackBot/__pycache__*
+/SlackBot/Source/__pycache__*
+__pycache__*
+/logs
