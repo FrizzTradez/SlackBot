@@ -5,13 +5,10 @@ from SlackBot.Source.Startup import *
 from SlackBot.Slack_Alerts.Periodic.IB_CRUDE import IB_Crude_Alert
 from SlackBot.Slack_Alerts.Periodic.IB_EQUITY import IB_Equity_Alert
 from logs.Logging_Config import setup_logging
-from datetime import datetime
 from zoneinfo import ZoneInfo
 import time
-
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-
 import os
 
 def main():
@@ -33,14 +30,14 @@ def main():
     
     # Schedule IB Equity Alert at 10:30 AM EST every day
     scheduler.add_job(
-        ib_equity_alert.ib_check_in_equity,
+        ib_equity_alert.send_alert,
         trigger=CronTrigger(hour=10, minute=30),
         name='IB Equity Alert'
     )
     
     # Schedule IB Crude Alert at 10:00 AM EST every day
     scheduler.add_job(
-        ib_crude_alert.ib_check_in_crude,
+        ib_crude_alert.send_alert,
         trigger=CronTrigger(hour=10, minute=0),
         name='IB Crude Alert'
     )

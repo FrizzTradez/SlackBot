@@ -3,19 +3,17 @@ from queue import Queue
 import time
 import logging
 import os
-from logs.Logging_Config import setup_logging
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from SlackBot.Source.Startup import Initialization
 from SlackBot.Slack_Alerts.Conditional.PVAT import PVAT
 
-setup_logging()
 logger = logging.getLogger(__name__)
 
 conditions = [
     {
         "name": "PVAT_ES",
-        "required_files": ["ES_1","ES_2","ES_3","ES_4","ES_6","ES_7"]
+        "required_files": ["ES_1", "ES_2", "ES_3","ES_4","ES_6","ES_7"]
     },
     {
         "name": "PVAT_NQ",
@@ -132,7 +130,7 @@ class FileChangeHandler(FileSystemEventHandler):
                 tasks = [self.file_to_task[file_name] for file_name in required_files]
 
                 all_variables = Initialization.prep_data(tasks)
-
+                
                 product_name = required_files[0].split('_')[0]
                 
                 variables = all_variables.get(product_name, {})

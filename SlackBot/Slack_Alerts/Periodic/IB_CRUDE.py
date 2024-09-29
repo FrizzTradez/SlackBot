@@ -2,17 +2,15 @@ import logging
 import math
 from datetime import datetime
 from SlackBot.External import External_Config
-from logs.Logging_Config import setup_logging
 from SlackBot.Slack_Alerts.Periodic.Base import Base_Periodic
 
-setup_logging()
 logger = logging.getLogger(__name__)
 
 class IB_Crude_Alert(Base_Periodic):
     def __init__(self, files):
         super().__init__(files)
         
-    def ib_check_in_crude(self): # need to do logging
+    def send_alert(self): # need to do logging
         for product_name in ['CL']:
             variables = self.fetch_latest_variables(product_name) 
             if not variables:

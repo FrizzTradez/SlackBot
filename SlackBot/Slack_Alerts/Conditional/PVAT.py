@@ -3,10 +3,8 @@ import math
 import threading
 from datetime import datetime
 from SlackBot.External import External_Config
-from logs.Logging_Config import setup_logging
 from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
 
-setup_logging()
 logger = logging.getLogger(__name__)
 
 last_alerts = {}
@@ -17,17 +15,17 @@ class PVAT(Base_Conditional):
         super().__init__(product_name, variables)
         
         # Variables
-        self.p_vpoc = self.variables.get(f'{product_name}_PVPOC')
-        self.open = self.variables.get(f'{product_name}_D_OPEN')
-        self.p_high = self.variables.get(f'{product_name}_PRIOR_HIGH')
-        self.p_low = self.variables.get(f'{product_name}_PRIOR_LOW')
-        self.ib_atr = self.variables.get(f'{product_name}_IB_ATR')
-        self.euro_ibh = self.variables.get(f'{product_name}_EURO_IBH')
-        self.euro_ibl = self.variables.get(f'{product_name}_EURO_IBL')
-        self.orh = self.variables.get(f'{product_name}_ORH')
-        self.orl = self.variables.get(f'{product_name}_ORL')
-        self.eth_vwap = self.variables.get(f'{product_name}_ETH_VWAP')
-        self.cpl = self.variables.get(f'{product_name}_CPL')
+        self.p_vpoc = self.variables.get(f'{self.product_name}_PRIOR_VPOC')
+        self.open = self.variables.get(f'{self.product_name}_DAY_OPEN')
+        self.p_high = self.variables.get(f'{self.product_name}_PRIOR_HIGH')
+        self.p_low = self.variables.get(f'{self.product_name}_PRIOR_LOW')
+        self.ib_atr = self.variables.get(f'{self.product_name}_IB_ATR')
+        self.euro_ibh = self.variables.get(f'{self.product_name}_EURO_IBH')
+        self.euro_ibl = self.variables.get(f'{self.product_name}_EURO_IBL')
+        self.orh = self.variables.get(f'{self.product_name}_ORH')
+        self.orl = self.variables.get(f'{self.product_name}_ORL')
+        self.eth_vwap = self.variables.get(f'{self.product_name}_ETH_VWAP')
+        self.cpl = self.variables.get(f'{self.product_name}_CPL')
         self.total_ovn_delta = self.variables.get(f'{self.product_name}_TOTAL_OVN_DELTA')
         self.total_rth_delta = self.variables.get(f'{self.product_name}_TOTAL_RTH_DELTA')
         self.prior_close = self.variables.get(f'{self.product_name}_PRIOR_CLOSE')
@@ -235,7 +233,7 @@ class PVAT(Base_Conditional):
             "────────────────\n"
             f">*Playbook Score*: _{self.score} / 5_\n"    
             "──────────────────────\n"
-            f">*Alert Time*: _{alert_time_formatted} EST_\n"
+            f">*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_\n"
         )
         return message_template  
     

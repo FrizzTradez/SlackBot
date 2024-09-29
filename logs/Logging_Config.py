@@ -12,7 +12,7 @@ def setup_logging():
     LOG_FILE_PATH = os.path.join(LOGS_DIR, 'System.log')
 
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)  
+    root_logger.setLevel(logging.DEBUG)  
 
   
     if not root_logger.handlers:
@@ -23,10 +23,10 @@ def setup_logging():
             backupCount=5,         
             encoding='utf-8'
         )
-        file_handler.setLevel(logging.INFO)
+        file_handler.setLevel(logging.DEBUG)
 
         console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
+        console_handler.setLevel(logging.DEBUG)
 
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         file_handler.setFormatter(formatter)
