@@ -158,7 +158,7 @@ columns_to_drop = [
     "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 
 files = [
-    {"name": "ES_1", "filepath": "c:/SierraChart/Data/StreamDataES_1.tsv", "columns": es_1, "iloc1": 1, "iloc2": 2, "header_row": 1},
+    {"name": "ES_1", "filepath": "c:/SierraChart/Data/StreamDataES_1.tsv", "columns": es_1, "iloc1": 0, "iloc2": 1, "header_row": 0},
     {"name": "ES_2", "filepath": "c:/SierraChart/Data/StreamDataES_2.tsv", "columns": es_2, "iloc1": 1, "iloc2": 2, "header_row": 1},
     {"name": "ES_3", "filepath": "c:/SierraChart/Data/StreamDataES_3.tsv", "columns": es_3, "iloc1": 0, "iloc2": 1, "header_row": 0},
     {"name": "ES_4", "filepath": "c:/SierraChart/Data/StreamDataES_4.tsv", "columns": es_4, "iloc1": 1, "iloc2": 2, "header_row": 1},
@@ -166,15 +166,15 @@ files = [
     {"name": "ES_6", "filepath": "c:/SierraChart/Data/StreamDataES_6.tsv", "columns": es_6, "iloc1": 0, "iloc2": 1, "header_row": 0},
     {"name": "ES_7", "filepath": "c:/SierraChart/Data/StreamDataES_7.tsv", "columns": es_7, "iloc1": 0, "iloc2": 1, "header_row": 0},
 
-    #{"name": "NQ_1", "filepath": "c:/SierraChart/Data/StreamDataNQ_1.tsv", "columns": nq_1, "iloc1": 1, "iloc2": 2, "header_row": 1},
-    #{"name": "NQ_2", "filepath": "c:/SierraChart/Data/StreamDataNQ_2.tsv", "columns": nq_2, "iloc1": 1, "iloc2": 2, "header_row": 1},
-    #{"name": "NQ_3", "filepath": "c:/SierraChart/Data/StreamDataNQ_3.tsv", "columns": nq_3, "iloc1": 0, "iloc2": 1, "header_row": 0},
-    #{"name": "NQ_4", "filepath": "c:/SierraChart/Data/StreamDataNQ_4.tsv", "columns": nq_4, "iloc1": 1, "iloc2": 2, "header_row": 1},
-    #{"name": "NQ_5", "filepath": "c:/SierraChart/Data/StreamDataNQ_5.tsv", "columns": nq_5, "iloc1": 0, "iloc2": 1, "header_row": 0},
-    #{"name": "NQ_6", "filepath": "c:/SierraChart/Data/StreamDataNQ_6.tsv", "columns": nq_6, "iloc1": 0, "iloc2": 1, "header_row": 0},
-    #{"name": "NQ_7", "filepath": "c:/SierraChart/Data/StreamDataNQ_7.tsv", "columns": nq_7, "iloc1": 0, "iloc2": 1, "header_row": 0},
+    {"name": "NQ_1", "filepath": "c:/SierraChart/Data/StreamDataNQ_1.tsv", "columns": nq_1, "iloc1": 0, "iloc2": 1, "header_row": 0},
+    {"name": "NQ_2", "filepath": "c:/SierraChart/Data/StreamDataNQ_2.tsv", "columns": nq_2, "iloc1": 1, "iloc2": 2, "header_row": 1},
+    {"name": "NQ_3", "filepath": "c:/SierraChart/Data/StreamDataNQ_3.tsv", "columns": nq_3, "iloc1": 0, "iloc2": 1, "header_row": 0},
+    {"name": "NQ_4", "filepath": "c:/SierraChart/Data/StreamDataNQ_4.tsv", "columns": nq_4, "iloc1": 1, "iloc2": 2, "header_row": 1},
+    {"name": "NQ_5", "filepath": "c:/SierraChart/Data/StreamDataNQ_5.tsv", "columns": nq_5, "iloc1": 0, "iloc2": 1, "header_row": 0},
+    {"name": "NQ_6", "filepath": "c:/SierraChart/Data/StreamDataNQ_6.tsv", "columns": nq_6, "iloc1": 0, "iloc2": 1, "header_row": 0},
+    {"name": "NQ_7", "filepath": "c:/SierraChart/Data/StreamDataNQ_7.tsv", "columns": nq_7, "iloc1": 0, "iloc2": 1, "header_row": 0},
 
-    #{"name": "RTY_1", "filepath": "c:/SierraChart/Data/StreamDataRTY_1.tsv", "columns": rty_1, "iloc1": 1, "iloc2": 2, "header_row": 1},
+    #{"name": "RTY_1", "filepath": "c:/SierraChart/Data/StreamDataRTY_1.tsv", "columns": rty_1, "iloc1": 0, "iloc2": 1, "header_row": 0},
     #{"name": "RTY_2", "filepath": "c:/SierraChart/Data/StreamDataRTY_2.tsv", "columns": rty_2, "iloc1": 1, "iloc2": 2, "header_row": 1},
     #{"name": "RTY_3", "filepath": "c:/SierraChart/Data/StreamDataRTY_3.tsv", "columns": rty_3, "iloc1": 0, "iloc2": 1, "header_row": 0},
     #{"name": "RTY_4", "filepath": "c:/SierraChart/Data/StreamDataRTY_4.tsv", "columns": rty_4, "iloc1": 1, "iloc2": 2, "header_row": 1},
@@ -182,7 +182,7 @@ files = [
     #{"name": "RTY_6", "filepath": "c:/SierraChart/Data/StreamDataRTY_6.tsv", "columns": rty_6, "iloc1": 0, "iloc2": 1, "header_row": 0},
     #{"name": "RTY_7", "filepath": "c:/SierraChart/Data/StreamDataRTY_7.tsv", "columns": rty_7, "iloc1": 0, "iloc2": 1, "header_row": 0},
 
-    #{"name": "CL_1", "filepath": "c:/SierraChart/Data/StreamDataCL_1.tsv", "columns": cl_1, "iloc1": 1, "iloc2": 2, "header_row": 1},
+    #{"name": "CL_1", "filepath": "c:/SierraChart/Data/StreamDataCL_1.tsv", "columns": cl_1, "iloc1": 0, "iloc2": 1, "header_row": 0},
     #{"name": "CL_2", "filepath": "c:/SierraChart/Data/StreamDataCL_2.tsv", "columns": cl_2, "iloc1": 1, "iloc2": 2, "header_row": 1},
     #{"name": "CL_3", "filepath": "c:/SierraChart/Data/StreamDataCL_3.tsv", "columns": cl_3, "iloc1": 0, "iloc2": 1, "header_row": 0},
     #{"name": "CL_4", "filepath": "c:/SierraChart/Data/StreamDataCL_4.tsv", "columns": cl_4, "iloc1": 1, "iloc2": 2, "header_row": 1},

@@ -3,6 +3,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 import logging
 from SlackBot.Static.Lists import *
+from datetime import datetime, time
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,36 @@ class Initialization:
 
     def prep_data(files):
         all_variables = {}
-
+        
+        period_equity = {
+            'A': time(9, 30),
+            'B': time(10, 0),
+            'C': time(10, 30),
+            'D': time(11, 0),
+            'E': time(11, 30),
+            'F': time(12, 0),
+            'G': time(12, 30),
+            'H': time(13, 0),
+            'I': time(13, 30),
+            'J': time(14, 0),
+            'K': time(14, 30),
+            'L': time(15, 0),
+            'M': time(15, 30),                                                                                                                        
+        }
+        period_crude = {
+            'A': time(9, 0),
+            'B': time(9, 30),
+            'C': time(10, 0),
+            'D': time(10, 30),
+            'E': time(11, 0),
+            'F': time(11, 30),
+            'G': time(12, 0),
+            'H': time(12, 30),
+            'I': time(13, 0),
+            'J': time(13, 30),
+            'K': time(14, 0),        
+        }        
+        
         for task in files:  
             if task["header_row"] == 1:
                 data = pd.read_csv(task["filepath"], delimiter='\t', header=None)
@@ -50,15 +80,10 @@ class Initialization:
             else:
                 raise ValueError("header_row should be either 0 or 1")
             
-            logger.debug(f"Data after reading CSV:\n{data.head()}")
-            
             # Set Header and Configure DF
             pd.options.mode.copy_on_write = True
-            data.to_string()
             data.columns = data.iloc[task["iloc1"]]
             data = data[task["iloc2"]:]
-            
-            logger.debug(f"Data after setting headers and slicing:\n{data.head()}")
             
             # Drop Unwanted Columns and N/A
             existing_columns_to_drop = [col for col in columns_to_drop if col in data.columns]
@@ -67,102 +92,124 @@ class Initialization:
             data = df_cleaned
             data = data.dropna()
             
-            logger.debug(f"Data after dropping columns and NA:\n{data.head()}")
-            
             # Set Date-Time As Index
             if 'Date Time' in data.columns:
                 data['Date Time'] = pd.to_datetime(data['Date Time'], errors='coerce')
                 data.set_index('Date Time', inplace=True)
-                
-                logger.debug(f"Data after setting 'Date Time' as index:\n{data.head()}")  
               
             # Converting Columns to float
             for columns in task["columns"]:
                 data[columns] = data[columns].str.replace(',', '.').astype(float)
-            
-            # Get Necessary Variables  
+                
+            logger.debug(f"Data Frame For {task["name"]}: \n{data.head()}")
             variables = {}
-
+            
             match task["name"]:
                 case "ES_1":
-                    variables['ES_DAY_OPEN'] = float(data.loc[2, '[ID2.SG1] Day_Open'])
-                    variables['ES_DAY_HIGH'] = float(data.loc[2, '[ID2.SG2] Day_High'])
-                    variables['ES_DAY_LOW'] = float(data.loc[2, '[ID2.SG3] Day_Low'])
-                    variables['ES_DAY_CLOSE'] = float(data.loc[2, '[ID2.SG4] Day_Close'])
-                    variables['ES_DAY_VPOC'] = float(data.loc[2, '[ID1.SG1] Day_Vpoc'])
-                    variables['ES_PRIOR_VPOC'] = float(data.loc[2, '[ID9.SG1] Prior_Vpoc'])
-                    variables['ES_PRIOR_HIGH'] = float(data.loc[2, '[ID8.SG2] Prior_High'])
-                    variables['ES_PRIOR_LOW'] = float(data.loc[2, '[ID8.SG3] Prior_Low'])
-                    variables['ES_PRIOR_CLOSE'] = float(data.loc[2, '[ID8.SG4] Prior_Close'])
-                    variables['ES_RVOL'] = float(data.loc[2, '[ID6.SG1] R_Vol'])
-                    variables['ES_CUMULATIVE_RVOL'] = float(data.loc[2, '[ID6.SG2] R_Vol_Cumulative'])
-                    variables['ES_TOTAL_RTH_DELTA'] = float(data.loc[2, '[ID4.SG4] Total_Delta'])
-                    '''
-                    variables['ES_A_HIGH'] = float(data.loc[2, '[ID10.SG1] A_High'])
-                    variables['ES_A_LOW'] = float(data.loc[2, '[ID10.SG2] A_Low'])
-                    variables['ES_B_HIGH'] = float(data.loc[2, '[ID11.SG1] B_High'])
-                    variables['ES_B_LOW'] = float(data.loc[2, '[ID11.SG2] B_Low'])
-                    variables['ES_C_HIGH'] = float(data.loc[2, '[ID12.SG1] C_High'])
-                    variables['ES_C_LOW'] = float(data.loc[2, '[ID12.SG2] C_Low'])
-                    variables['ES_D_HIGH'] = float(data.loc[2, '[ID13.SG1] D_High'])
-                    variables['ES_D_LOW'] = float(data.loc[2, '[ID13.SG2] D_Low'])
-                    variables['ES_E_HIGH'] = float(data.loc[2, '[ID14.SG1] E_High'])
-                    variables['ES_E_LOW'] = float(data.loc[2, '[ID14.SG2] E_Low'])
-                    variables['ES_F_HIGH'] = float(data.loc[2, '[ID15.SG1] F_High'])
-                    variables['ES_F_LOW'] = float(data.loc[2, '[ID15.SG2] F_Low'])
-                    variables['ES_G_HIGH'] = float(data.loc[2, '[ID16.SG1] G_High'])
-                    variables['ES_G_LOW'] = float(data.loc[2, '[ID16.SG2] G_Low'])
-                    variables['ES_H_HIGH'] = float(data.loc[2, '[ID17.SG1] H_High'])
-                    variables['ES_H_LOW'] = float(data.loc[2, '[ID17.SG2] H_Low'])
-                    variables['ES_I_HIGH'] = float(data.loc[2, '[ID18.SG1] I_High'])
-                    variables['ES_I_LOW'] = float(data.loc[2, '[ID18.SG2] I_Low'])
-                    variables['ES_J_HIGH'] = float(data.loc[2, '[ID19.SG1] J_High'])
-                    variables['ES_J_LOW'] = float(data.loc[2, '[ID19.SG2] J_Low'])                
-                    variables['ES_K_HIGH'] = float(data.loc[2, '[ID20.SG1] K_High'])
-                    variables['ES_K_LOW'] = float(data.loc[2, '[ID20.SG2] K_Low'])                
-                    variables['ES_L_HIGH'] = float(data.loc[2, '[ID21.SG1] L_High'])
-                    variables['ES_L_LOW'] = float(data.loc[2, '[ID21.SG2] L_Low'])                
-                    variables['ES_M_HIGH'] = float(data.loc[2, '[ID22.SG1] M_High'])
-                    variables['ES_M_LOW'] = float(data.loc[2, '[ID22.SG2] M_Low'])                
-                    '''
+                    # ------------------- Use Integer Based iLoc ----------------------- #
+                    variables['ES_DAY_OPEN'] = float(data.iloc[0]['[ID2.SG1] Day_Open'])
+                    variables['ES_DAY_HIGH'] = float(data.iloc[0]['[ID2.SG2] Day_High'])
+                    variables['ES_DAY_LOW'] = float(data.iloc[0]['[ID2.SG3] Day_Low'])
+                    variables['ES_DAY_CLOSE'] = float(data.iloc[0]['[ID2.SG4] Day_Close'])
+                    variables['ES_DAY_VPOC'] = float(data.iloc[0]['[ID1.SG1] Day_Vpoc'])
+                    variables['ES_PRIOR_VPOC'] = float(data.iloc[0]['[ID9.SG1] Prior_Vpoc'])
+                    variables['ES_PRIOR_HIGH'] = float(data.iloc[0]['[ID8.SG2] Prior_High'])
+                    variables['ES_PRIOR_LOW'] = float(data.iloc[0]['[ID8.SG3] Prior_Low'])
+                    variables['ES_PRIOR_CLOSE'] = float(data.iloc[0]['[ID8.SG4] Prior_Close'])
+                    variables['ES_RVOL'] = float(data.iloc[0]['[ID6.SG1] R_Vol'])
+                    variables['ES_CUMULATIVE_RVOL'] = float(data.iloc[0]['[ID6.SG2] R_Vol_Cumulative'])
+                    variables['ES_TOTAL_RTH_DELTA'] = float(data.iloc[0]['[ID4.SG4] Total_Delta'])
+                    # ---------------------- Use Date Date Time Loc ------------------------- #
+                    latest_date = data.index.max().date()
+                    period_datetimes = {}
+
+                    for period_label, period_time in period_equity.items():
+                        specific_datetime = datetime.combine(latest_date, period_time)
+                        period_datetimes[period_label] = specific_datetime
+
+                    for period_label, specific_datetime in period_datetimes.items():    
+                        if specific_datetime in data.index:
+                            match period_label:
+                                case 'A':
+                                    variables['ES_A_HIGH'] = float(data.loc[specific_datetime]['[ID10.SG1] A_High'])
+                                    variables['ES_A_LOW'] = float(data.loc[specific_datetime]['[ID10.SG2] A_Low'])    
+                                case 'B':
+                                    variables['ES_B_HIGH'] = float(data.loc[specific_datetime]['[ID11.SG1] B_High'])
+                                    variables['ES_B_LOW'] = float(data.loc[specific_datetime]['[ID11.SG2] B_Low'])
+                                case 'C':
+                                    variables['ES_C_HIGH'] = float(data.loc[specific_datetime]['[ID12.SG1] C_High'])
+                                    variables['ES_C_LOW'] = float(data.loc[specific_datetime]['[ID12.SG2] C_Low'])
+                                case 'D':
+                                    variables['ES_D_HIGH'] = float(data.loc[specific_datetime]['[ID13.SG1] D_High'])
+                                    variables['ES_D_LOW'] = float(data.loc[specific_datetime]['[ID13.SG2] D_Low'])
+                                case 'E':
+                                    variables['ES_E_HIGH'] = float(data.loc[specific_datetime]['[ID14.SG1] E_High'])
+                                    variables['ES_E_LOW'] = float(data.loc[specific_datetime]['[ID14.SG2] E_Low'])
+                                case 'F':
+                                    variables['ES_F_HIGH'] = float(data.loc[specific_datetime]['[ID15.SG1] F_High'])
+                                    variables['ES_F_LOW'] = float(data.loc[specific_datetime]['[ID15.SG2] F_Low'])
+                                case 'G':
+                                    variables['ES_G_HIGH'] = float(data.loc[specific_datetime]['[ID16.SG1] G_High'])
+                                    variables['ES_G_LOW'] = float(data.loc[specific_datetime]['[ID16.SG2] G_Low'])
+                                case 'H':
+                                    variables['ES_H_HIGH'] = float(data.loc[specific_datetime]['[ID17.SG1] H_High'])
+                                    variables['ES_H_LOW'] = float(data.loc[specific_datetime]['[ID17.SG2] H_Low'])
+                                case 'I':
+                                    variables['ES_I_HIGH'] = float(data.loc[specific_datetime]['[ID18.SG1] I_High'])
+                                    variables['ES_I_LOW'] = float(data.loc[specific_datetime]['[ID18.SG2] I_Low'])
+                                case 'J':
+                                    variables['ES_J_HIGH'] = float(data.loc[specific_datetime]['[ID19.SG1] J_High'])
+                                    variables['ES_J_LOW'] = float(data.loc[specific_datetime]['[ID19.SG2] J_Low'])
+                                case 'K':
+                                    variables['ES_K_HIGH'] = float(data.loc[specific_datetime]['[ID20.SG1] K_High'])
+                                    variables['ES_K_LOW'] = float(data.loc[specific_datetime]['[ID20.SG2] K_Low'])
+                                case 'L':
+                                    variables['ES_L_HIGH'] = float(data.loc[specific_datetime]['[ID21.SG1] L_High'])
+                                    variables['ES_L_LOW'] = float(data.loc[specific_datetime]['[ID21.SG2] L_Low'])
+                                case 'M':
+                                    variables['ES_M_HIGH'] = float(data.loc[specific_datetime]['[ID22.SG1] M_High'])
+                                    variables['ES_M_LOW'] = float(data.loc[specific_datetime]['[ID22.SG2] M_Low'])
+                        else:
+                            logger.warning(f"Error Fetching Period Data for period {period_label} at time {specific_datetime}")
                 case "ES_2":
-                    variables['ES_ETH_VWAP'] = float(data.loc[2, '[ID7.SG1] ETH_VWAP'])
-                    variables['ES_ETH_TOP_1'] = float(data.loc[2, '[ID7.SG2] Top_1'])
-                    variables['ES_ETH_BOTTOM_1'] = float(data.loc[2, '[ID7.SG3] Bottom_1'])
-                    variables['ES_ETH_TOP_2'] = float(data.loc[2, '[ID7.SG4] Top_2'])
-                    variables['ES_ETH_BOTTOM_2'] = float(data.loc[2, '[ID7.SG5] Bottom_2'])
-                    variables['ES_CPL'] = float(data.loc[2, '[ID2.SG1] CPL'])
-                    variables['ES_5D_VPOC'] = float(data.loc[2, '[ID4.SG2] 5DVPOC'])
-                    variables['ES_20D_VPOC'] = float(data.loc[2, '[ID3.SG2] 20DVPOC'])
-                    variables['ES_P_WOPEN'] = float(data.loc[2, '[ID5.SG1] P_WOPEN'])
-                    variables['ES_P_WHIGH'] = float(data.loc[2, '[ID5.SG2] P_WHIGH'])
-                    variables['ES_P_WLO'] = float(data.loc[2, '[ID5.SG3] P_WLO'])
-                    variables['ES_P_WCLOSE'] = float(data.loc[2, '[ID5.SG4] P_WCLOSE'])
-                    variables['ES_P_WVPOC'] = float(data.loc[2, '[ID11.SG1] P_WVPOC'])
-                    variables['ES_WVWAP'] = float(data.loc[2, '[ID10.SG1] WVWAP'])
-                    variables['ES_P_MOPEN'] = float(data.loc[2, '[ID8.SG1] P_MOPEN'])
-                    variables['ES_P_MHIGH'] = float(data.loc[2, '[ID8.SG2] P_MHIGH'])
-                    variables['ES_P_MLO'] = float(data.loc[2, '[ID8.SG3] P_MLO'])
-                    variables['ES_P_MCLOSE'] = float(data.loc[2, '[ID8.SG4] P_MCLOSE'])
-                    variables['ES_P_MVPOC'] = float(data.loc[2, '[ID12.SG1] P_MVPOC'])
-                    variables['ES_MVWAP'] = float(data.loc[2, '[ID1.SG1] MVWAP'])
+                    # ------------------- Use Integer Based Loc ----------------------- #
+                    variables['ES_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
+                    variables['ES_ETH_TOP_1'] = float(data.iloc[0]['[ID7.SG2] Top_1'])
+                    variables['ES_ETH_BOTTOM_1'] = float(data.iloc[0]['[ID7.SG3] Bottom_1'])
+                    variables['ES_ETH_TOP_2'] = float(data.iloc[0]['[ID7.SG4] Top_2'])
+                    variables['ES_ETH_BOTTOM_2'] = float(data.iloc[0]['[ID7.SG5] Bottom_2'])
+                    variables['ES_CPL'] = float(data.iloc[0]['[ID2.SG1] CPL'])
+                    variables['ES_5D_VPOC'] = float(data.iloc[0]['[ID4.SG2] 5DVPOC'])
+                    variables['ES_20D_VPOC'] = float(data.iloc[0]['[ID3.SG2] 20DVPOC'])
+                    variables['ES_P_WOPEN'] = float(data.iloc[0]['[ID5.SG1] P_WOPEN'])
+                    variables['ES_P_WHIGH'] = float(data.iloc[0]['[ID5.SG2] P_WHIGH'])
+                    variables['ES_P_WLO'] = float(data.iloc[0]['[ID5.SG3] P_WLO'])
+                    variables['ES_P_WCLOSE'] = float(data.iloc[0]['[ID5.SG4] P_WCLOSE'])
+                    variables['ES_P_WVPOC'] = float(data.iloc[0]['[ID11.SG1] P_WVPOC'])
+                    variables['ES_WVWAP'] = float(data.iloc[0]['[ID10.SG1] WVWAP'])
+                    variables['ES_P_MOPEN'] = float(data.iloc[0]['[ID8.SG1] P_MOPEN'])
+                    variables['ES_P_MHIGH'] = float(data.iloc[0]['[ID8.SG2] P_MHIGH'])
+                    variables['ES_P_MLO'] = float(data.iloc[0]['[ID8.SG3] P_MLO'])
+                    variables['ES_P_MCLOSE'] = float(data.iloc[0]['[ID8.SG4] P_MCLOSE'])
+                    variables['ES_P_MVPOC'] = float(data.iloc[0]['[ID12.SG1] P_MVPOC'])
+                    variables['ES_MVWAP'] = float(data.iloc[0]['[ID1.SG1] MVWAP'])
                 case "ES_3":
-                    variables['ES_IB_ATR'] = float(data.loc[2, '[ID2.SG1] IB ATR'])
-                    variables['ES_IB_HIGH'] = float(data.loc[1, '[ID1.SG2] IBH'])
-                    variables['ES_IB_LOW'] = float(data.loc[1, '[ID1.SG3] IBL'])
+                    variables['ES_IB_ATR'] = float(data.iloc[1]['[ID2.SG1] IB ATR'])
+                    variables['ES_IB_HIGH'] = float(data.iloc[0]['[ID1.SG2] IBH'])
+                    variables['ES_IB_LOW'] = float(data.iloc[0]['[ID1.SG3] IBL'])
                 case "ES_4":
-                    variables['ES_OVNH'] = float(data.loc[2, '[ID1.SG2] OVN H'])
-                    variables['ES_OVNL'] = float(data.loc[2, '[ID1.SG3] OVN L'])
-                    variables['ES_TOTAL_OVN_DELTA'] = float(data.loc[2, '[ID3.SG4] OVN Total'])
+                    variables['ES_OVNH'] = float(data.iloc[0]['[ID1.SG2] OVN H'])
+                    variables['ES_OVNL'] = float(data.iloc[0]['[ID1.SG3] OVN L'])
+                    variables['ES_TOTAL_OVN_DELTA'] = float(data.iloc[0]['[ID3.SG4] OVN Total'])
                 case "ES_5":
-                    variables['ES_OVNTOIB_HI'] = float(data.loc[1, '[ID1.SG2] OVNTOIB_HI'])
-                    variables['ES_OVNTOIB_LO'] = float(data.loc[1, '[ID1.SG3] OVNTOIB_LO'])
+                    variables['ES_OVNTOIB_HI'] = float(data.iloc[0]['[ID1.SG2] OVNTOIB_HI'])
+                    variables['ES_OVNTOIB_LO'] = float(data.iloc[0]['[ID1.SG3] OVNTOIB_LO'])
                 case "ES_6":
-                    variables['ES_EURO_IBH'] = float(data.loc[1, '[ID1.SG2] EURO IBH'])
-                    variables['ES_EURO_IBL'] = float(data.loc[1, '[ID1.SG3] EURO IBL'])
+                    variables['ES_EURO_IBH'] = float(data.iloc[0]['[ID1.SG2] EURO IBH'])
+                    variables['ES_EURO_IBL'] = float(data.iloc[0]['[ID1.SG3] EURO IBL'])
                 case "ES_7":
-                    variables['ES_ORH'] = float(data.loc[1, '[ID1.SG2] ORH'])
-                    variables['ES_ORL'] = float(data.loc[1, '[ID1.SG3] ORL'])
+                    variables['ES_ORH'] = float(data.iloc[0]['[ID1.SG2] ORH'])
+                    variables['ES_ORL'] = float(data.iloc[0]['[ID1.SG3] ORL'])
                 case "NQ_1":
                     variables['NQ_DAY_OPEN'] = float(data.loc[2, '[ID2.SG1] Day_Open'])
                     variables['NQ_DAY_HIGH'] = float(data.loc[2, '[ID2.SG2] Day_High'])
@@ -430,6 +477,6 @@ class Initialization:
             # Update the product's variables
             all_variables[product_name].update(variables)  
             
-            logger.debug(f"Extracted variables for task '{task['name']}': {variables}")
+        logger.debug(f"All Extracted variables for Product '{product_name}': {all_variables}")
             
         return all_variables

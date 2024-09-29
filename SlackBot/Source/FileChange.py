@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 conditions = [
     {
         "name": "PVAT_ES",
-        "required_files": ["ES_1", "ES_2", "ES_3","ES_4","ES_6","ES_7"]
+        "required_files": ["ES_1","ES_2","ES_3","ES_4","ES_6","ES_7"]
     },
     {
         "name": "PVAT_NQ",
