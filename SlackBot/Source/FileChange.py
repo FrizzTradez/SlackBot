@@ -15,19 +15,19 @@ logger = logging.getLogger(__name__)
 conditions = [
     {
         "name": "PVAT_ES",
-        "required_files": ["ES_1","ES_2","ES_3","ES_4","ES_6","ES_8"]
+        "required_files": ["ES_1","ES_2","ES_3","ES_4","ES_6","ES_7"]
     },
     {
         "name": "PVAT_NQ",
-        "required_files": ["NQ_1","NQ_2","NQ_3","NQ_4","NQ_6","NQ_8"]
+        "required_files": ["NQ_1","NQ_2","NQ_3","NQ_4","NQ_6","NQ_7"]
     },
     {
         "name": "PVAT_RTY",
-        "required_files": ["RTY_1","RTY_2","RTY_3","RTY_4","RTY_6","RTY_8"]
+        "required_files": ["RTY_1","RTY_2","RTY_3","RTY_4","RTY_6","RTY_7"]
     },
     {
         "name": "PVAT_CL",
-        "required_files": ["CL_1","CL_2","CL_3","CL_4","CL_6","CL_8"]
+        "required_files": ["CL_1","CL_2","CL_3","CL_4","CL_6","CL_7"]
     },
 ]
 
