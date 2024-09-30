@@ -4,6 +4,7 @@ from SlackBot.External import External_Config
 from SlackBot.Slack_Alerts.Periodic.Base import Base_Periodic
 import threading
 from datetime import datetime
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +14,8 @@ class IB_Equity_Alert(Base_Periodic):
         
     # ---------------------- Specific Calculations ------------------------- #
     def ib_info(self, ib_high, ib_low, ib_atr):
-        ib_range = ib_high - ib_low
-        ib_vatr = ib_range / ib_atr
+        ib_range = round((ib_high - ib_low) , 2)
+        ib_vatr = round((ib_range / ib_atr) , 2)
        
         if ib_vatr > 1.1:
             ib_type = "Wide IB"
@@ -22,16 +23,16 @@ class IB_Equity_Alert(Base_Periodic):
             ib_type = "Narrow IB"
         elif 0.85 <= ib_vatr <= 1.1:
             ib_type = "Average IB"
-
-        return ib_range, ib_type, ib_vatr
+        
+        return ib_range, ib_type, ib_vatr*100
         
     def exp_range_info(self, prior_close, cpl, ovn_to_ibh, ovn_to_ibl, impvol):
         exp_range = round(((prior_close * (impvol / 100)) * math.sqrt(1 / 252)), 2)
         exp_hi = round(prior_close + exp_range, 2)
         exp_lo = round(prior_close - exp_range, 2)
-        range_used = ((ovn_to_ibh - ovn_to_ibl) / exp_range)
+        range_used = round((ovn_to_ibh - ovn_to_ibl) / exp_range, 2)
 
-        if abs(range_used) > 1:
+        if abs(range_used) >= 1:
             exhausted = "Exhausted"
         else:
             exhausted = "Nominal"
@@ -39,16 +40,14 @@ class IB_Equity_Alert(Base_Periodic):
         if cpl > exp_hi:
             range_up = "Exhausted"
         else:
-            range_up_value = abs((exp_hi - cpl) / (exp_range * 2))
-            range_up = f"{range_up_value:.2f}"
+            range_up = round(abs((exp_hi - cpl) / (exp_range * 2) * 100), 2)
 
         if cpl < exp_lo:
             range_down = "Exhausted"
         else:
-            range_down_value = abs((exp_lo - cpl) / (exp_range * 2))
-            range_down = f"{range_down_value:.2f}"
+            range_down = round(abs((exp_lo - cpl) / (exp_range * 2) * 100), 2)
         
-        return exhausted, range_used, range_up, range_down, exp_range
+        return exhausted, range_used*100, range_up, range_down, exp_range
 
     def gap_info(self, day_open, prior_high, prior_low, exp_range):
         gap = ""
@@ -86,7 +85,7 @@ class IB_Equity_Alert(Base_Periodic):
         
         else:
             gap = "No Gap"
-            gap_tier = ""
+            gap_tier = "Tier 0"
         
         return gap, gap_tier
 
@@ -216,28 +215,31 @@ class IB_Equity_Alert(Base_Periodic):
             
             # Message Template
             message = (
-                f">:large_{color}_square: *{product_name} - Alert - IB Check-In* :large_{color}_square:\n"
-                "──────────────────────\n"
-                f"*{ib_type}*: {ib_range}p = {ib_vatr} of Avg\n"
-                f"*Expected Range*: _{exhausted}_ {range_used} Used\n"
-                "────────────────\n"
-                f"*Rng Up*: _{range_up}_\n"
-                f"*Rng Down*: _{range_down}_\n"
-                "────────────────\n"
-                f"*{gap}* = _{gap_tier}_\n"
-                f"*RVOL*: {rvol}\n"
-                f"*Current Posture*: {posture}\n"
-                "──────────────────────\n"
+                f">:large_{color}_square:  *{product_name} - Alert - IB Check-In*  :large_{color}_square:\n"
+                "────────────────────\n"
+                f">               *Session Stats*\n"             
+                f"*Open Type*: _{open_type}_\n"
+                f"*{ib_type}*: _{ib_range}p_ = _{ib_vatr}%_ of Avg\n"
+                f"*{gap}* = _{gap_tier}_\n" 
+                f"*Rvol*: _{rvol}%_\n"
+                f"*Current Posture*: _{posture}_\n"
+                "────────────────────\n"
+                f">             *Expected Range*\n"
+                f"*Rng Used*: _{exhausted}_ | _{range_used}%_ Used\n"
+                f"*Range Left Up*: _{range_up}%_\n"
+                f"*Range Left Down*: _{range_down}%_\n"
+                "────────────────────\n"                
                 f">*Alert Time*: _{current_time}_\n"
             )
             
             # Send Slack Alert
             channel = self.slack_channels.get(product_name)
             if channel:
+                time.sleep(1)
                 self.slack_client.chat_postMessage(channel=channel, text=message) 
-                print(f"Message sent to {channel} for {product_name}")
+                logger.info(f"Message sent to {channel} for {product_name}")
             else:
-                print(f"No Slack channel configured for {product_name}")
+                logger.error(f"No Slack channel configured for {product_name}")
         except Exception as e:
             logger.error(f"Error processing {product_name}: {e}")
                 

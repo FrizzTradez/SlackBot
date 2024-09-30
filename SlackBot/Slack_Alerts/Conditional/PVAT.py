@@ -99,7 +99,7 @@ class PVAT(Base_Conditional):
             and
             abs(self.cpl - self.p_vpoc) > self.exp_rng * 0.1 
             and
-            abs(self.cpl - self.p_vpoc) <= self.ib_atr
+            abs(self.cpl - self.p_vpoc) <= self.ib_atr # This needs to be equal to the IB ATR left at that time
             )    
         
         logger.info(f"|pvat_input {logic}| Product : {self.product_name} |")
@@ -150,7 +150,7 @@ class PVAT(Base_Conditional):
                     logger.info("Condition met. Preparing to send Slack alert.")
                     
                     # Logic For c_within_atr 
-                    if abs(self.cpl - self.p_vpoc) <= self.ib_atr:
+                    if abs(self.cpl - self.p_vpoc) <= self.ib_atr:  # This needs to be equal to the IB ATR left at that time
                         self.c_within_atr = "x" 
                     else:
                         self.c_within_atr = "  "

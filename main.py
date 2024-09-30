@@ -31,14 +31,14 @@ def main():
     # Schedule IB Equity Alert at 10:30 AM EST every day
     scheduler.add_job(
         ib_equity_alert.send_alert,
-        trigger=CronTrigger(hour=10, minute=30),
+        trigger=CronTrigger(hour=1, minute=59, timezone=est),
         name='IB Equity Alert'
     )
     
     # Schedule IB Crude Alert at 10:00 AM EST every day
     scheduler.add_job(
         ib_crude_alert.send_alert,
-        trigger=CronTrigger(hour=20, minute=16),
+        trigger=CronTrigger(hour=1, minute=51, timezone=est),
         name='IB Crude Alert'
     )
     
