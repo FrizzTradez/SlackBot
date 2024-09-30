@@ -29,10 +29,12 @@ class PVAT(Base_Conditional):
         self.total_ovn_delta = self.variables.get(f'{self.product_name}_TOTAL_OVN_DELTA')
         self.total_rth_delta = self.variables.get(f'{self.product_name}_TOTAL_RTH_DELTA')
         self.prior_close = self.variables.get(f'{self.product_name}_PRIOR_CLOSE')
+        
         self.es_impvol = External_Config.es_impvol
         self.nq_impvol = External_Config.nq_impvol
         self.rty_impvol = External_Config.rty_impvol
         self.cl_impvol = External_Config.cl_impvol 
+        
         self.delta = self.total_delta()
         self.exp_rng, self.exp_hi, self.exp_lo = self.exp_range() 
 
@@ -114,11 +116,11 @@ class PVAT(Base_Conditional):
         
         # Define time windows based on product type
         if self.product_name == 'CL':
-            start_time = self.crude_open
+            start_time = self.crude_pvat_start
             end_time = self.crude_ib
             logger.info(f"Product '{self.product_name}' detected. Time Window: {start_time} - {end_time}")
         elif self.product_name in ['ES', 'RTY', 'NQ']:
-            start_time = self.equity_open
+            start_time = self.equity_pvat_start
             end_time = self.equity_ib
             logger.info(f"Product '{self.product_name}' detected. Time Window: {start_time} - {end_time}")
         else:

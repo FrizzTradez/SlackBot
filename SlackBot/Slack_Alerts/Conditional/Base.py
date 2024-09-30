@@ -36,8 +36,8 @@ class Base_Conditional:
         self.current_time = self.current_datetime.time()
         
         # Time Regulations for Equity Products
-        self.equity_open = time(1, 00) 
-        self.equity_ib = time(10, 59)
+        self.equity_open = time(9, 30) 
+        self.equity_ib = time(10, 30)
         self.equity_lunch_start = time(12, 00)
         self.equity_lunch_end = time(14, 00)
         self.equity_close = time(16, 00)
@@ -46,7 +46,11 @@ class Base_Conditional:
         self.crude_open = time(9, 00)
         self.crude_ib = time(10, 00)
         self.crude_close = time(14, 30)
-
+        
+        # Custom Time Regulations for Playbook
+        self.crude_pvat_start = time(9, 2)
+        self.equity_pvat_start = time(9, 32)
+        
     def send_slack_message(self, channel, message):
         if channel:
             try:

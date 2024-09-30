@@ -2,11 +2,11 @@ import logging
 import math
 from datetime import datetime
 from SlackBot.External import External_Config
-from logs.Logging_Config import setup_logging
 from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
 
-setup_logging()
 logger = logging.getLogger(__name__)
+
+# This is A Time and Conditional Based Setup (Both are Required)
 
 class DATR(Base_Conditional): 
     

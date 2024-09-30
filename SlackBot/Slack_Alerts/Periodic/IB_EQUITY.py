@@ -13,43 +13,204 @@ class IB_Equity_Alert(Base_Periodic):
 # ---------------------- Specific Calculations ------------------------- #
     def ib_info(self):
         
-        print("Return IB Type, IB Range , IB Vatr")
+        # Calculations
+        ib_range = self.ib_high - self.ib_low
+        ib_vatr = ib_range / self.ib_atr
+       
+        if ib_vatr > 1.1:
+            ib_type = "Wide IB"
+        elif ib_vatr < 0.85:
+            ib_type = "Narrow IB"
+        elif 0.85 <= ib_vatr <= 1.1:
+            ib_type = "Average IB"
+
+        return ib_range, ib_type, ib_vatr
         
     def exp_range_info(self):
-        print("Return Exhausted , Range used, range up, range down, ")
+        
+        # Calculations
+        if self.product_name == 'ES':
+            exp_range = round(((self.prior_close * (self.es_impvol / 100)) * math.sqrt(1 / 252)), 2)
+        elif self.product_name == 'NQ':
+            exp_range = round(((self.prior_close * (self.nq_impvol / 100)) * math.sqrt(1 / 252)), 2)
+        elif self.product_name == 'RTY':
+            exp_range = round(((self.prior_close * (self.rty_impvol / 100)) * math.sqrt(1 / 252)), 2)
+        elif self.product_name == 'CL':
+            exp_range = round(((self.prior_close * (self.cl_impvol / 100)) * math.sqrt(1 / 252)), 2)
+        else:
+            raise ValueError(f"Unknown product: {self.product_name}")
+
+        exp_hi = round(self.prior_close + exp_range, 2)
+        exp_lo = round(self.prior_close - exp_range, 2)
+        range_used = ((self.ovn_to_ibh - self.ovn_to_ibl) / exp_range)
+
+        if abs(range_used) > 1:
+            exhausted = "Exhausted"
+        else:
+            exhausted = "Nominal"
+
+        if self.cpl > exp_hi:
+            range_up = "Exhausted"
+        else:
+            range_up_value = abs((exp_hi - self.cpl) / (exp_range * 2))
+            range_up = f"{range_up_value:.2f}"
+
+        # Calculate range_down
+        if self.cpl < exp_lo:
+            range_down = "Exhausted"
+        else:
+            range_down_value = abs((exp_lo - self.cpl) / (exp_range * 2))
+            range_down = f"{range_down_value:.2f}"
+        
+        return exhausted, range_used, range_up, range_down, exp_range
 
     def gap_info(self):
-        print("Return Gap Tier, Gap Amount, IF Gap(Tier Closed?)")
+        # Get values from exp_range_info, including exp_range
+        exhausted, range_used, range_up, range_down, exp_range = self.exp_range_info()
+
+        # Initialize gap and gap_tier
+        gap = ""
+        gap_tier = ""
+        
+        # Check for Gap Up
+        if self.day_open > self.prior_high:
+            gap_size = round(self.day_open - self.prior_high, 2)
+            gap = f"Gap Up: {gap_size}"
+            
+            # Calculate gap_tier
+            if exp_range == 0:
+                gap_tier = "Undefined"  # Avoid division by zero
+            else:
+                gap_ratio = gap_size / exp_range
+                if gap_ratio <= 0.5:
+                    gap_tier = "Tier 1"
+                elif gap_ratio <= 0.75:
+                    gap_tier = "Tier 2"
+                else:
+                    gap_tier = "Tier 3"
+        
+        # Check for Gap Down
+        elif self.day_open < self.prior_low:
+            gap_size = round(self.prior_low - self.day_open, 2)
+            gap = f"Gap Down: {gap_size}"
+            
+            # Calculate gap_tier
+            if exp_range == 0:
+                gap_tier = "Undefined"  # Avoid division by zero
+            else:
+                gap_ratio = gap_size / exp_range
+                if gap_ratio <= 0.5:
+                    gap_tier = "Tier 1"
+                elif gap_ratio <= 0.75:
+                    gap_tier = "Tier 2"
+                else:
+                    gap_tier = "Tier 3"
+        
+        # No Gap
+        else:
+            gap = "No Gap"
+            gap_tier = ""
+        
+        return gap, gap_tier
 
     def posture(self):
-        print("Postures")
+        exhausted, range_used, range_up, range_down, exp_range = self.exp_range_info()
+        
+        threshold = exp_range * 0.68
 
+        if (abs(self.cpl - self.fd_vpoc) <= threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold):
+            posture = "Price=5D=20D"
+        elif (self.cpl > self.fd_vpoc + threshold) and (self.fd_vpoc > self.td_vpoc + threshold):
+            posture = "Price^5D^20D"
+        elif (self.cpl < self.fd_vpoc - threshold) and (self.fd_vpoc < self.td_vpoc - threshold):
+            posture = "Pricev5Dv20D"
+        elif (abs(self.cpl - self.fd_vpoc) <= threshold) and (self.fd_vpoc > self.td_vpoc + threshold):
+            posture = "Price=5D^20D"
+        elif (self.cpl > self.fd_vpoc + threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold):
+            posture = "Price^5D=20D"
+        elif (self.cpl < self.fd_vpoc - threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold):
+            posture = "Pricev5D=20D"
+        elif (abs(self.cpl - self.fd_vpoc) <= threshold) and (self.fd_vpoc < self.td_vpoc - threshold):
+            posture = "Price=5Dv20D"
+        elif (self.cpl > self.fd_vpoc + threshold) and (self.fd_vpoc < self.td_vpoc - threshold):
+            posture = "Price^5Dv20D"
+        elif (self.cpl < self.fd_vpoc - threshold) and (self.fd_vpoc > self.td_vpoc + threshold):
+            posture = "Pricev5D^20D"
+        else:
+            posture = "Other"
+
+        return posture
+        
     def open_type(self):
-        print("Open Type of the session")
+        A_period_mid = (self.a_high + self.a_low) / 2
+        A_period_range = self.a_high - self.a_low
+        overlap = max(0, min(max(self.a_high, self.b_high), self.prior_high) - max(min(self.a_low, self.b_low), self.prior_low))
+        total_range = max(self.a_high, self.b_high) - min(self.a_low, self.b_low)
+
+        if (self.day_open > A_period_mid) and (self.b_high < A_period_mid):
+            open_type = "OTD v"
+        elif (self.day_open < A_period_mid) and (self.b_low > A_period_mid):
+            open_type = "OTD ^"
+        elif (abs(self.day_open - self.a_high) <= 0.05 * A_period_range) and (self.b_high < A_period_mid):
+            open_type = "OD v"
+        elif (abs(self.day_open - self.a_low) <= 0.05 * A_period_range) and (self.b_low > A_period_mid):
+            open_type = "OD ^"
+        elif (self.day_open > A_period_mid) and (self.b_low > A_period_mid) and (self.b_high > self.orh):
+            open_type = "ORR ^"
+        elif (self.day_open < A_period_mid) and (self.b_high < A_period_mid) and (self.b_low < self.orl):
+            open_type = "ORR v"
+        elif overlap >= 0.5 * total_range:
+            open_type = "OAIR"
+        elif (overlap < 0.5 * total_range) and (self.day_open > self.prior_high):
+            open_type = "OAOR ^"
+        elif (overlap < 0.5 * total_range) and (self.day_open < self.prior_low):
+            open_type = "OAOR v"
+        else:
+            open_type = "Other"
+
+        return open_type
 # ---------------------- Alert Preparation ------------------------- #
     def send_alert(self):
-        for product_name in ['ES', 'NQ', 'RTY']:
-            self.variables = self.fetch_latest_variables(product_name) 
+        for self.product_name in ['ES', 'NQ', 'RTY']:
+            self.variables = self.fetch_latest_variables(self.product_name) 
             if not self.variables:
-                print(f"No data available for {product_name}")
+                print(f"No data available for {self.product_name}")
                 continue
             
-            # Raw Variables
-            self.product_name = product_name
+            # Variables
+            self.ib_atr = self.variables.get(f'{self.product_name}_IB_ATR')
+            self.ib_high = self.variables.get(f'{self.product_name}_IB_HIGH')
+            self.ib_low = self.variables.get(f'{self.product_name}_IB_LOW')
+            self.prior_close = self.variables.get(f'{self.product_name}_PRIOR_CLOSE')
+            self.day_open = self.variables.get(f'{self.product_name}_DAY_OPEN')
+            self.prior_high= self.variables.get(f'{self.product_name}_PRIOR_HIGH')
+            self.prior_low = self.variables.get(f'{self.product_name}_PRIOR_LOW')
+            self.cpl = self.variables.get(f'{self.product_name}_CPL')
+            self.fd_vpoc = self.variables.get(f'{self.product_name}_5D_VPOC')
+            self.td_vpoc = self.variables.get(f'{self.product_name}_20D_VPOC')
+            self.ovn_to_ibh = self.variables.get(f'{self.product_name}_OVNTOIB_HI')
+            self.ovn_to_ibl = self.variables.get(f'{self.product_name}_OVNTOIB_LO')
+            self.a_high = self.variables.get(f'{self.product_name}_A_HIGH')
+            self.a_low = self.variables.get(f'{self.product_name}_A_LOW')
+            self.b_high = self.variables.get(f'{self.product_name}_B_HIGH')
+            self.b_low = self.variables.get(f'{self.product_name}_B_LOW')
+            self.orh = self.variables.get(f'{self.product_name}_ORH')
+            self.orl = self.variables.get(f'{self.product_name}_ORL')
+            rvol = self.variables.get(f'{self.product_name}_CUMULATIVE_RVOL') 
+             
+            self.es_impvol = External_Config.es_impvol
+            self.nq_impvol = External_Config.nq_impvol
+            self.rty_impvol = External_Config.rty_impvol
+            self.cl_impvol = External_Config.cl_impvol 
+            
             # Message Variables
-            color = self.product_color.get(product_name) 
-            ib_type = print("do calculations")
-            ib_range = print("do calculations") 
-            ib_vatr = print("do calculations") 
-            exhausted = print("Do Calculations") 
-            range_used = print("do Calculations")
-            range_up = print("do calculations")
-            range_down = print("do Calculations")
-            gap = print("do calculations")
-            gap_tier = print("do calculations") 
+            color = self.product_color.get(self.product_name)
             rvol = self.variables.get(f'{self.product_name}_CUMULATIVE_RVOL')
-            posture = print("do calculations") 
-            open_type = print()
+            ib_range, ib_type, ib_vatr = self.ib_info()
+            exhausted, range_used, range_up, range_down, exp_range = self.exp_range_info()
+            gap, gap_tier = self.gap_info()
+            posture = self.posture()
+            open_type = self.open_type()
             
             # Message Template
             message = (
