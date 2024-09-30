@@ -150,6 +150,7 @@ class IB_Equity_Alert(Base_Periodic):
             thread = threading.Thread(target=self.process_product, args=(product_name,))
             thread.start()
             threads.append(thread)
+            time.sleep(1)
 
         # Optionally wait for all threads to complete
         for thread in threads:
@@ -235,7 +236,6 @@ class IB_Equity_Alert(Base_Periodic):
             # Send Slack Alert
             channel = self.slack_channels.get(product_name)
             if channel:
-                time.sleep(1)
                 self.slack_client.chat_postMessage(channel=channel, text=message) 
                 logger.info(f"Message sent to {channel} for {product_name}")
             else:
