@@ -29,6 +29,8 @@ class PVAT(Base_Conditional):
         self.total_ovn_delta = self.variables.get(f'{self.product_name}_TOTAL_OVN_DELTA')
         self.total_rth_delta = self.variables.get(f'{self.product_name}_TOTAL_RTH_DELTA')
         self.prior_close = self.variables.get(f'{self.product_name}_PRIOR_CLOSE')
+        self.ib_high = variables.get(f'{product_name}_IB_HIGH')
+        self.ib_low = variables.get(f'{product_name}_IB_LOW')
         
         self.es_impvol = External_Config.es_impvol
         self.nq_impvol = External_Config.nq_impvol
@@ -92,17 +94,31 @@ class PVAT(Base_Conditional):
     
 # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self):
+        self.used_atr = self.ib_high - self.ib_low
+        self.remaining_atr = self.ib_atr - self.used_atr
         
+        # Direction Based Logic
+        if self.direction == "short":
+            atr_condition = abs(self.ib_low - self.p_vpoc) <= self.remaining_atr
+        elif self.direction == "long":
+            atr_condition = abs(self.ib_high - self.p_vpoc) <= self.remaining_atr
+            
         # Driving Input
         logic = (
             self.p_low - (self.exp_rng * 0.1) <= self.cpl <= self.p_high + (self.exp_rng * 0.1)
             and
             abs(self.cpl - self.p_vpoc) > self.exp_rng * 0.1 
             and
-            abs(self.cpl - self.p_vpoc) <= self.ib_atr # This needs to be equal to the IB ATR left at that time
+            atr_condition  
             )    
         
-        logger.info(f"|pvat_input {logic}| Product : {self.product_name} |")
+        logger.info(
+            f"|pvat_input {logic} | "
+            f"Product: {self.product_name} | "
+            f"Direction: {self.direction} | "
+            f"Remaining ATR: {self.remaining_atr} | "
+            f"Initial ATR: {self.ib_atr}"
+            )
         return logic
     
 # ---------------------------------- Opportunity Window ------------------------------------ #   
@@ -136,11 +152,13 @@ class PVAT(Base_Conditional):
             return False
 # ---------------------------------- Calculate Criteria ------------------------------------ #      
     def check(self):
+        
+        # Define Direction
+        self.direction = "short" if self.cpl > self.p_vpoc else "long"
+        self.color = "red" if self.direction == "short" else "green"
+        
+        # Driving Input
         if self.input() and self.opp_window():
-            
-            # Logic For Direction 
-            self.direction = "short" if self.cpl > self.p_vpoc else "long"
-            self.color = "red" if self.direction == "short" else "green"
             
             with last_alerts_lock:
                 last_alert = last_alerts.get(self.product_name)   
@@ -150,7 +168,7 @@ class PVAT(Base_Conditional):
                     logger.info("Condition met. Preparing to send Slack alert.")
                     
                     # Logic For c_within_atr 
-                    if abs(self.cpl - self.p_vpoc) <= self.ib_atr:  # This needs to be equal to the IB ATR left at that time
+                    if abs(self.cpl - self.p_vpoc) <= self.remaining_atr:  # This needs to be equal to the IB ATR left at that time
                         self.c_within_atr = "x" 
                     else:
                         self.c_within_atr = "  "
@@ -185,7 +203,6 @@ class PVAT(Base_Conditional):
                         self.c_align = "  "
                     # Logic for Score 
                     self.score = sum(1 for condition in [self.c_within_atr, self.c_orderflow, self.c_euro_ib, self.c_or, self.c_between, self.c_align] if condition == "x")   
-
                     try:
                         logger.info(f"Current direction: {self.direction}, Last alert: {last_alert} for {self.product_name}")
                         last_alerts[self.product_name] = self.direction
