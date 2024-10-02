@@ -99,17 +99,17 @@ class PVAT(Base_Conditional):
         
         # Direction Based Logic
         if self.direction == "short":
-            atr_condition = abs(self.ib_low - self.p_vpoc) <= self.remaining_atr
+            self.atr_condition = abs(self.ib_low - self.p_vpoc) <= self.remaining_atr
         elif self.direction == "long":
-            atr_condition = abs(self.ib_high - self.p_vpoc) <= self.remaining_atr
+            self.atr_condition = abs(self.ib_high - self.p_vpoc) <= self.remaining_atr
             
         # Driving Input
         logic = (
-            self.p_low - (self.exp_rng * 0.1) <= self.cpl <= self.p_high + (self.exp_rng * 0.1)
+            self.p_low + (self.exp_rng * 0.1) <= self.cpl <= self.p_high - (self.exp_rng * 0.1) # Need to Show Acceptance
             and
             abs(self.cpl - self.p_vpoc) > self.exp_rng * 0.1 
             and
-            atr_condition  
+            self.atr_condition  
             )    
         
         logger.info(
@@ -168,7 +168,7 @@ class PVAT(Base_Conditional):
                     logger.info("Condition met. Preparing to send Slack alert.")
                     
                     # Logic For c_within_atr 
-                    if abs(self.cpl - self.p_vpoc) <= self.remaining_atr:  # This needs to be equal to the IB ATR left at that time
+                    if self.atr_condition: 
                         self.c_within_atr = "x" 
                     else:
                         self.c_within_atr = "  "
@@ -221,12 +221,14 @@ class PVAT(Base_Conditional):
             "long": {
                 "pv_indicator": "^",
                 "c_euro_ib_text": "Above Euro IBH",
-                "c_or_text": "Above 30 Sec Opening Range High"
+                "c_or_text": "Above 30 Sec Opening Range High",
+                "large": "large_"
             },
             "short": {
                 "pv_indicator": "v",
                 "c_euro_ib_text": "Below Euro IBL",
-                "c_or_text": "Below 30 Sec Opening Range Low"
+                "c_or_text": "Below 30 Sec Opening Range Low",
+                "large": ""
             }
         }
     
@@ -235,7 +237,7 @@ class PVAT(Base_Conditional):
             raise ValueError(f"Invalid direction: {self.direction}")
     
         message_template = (
-            f">:large_{pro_color}_square: *{self.product_name} - Playbook Alert - PVAT {settings['pv_indicator']}* :large_{self.color}_circle:\n"
+            f">:large_{pro_color}_square: *{self.product_name} - Playbook Alert - PVAT {settings['pv_indicator']}* :{settings['large']}{self.color}_circle:\n"
             "──────────────────────\n"
             f"*Destination*: _{self.p_vpoc} (Prior Session Vpoc)_\n" 
             f"*Risk*: _Wrong if auction fails to complete PVPOC test before IB, or accepts away form value_\n" 

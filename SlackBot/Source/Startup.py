@@ -170,7 +170,7 @@ class Initialization:
                                     variables['ES_M_HIGH'] = float(data.loc[specific_datetime]['[ID22.SG1] M_High'])
                                     variables['ES_M_LOW'] = float(data.loc[specific_datetime]['[ID22.SG2] M_Low'])
                         else:
-                            logger.warning(f"Error Fetching Period Data for period {period_label} at time {specific_datetime}")
+                            logger.info(f"No Period Data for period {period_label} at time {specific_datetime}") # Better Way to Improve on this 
                 case "ES_2":
                     # ------------------- Use Integer Based Loc ----------------------- #
                     variables['ES_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
@@ -275,7 +275,7 @@ class Initialization:
                                     variables['NQ_M_HIGH'] = float(data.loc[specific_datetime]['[ID22.SG1] M_High'])
                                     variables['NQ_M_LOW'] = float(data.loc[specific_datetime]['[ID22.SG2] M_Low'])
                         else:
-                            logger.warning(f"Error Fetching Period Data for period {period_label} at time {specific_datetime}")
+                            logger.info(f"No Period Data for period {period_label} at time {specific_datetime}")
                 case "NQ_2":
                     variables['NQ_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
                     variables['NQ_ETH_TOP_1'] = float(data.iloc[0]['[ID7.SG2] Top_1'])
@@ -385,7 +385,7 @@ class Initialization:
                                     variables['RTY_M_HIGH'] = float(data.loc[specific_datetime]['[ID22.SG1] M_High'])
                                     variables['RTY_M_LOW'] = float(data.loc[specific_datetime]['[ID22.SG2] M_Low'])
                         else:
-                            logger.warning(f"Error Fetching Period Data for period {period_label} at time {specific_datetime}")
+                            logger.info(f"No Period Data for period {period_label} at time {specific_datetime}")
                 case "RTY_2":
                     variables['RTY_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
                     variables['RTY_ETH_TOP_1'] = float(data.iloc[0]['[ID7.SG2] Top_1'])
@@ -489,7 +489,7 @@ class Initialization:
                                     variables['CL_K_HIGH'] = float(data.loc[specific_datetime]['[ID20.SG1] K_High'])
                                     variables['CL_K_LOW'] = float(data.loc[specific_datetime]['[ID20.SG2] K_Low'])
                         else:
-                            logger.warning(f"Error Fetching Period Data for period {period_label} at time {specific_datetime}")
+                            logger.info(f"No Period Data for period {period_label} at time {specific_datetime}")
                 case "CL_2":
                     variables['CL_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
                     variables['CL_ETH_TOP_1'] = float(data.iloc[0]['[ID7.SG2] Top_1'])

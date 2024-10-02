@@ -11,6 +11,27 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import os
 
+#                Necessary Improvements for 10/01/24
+# ------------------------------------------------------------ #
+# Add a timer to see how long program has ran
+# Schedule when certain products should be monitored, You dont always need to monitor all products.
+# Load needs to be dynamic, Offset load when playbook is not in play, do this at the file change level.
+# Econ Alert If we are before 8:45 AM EST wait, if After send immediately
+# Max Remaining ATR = 0
+# Need to do rounding on some prices (Look at alerts)
+# Improve Debugging and Logging And Make it Consistent and organized (Improve your feedback loop)
+# Pvat Only in play if we Slightly gap (Use Open)
+# Pvat only in play if we auction above 30 Second Opening Range (Add this to input)
+# Investigate IB Range issue (why is it not accurate in IB Check Crude?) (FIXED)
+# Compare Expected Ranges WIth Josh (Is he using full or 68%? IB CHECK IN)
+# Rounding Issue in IB Check-IN
+# Easy Alert Addition (Add ALerts for IB Extension And Address if TIer Gap was closed in IB Checkin)
+# FIgure out Crude Posture Issue (20D is not accurate from sierra chart)
+# See if you can adjust Sierra RVOL study to be more accurate
+# Range left up or Down says : "Exhausted %"
+# Compare OPen Drive, The Criteria Are not QUite THere (And then adjust on Google sheets)
+# ------------------------------------------------------------ #
+
 def main():
     setup_logging()
     logger = logging.getLogger(__name__)

@@ -218,7 +218,7 @@ class IB_Equity_Alert(Base_Periodic):
             message = (
                 f">:large_{color}_square:  *{product_name} - Alert - IB Check-In*  :large_{color}_square:\n"
                 "────────────────────\n"
-                f">               *Session Stats*\n"             
+                f">                *Session Stats*\n"             
                 f"*Open Type*: _{open_type}_\n"
                 f"*{ib_type}*: _{ib_range}p_ = _{ib_vatr}%_ of Avg\n"
                 f"*{gap}* = _{gap_tier}_\n" 
