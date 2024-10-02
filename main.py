@@ -18,11 +18,7 @@ import os
 # Load needs to be dynamic, Offset load when playbook is not in play, do this at the file change level.
 # Econ Alert If we are before 8:45 AM EST wait, if After send immediately
 # Improve Debugging and Logging And Make it Consistent and organized (Improve your feedback loop)
-# Compare Expected Ranges WIth Josh (Is he using full or 68%? IB CHECK IN)
 # Easy Alert Addition (Add ALerts for IB Extension And Address if TIer Gap was closed in IB Checkin)
-# FIgure out Crude Posture Issue (20D is not accurate from sierra chart)
-# See if you can adjust Sierra RVOL study to be more accurate
-# Range left up or Down says : "Exhausted %"
 # ------------------------------------------------------------ #
 
 def main():

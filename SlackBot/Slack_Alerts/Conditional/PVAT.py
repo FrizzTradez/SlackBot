@@ -107,13 +107,15 @@ class PVAT(Base_Conditional):
             
         # Driving Input
         logic = (
-            self.p_low - (self.exp_rng * 0.15) <= self.day_open <= self.p_high + (self.exp_rng * 0.15)
+            self.p_low - (self.exp_rng * 0.15) <= self.day_open <= self.p_high + (self.exp_rng * 0.15) # Open in range or slight gap
             and
-            self.atr_condition
+            self.p_low + (self.exp_rng * 0.10) <= self.cpl <= self.p_high - (self.exp_rng * 0.10) # Last Price acceptance in range
             and
-            abs(self.cpl - self.p_vpoc) > self.exp_rng * 0.1 
+            self.atr_condition # Must have enough IB To Achieve Target
             and
-            self.or_condition  
+            abs(self.cpl - self.p_vpoc) > self.exp_rng * 0.1  # Must Have enough Distance Away from Target (Reward)
+            and
+            self.or_condition # Must Be Above/Below Opening Range
             )    
         
         logger.info(

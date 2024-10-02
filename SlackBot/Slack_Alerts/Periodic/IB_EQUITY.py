@@ -221,18 +221,18 @@ class IB_Equity_Alert(Base_Periodic):
                 f">                *Session Stats*\n"             
                 f"*Open Type*: _{open_type}_\n"
                 f"*{ib_type}*: _{ib_range}p_ = _{ib_vatr}%_ of Avg\n"
-                f"*{gap}* = _{gap_tier}_\n" 
+                f"{f'*{gap}* = _{gap_tier}_\n' if gap != 'No Gap' else ''}"
                 f"*Rvol*: _{rvol}%_\n"
                 f"*Current Posture*: _{posture}_\n"
                 "────────────────────\n"
                 f">             *Expected Range*\n"
                 f"*Rng Used*: _{exhausted}_ | _{range_used}%_ Used\n"
-                f"*Range Left Up*: _{range_up}%_\n"
-                f"*Range Left Down*: _{range_down}%_\n"
+                f"*Range Left Up*: _{range_up}{'' if range_up == 'Exhausted' else '%'}_\n"
+                f"*Range Left Down*: _{range_down}{'' if range_down == 'Exhausted' else '%'}_\n"
                 "────────────────────\n"                
                 f">*Alert Time*: _{current_time}_\n"
             )
-            
+                
             # Send Slack Alert
             channel = self.slack_channels.get(product_name)
             if channel:
