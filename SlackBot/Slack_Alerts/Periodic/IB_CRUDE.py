@@ -130,15 +130,15 @@ class IB_Crude_Alert(Base_Periodic):
         a_period_range = (a_high - a_low)
         overlap = max(0, min(max(a_high, b_high), prior_high) - max(min(a_low, b_low), prior_low))
         total_range = max(a_high, b_high) - min(a_low, b_low)
-
-        if (day_open > a_period_mid) and (b_high < a_period_mid):
+        
+        if (abs(day_open - a_high) <= 0.025 * a_period_range) and (b_high < a_period_mid):
+            open_type = "OD v"
+        elif (abs(day_open - a_low) <= 0.025 * a_period_range) and (b_low > a_period_mid):
+            open_type = "OD ^"
+        elif (day_open > a_period_mid) and (b_high < a_period_mid):
             open_type = "OTD v"
         elif (day_open < a_period_mid) and (b_low > a_period_mid):
             open_type = "OTD ^"
-        elif (abs(day_open - a_high) <= 0.075 * a_period_range) and (b_high < a_period_mid):
-            open_type = "OD v"
-        elif (abs(day_open - a_low) <= 0.075 * a_period_range) and (b_low > a_period_mid):
-            open_type = "OD ^"
         elif (day_open > a_period_mid) and (b_low > a_period_mid) and (b_high > orh):
             open_type = "ORR ^"
         elif (day_open < a_period_mid) and (b_high < a_period_mid) and (b_low < orl):
