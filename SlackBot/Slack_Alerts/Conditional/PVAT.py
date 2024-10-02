@@ -95,7 +95,7 @@ class PVAT(Base_Conditional):
 # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self):
         self.used_atr = self.ib_high - self.ib_low
-        self.remaining_atr = self.ib_atr - self.used_atr
+        self.remaining_atr = max((self.ib_atr - self.used_atr), 0)
         
         # Direction Based Logic
         if self.direction == "short":

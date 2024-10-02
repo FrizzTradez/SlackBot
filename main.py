@@ -17,12 +17,9 @@ import os
 # Schedule when certain products should be monitored, You dont always need to monitor all products.
 # Load needs to be dynamic, Offset load when playbook is not in play, do this at the file change level.
 # Econ Alert If we are before 8:45 AM EST wait, if After send immediately
-# Max Remaining ATR = 0
-# Need to do rounding on some prices (Look at alerts)
 # Improve Debugging and Logging And Make it Consistent and organized (Improve your feedback loop)
 # Pvat Only in play if we Slightly gap (Use Open)
 # Pvat only in play if we auction above 30 Second Opening Range (Add this to input)
-# Investigate IB Range issue (why is it not accurate in IB Check Crude?) (Addressed)
 # Compare Expected Ranges WIth Josh (Is he using full or 68%? IB CHECK IN)
 # Rounding Issue in IB Check-IN
 # Easy Alert Addition (Add ALerts for IB Extension And Address if TIer Gap was closed in IB Checkin)
