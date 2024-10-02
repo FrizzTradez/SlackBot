@@ -7,13 +7,13 @@ from SlackBot.Slack_Alerts.Periodic.IB_EQUITY import IB_Equity_Alert
 from logs.Logging_Config import setup_logging
 from zoneinfo import ZoneInfo
 import time
+from datetime import timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import os
 
 #                Necessary Improvements for 10/01/24
 # ------------------------------------------------------------ #
-# Add a timer to see how long program has ran
 # Schedule when certain products should be monitored, You dont always need to monitor all products.
 # Load needs to be dynamic, Offset load when playbook is not in play, do this at the file change level.
 # Econ Alert If we are before 8:45 AM EST wait, if After send immediately
@@ -22,7 +22,7 @@ import os
 # Improve Debugging and Logging And Make it Consistent and organized (Improve your feedback loop)
 # Pvat Only in play if we Slightly gap (Use Open)
 # Pvat only in play if we auction above 30 Second Opening Range (Add this to input)
-# Investigate IB Range issue (why is it not accurate in IB Check Crude?) (FIXED)
+# Investigate IB Range issue (why is it not accurate in IB Check Crude?) (Addressed)
 # Compare Expected Ranges WIth Josh (Is he using full or 68%? IB CHECK IN)
 # Rounding Issue in IB Check-IN
 # Easy Alert Addition (Add ALerts for IB Extension And Address if TIer Gap was closed in IB Checkin)
@@ -33,6 +33,8 @@ import os
 # ------------------------------------------------------------ #
 
 def main():
+    start_time = time.time()
+    
     setup_logging()
     logger = logging.getLogger(__name__)
     
@@ -88,7 +90,12 @@ def main():
         logger.info("Keyboard interrupt received. Shutting down...")
         observer.stop()
         scheduler.shutdown()
+        
     observer.join()
+    
+    end_time = time.time()
+    elapsed_time = timedelta(seconds=end_time - start_time)
+    logger.info(f"Script ran for {elapsed_time}")
 
 if __name__ == '__main__':
     main()

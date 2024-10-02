@@ -125,9 +125,9 @@ class IB_Crude_Alert(Base_Periodic):
             open_type = "OTD v"
         elif (day_open < a_period_mid) and (b_low > a_period_mid):
             open_type = "OTD ^"
-        elif (abs(day_open - a_high) <= 0.05 * a_period_range) and (b_high < a_period_mid):
+        elif (abs(day_open - a_high) <= 0.075 * a_period_range) and (b_high < a_period_mid):
             open_type = "OD v"
-        elif (abs(day_open - a_low) <= 0.05 * a_period_range) and (b_low > a_period_mid):
+        elif (abs(day_open - a_low) <= 0.075 * a_period_range) and (b_low > a_period_mid):
             open_type = "OD ^"
         elif (day_open > a_period_mid) and (b_low > a_period_mid) and (b_high > orh):
             open_type = "ORR ^"
