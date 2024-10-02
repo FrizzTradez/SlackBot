@@ -14,23 +14,23 @@ class PVAT(Base_Conditional):
     def __init__(self, product_name, variables):    
         super().__init__(product_name, variables)
         
-        # Variables
-        self.p_vpoc = self.variables.get(f'{self.product_name}_PRIOR_VPOC')
-        self.open = self.variables.get(f'{self.product_name}_DAY_OPEN')
-        self.p_high = self.variables.get(f'{self.product_name}_PRIOR_HIGH')
-        self.p_low = self.variables.get(f'{self.product_name}_PRIOR_LOW')
-        self.ib_atr = self.variables.get(f'{self.product_name}_IB_ATR')
-        self.euro_ibh = self.variables.get(f'{self.product_name}_EURO_IBH')
-        self.euro_ibl = self.variables.get(f'{self.product_name}_EURO_IBL')
-        self.orh = self.variables.get(f'{self.product_name}_ORH')
-        self.orl = self.variables.get(f'{self.product_name}_ORL')
-        self.eth_vwap = self.variables.get(f'{self.product_name}_ETH_VWAP')
-        self.cpl = self.variables.get(f'{self.product_name}_CPL')
-        self.total_ovn_delta = self.variables.get(f'{self.product_name}_TOTAL_OVN_DELTA')
-        self.total_rth_delta = self.variables.get(f'{self.product_name}_TOTAL_RTH_DELTA')
-        self.prior_close = self.variables.get(f'{self.product_name}_PRIOR_CLOSE')
-        self.ib_high = variables.get(f'{product_name}_IB_HIGH')
-        self.ib_low = variables.get(f'{product_name}_IB_LOW')
+        # Variables (Round All Variables)
+        self.p_vpoc = round(self.variables.get(f'{self.product_name}_PRIOR_VPOC'), 2)
+        self.open = round(self.variables.get(f'{self.product_name}_DAY_OPEN'), 2)
+        self.p_high = round(self.variables.get(f'{self.product_name}_PRIOR_HIGH'), 2)
+        self.p_low = round(self.variables.get(f'{self.product_name}_PRIOR_LOW'), 2)
+        self.ib_atr = round(self.variables.get(f'{self.product_name}_IB_ATR'), 2)
+        self.euro_ibh = round(self.variables.get(f'{self.product_name}_EURO_IBH'), 2)
+        self.euro_ibl = round(self.variables.get(f'{self.product_name}_EURO_IBL'), 2)
+        self.orh = round(self.variables.get(f'{self.product_name}_ORH'), 2)
+        self.orl = round(self.variables.get(f'{self.product_name}_ORL'), 2)
+        self.eth_vwap = round(self.variables.get(f'{self.product_name}_ETH_VWAP'), 2)
+        self.cpl = round(self.variables.get(f'{self.product_name}_CPL'), 2)
+        self.total_ovn_delta = round(self.variables.get(f'{self.product_name}_TOTAL_OVN_DELTA'), 2)
+        self.total_rth_delta = round(self.variables.get(f'{self.product_name}_TOTAL_RTH_DELTA'), 2)
+        self.prior_close = round(self.variables.get(f'{self.product_name}_PRIOR_CLOSE'), 2)
+        self.ib_high = round(self.variables.get(f'{product_name}_IB_HIGH'), 2)
+        self.ib_low = round(self.variables.get(f'{product_name}_IB_LOW'), 2)
         
         self.es_impvol = External_Config.es_impvol
         self.nq_impvol = External_Config.nq_impvol
@@ -51,32 +51,32 @@ class PVAT(Base_Conditional):
         
         if self.product_name == 'ES':
             exp_range = round(((self.prior_close * (self.es_impvol/100)) * math.sqrt(1/252)) , 2)
-            exp_hi = round((self.prior_close + exp_range) , 2)
-            exp_lo = round((self.prior_close - exp_range) , 2)
+            exp_hi = (self.prior_close + exp_range)
+            exp_lo = (self.prior_close - exp_range)
             
             logger.info(f"|exp_range Success| Product : {self.product_name} | EXP_RNG : {exp_range} | EXP_HI : {exp_hi} | EXP_LO : {exp_lo} |")
             return exp_range, exp_hi, exp_lo
         
         elif self.product_name == 'NQ':
             exp_range = round(((self.prior_close * (self.nq_impvol/100)) * math.sqrt(1/252)) , 2)
-            exp_hi = round((self.prior_close + exp_range) , 2)
-            exp_lo = round((self.prior_close - exp_range) , 2)
+            exp_hi = (self.prior_close + exp_range)
+            exp_lo = (self.prior_close - exp_range)
             
             logger.info(f"|exp_range Success| Product : {self.product_name} | EXP_RNG : {exp_range} | EXP_HI : {exp_hi} | EXP_LO : {exp_lo} |")
             return exp_range, exp_hi, exp_lo
         
         elif self.product_name == 'RTY':
             exp_range = round(((self.prior_close * (self.rty_impvol/100)) * math.sqrt(1/252)) , 2)
-            exp_hi = round((self.prior_close + exp_range) , 2)
-            exp_lo = round((self.prior_close - exp_range) , 2)
+            exp_hi = (self.prior_close + exp_range)
+            exp_lo = (self.prior_close - exp_range)
         
             logger.info(f"|exp_range Success| Product : {self.product_name} | EXP_RNG : {exp_range} | EXP_HI : {exp_hi} | EXP_LO : {exp_lo} |")
             return exp_range, exp_hi, exp_lo
         
         elif self.product_name == 'CL':
             exp_range = round(((self.prior_close * (self.cl_impvol/100)) * math.sqrt(1/252)) , 2)
-            exp_hi = round((self.prior_close + exp_range) , 2)
-            exp_lo = round((self.prior_close - exp_range) , 2)
+            exp_hi = (self.prior_close + exp_range)
+            exp_lo = (self.prior_close - exp_range)
             
             logger.info(f"|exp_range Success| Product : {self.product_name} | EXP_RNG : {exp_range} | EXP_HI : {exp_hi} | EXP_LO : {exp_lo} |")
             return exp_range, exp_hi, exp_lo
@@ -238,12 +238,12 @@ class PVAT(Base_Conditional):
     
         message_template = (
             f">:large_{pro_color}_square: *{self.product_name} - Playbook Alert - PVAT {settings['pv_indicator']}* :{settings['large']}{self.color}_circle:\n"
-            "──────────────────────\n"
+            "────────────────────\n"
             f"*Destination*: _{self.p_vpoc} (Prior Session Vpoc)_\n" 
             f"*Risk*: _Wrong if auction fails to complete PVPOC test before IB, or accepts away form value_\n" 
             f"*Driving Input*: _Auction opening in range or slightly outside range, divergent from prior session Vpoc_\n" 
-            "────────────────\n"
-            "                *Criteria*\n"
+            "────────────────────\n"
+            f">                    *Criteria*\n"
             f"*[{self.c_within_atr}]* Target Within ATR Of IB\n" 
             f"*[{self.c_orderflow}]* Orderflow In Direction Of Target (*_{self.delta}_*)\n" 
             f"*[{self.c_euro_ib}]* {settings['c_euro_ib_text']}\n" 
@@ -251,9 +251,9 @@ class PVAT(Base_Conditional):
             f"\n*[{self.c_between}]* Between DVWAP and PVPOC\n" 
             "Or\n"
             f"*[{self.c_align}]* DVWAP and PVPOC aligned\n" 
-            "────────────────\n"
-            f">*Playbook Score*: _{self.score} / 5_\n"    
-            "──────────────────────\n"
+            "────────────────────\n"
+            f">             *Playbook Score*: _{self.score} / 5_\n"    
+            "────────────────────\n"
             f">*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_\n"
         )
         return message_template  

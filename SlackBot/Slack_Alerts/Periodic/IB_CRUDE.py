@@ -14,8 +14,8 @@ class IB_Crude_Alert(Base_Periodic):
         
     # ---------------------- Specific Calculations ------------------------- #
     def ib_info(self, ib_high, ib_low, ib_atr):
-        ib_range = round((ib_high - ib_low) , 2)
-        ib_vatr = round((ib_range / ib_atr) , 2)
+        ib_range = (ib_high - ib_low)
+        ib_vatr = round((ib_range / ib_atr), 2)
        
         if ib_vatr > 1.1:
             ib_type = "Wide IB"
@@ -28,9 +28,9 @@ class IB_Crude_Alert(Base_Periodic):
         
     def exp_range_info(self, prior_close, cpl, ovn_to_ibh, ovn_to_ibl, impvol):
         exp_range = round(((prior_close * (impvol / 100)) * math.sqrt(1 / 252)), 2)
-        exp_hi = round(prior_close + exp_range, 2)
-        exp_lo = round(prior_close - exp_range, 2)
-        range_used = round((ovn_to_ibh - ovn_to_ibl) / exp_range)
+        exp_hi = (prior_close + exp_range)
+        exp_lo = (prior_close - exp_range)
+        range_used = round(((ovn_to_ibh - ovn_to_ibl) / exp_range), 2)
 
         if abs(range_used) >= 1:
             exhausted = "Exhausted"
@@ -54,13 +54,13 @@ class IB_Crude_Alert(Base_Periodic):
         gap_tier = ""
         
         if day_open > prior_high:
-            gap_size = round(day_open - prior_high, 2)
+            gap_size = (day_open - prior_high)
             gap = f"Gap Up: {gap_size}"
             
             if exp_range == 0:
                 gap_tier = "Undefined"  
             else:
-                gap_ratio = gap_size / exp_range
+                gap_ratio = round((gap_size / exp_range) , 2)
                 if gap_ratio <= 0.5:
                     gap_tier = "Tier 1"
                 elif gap_ratio <= 0.75:
@@ -69,13 +69,13 @@ class IB_Crude_Alert(Base_Periodic):
                     gap_tier = "Tier 3"
         
         elif day_open < prior_low:
-            gap_size = round(prior_low - day_open, 2)
+            gap_size = (prior_low - day_open)
             gap = f"Gap Down: {gap_size}"
             
             if exp_range == 0:
                 gap_tier = "Undefined" 
             else:
-                gap_ratio = gap_size / exp_range
+                gap_ratio = round((gap_size / exp_range) , 2)
                 if gap_ratio <= 0.5:
                     gap_tier = "Tier 1"
                 elif gap_ratio <= 0.75:
@@ -90,7 +90,7 @@ class IB_Crude_Alert(Base_Periodic):
         return gap, gap_tier
 
     def posture(self, cpl, fd_vpoc, td_vpoc, exp_range):
-        threshold = exp_range * 0.68
+        threshold = round((exp_range * 0.68), 2)
 
         if (abs(cpl - fd_vpoc) <= threshold) and (abs(fd_vpoc - td_vpoc) <= threshold):
             posture = "Price=5D=20D"
@@ -116,8 +116,8 @@ class IB_Crude_Alert(Base_Periodic):
         return posture
         
     def open_type(self, a_high, a_low, b_high, b_low, day_open, orh, orl, prior_high, prior_low):
-        a_period_mid = (a_high + a_low) / 2
-        a_period_range = a_high - a_low
+        a_period_mid = round(((a_high + a_low) / 2), 2)
+        a_period_range = (a_high - a_low)
         overlap = max(0, min(max(a_high, b_high), prior_high) - max(min(a_low, b_low), prior_low))
         total_range = max(a_high, b_high) - min(a_low, b_low)
 
@@ -164,25 +164,25 @@ class IB_Crude_Alert(Base_Periodic):
                 return
             
             # Variables specific to the product
-            ib_atr = variables.get(f'{product_name}_IB_ATR')
-            ib_high = variables.get(f'{product_name}_IB_HIGH')
-            ib_low = variables.get(f'{product_name}_IB_LOW')
-            prior_close = variables.get(f'{product_name}_PRIOR_CLOSE')
-            day_open = variables.get(f'{product_name}_DAY_OPEN')
-            prior_high = variables.get(f'{product_name}_PRIOR_HIGH')
-            prior_low = variables.get(f'{product_name}_PRIOR_LOW')
-            cpl = variables.get(f'{product_name}_CPL')
-            fd_vpoc = variables.get(f'{product_name}_5D_VPOC')
-            td_vpoc = variables.get(f'{product_name}_20D_VPOC')
-            ovn_to_ibh = variables.get(f'{product_name}_OVNTOIB_HI')
-            ovn_to_ibl = variables.get(f'{product_name}_OVNTOIB_LO')
-            a_high = variables.get(f'{product_name}_A_HIGH')
-            a_low = variables.get(f'{product_name}_A_LOW')
-            b_high = variables.get(f'{product_name}_B_HIGH')
-            b_low = variables.get(f'{product_name}_B_LOW')
-            orh = variables.get(f'{product_name}_ORH')
-            orl = variables.get(f'{product_name}_ORL')
-            rvol = variables.get(f'{product_name}_RVOL') 
+            ib_atr = round(variables.get(f'{product_name}_IB_ATR'), 2)
+            ib_high = round(variables.get(f'{product_name}_IB_HIGH'), 2)
+            ib_low = round(variables.get(f'{product_name}_IB_LOW'), 2)
+            prior_close = round(variables.get(f'{product_name}_PRIOR_CLOSE'), 2)
+            day_open = round(variables.get(f'{product_name}_DAY_OPEN'), 2)
+            prior_high = round(variables.get(f'{product_name}_PRIOR_HIGH'), 2)
+            prior_low = round(variables.get(f'{product_name}_PRIOR_LOW'), 2)
+            cpl = round(variables.get(f'{product_name}_CPL'), 2)
+            fd_vpoc = round(variables.get(f'{product_name}_5D_VPOC'), 2)
+            td_vpoc = round(variables.get(f'{product_name}_20D_VPOC'), 2)
+            ovn_to_ibh = round(variables.get(f'{product_name}_OVNTOIB_HI'), 2)
+            ovn_to_ibl = round(variables.get(f'{product_name}_OVNTOIB_LO'), 2)
+            a_high = round(variables.get(f'{product_name}_A_HIGH'), 2)
+            a_low = round(variables.get(f'{product_name}_A_LOW'), 2)
+            b_high = round(variables.get(f'{product_name}_B_HIGH'), 2)
+            b_low = round(variables.get(f'{product_name}_B_LOW'), 2)
+            orh = round(variables.get(f'{product_name}_ORH'), 2)
+            orl = round(variables.get(f'{product_name}_ORL'), 2)
+            rvol = round(variables.get(f'{product_name}_CUMULATIVE_RVOL'), 2)
             
             impvol = External_Config.cl_impvol
 

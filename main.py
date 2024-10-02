@@ -29,7 +29,6 @@ import os
 # FIgure out Crude Posture Issue (20D is not accurate from sierra chart)
 # See if you can adjust Sierra RVOL study to be more accurate
 # Range left up or Down says : "Exhausted %"
-# Compare OPen Drive, The Criteria Are not QUite THere (And then adjust on Google sheets)
 # ------------------------------------------------------------ #
 
 def main():
