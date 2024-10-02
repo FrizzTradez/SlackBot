@@ -18,10 +18,7 @@ import os
 # Load needs to be dynamic, Offset load when playbook is not in play, do this at the file change level.
 # Econ Alert If we are before 8:45 AM EST wait, if After send immediately
 # Improve Debugging and Logging And Make it Consistent and organized (Improve your feedback loop)
-# Pvat Only in play if we Slightly gap (Use Open)
-# Pvat only in play if we auction above 30 Second Opening Range (Add this to input)
 # Compare Expected Ranges WIth Josh (Is he using full or 68%? IB CHECK IN)
-# Rounding Issue in IB Check-IN
 # Easy Alert Addition (Add ALerts for IB Extension And Address if TIer Gap was closed in IB Checkin)
 # FIgure out Crude Posture Issue (20D is not accurate from sierra chart)
 # See if you can adjust Sierra RVOL study to be more accurate

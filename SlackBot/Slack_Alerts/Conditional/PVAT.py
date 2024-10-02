@@ -16,7 +16,7 @@ class PVAT(Base_Conditional):
         
         # Variables (Round All Variables)
         self.p_vpoc = round(self.variables.get(f'{self.product_name}_PRIOR_VPOC'), 2)
-        self.open = round(self.variables.get(f'{self.product_name}_DAY_OPEN'), 2)
+        self.day_open = round(self.variables.get(f'{self.product_name}_DAY_OPEN'), 2)
         self.p_high = round(self.variables.get(f'{self.product_name}_PRIOR_HIGH'), 2)
         self.p_low = round(self.variables.get(f'{self.product_name}_PRIOR_LOW'), 2)
         self.ib_atr = round(self.variables.get(f'{self.product_name}_IB_ATR'), 2)
@@ -100,16 +100,20 @@ class PVAT(Base_Conditional):
         # Direction Based Logic
         if self.direction == "short":
             self.atr_condition = abs(self.ib_low - self.p_vpoc) <= self.remaining_atr
+            self.or_condition = self.cpl < self.orl
         elif self.direction == "long":
             self.atr_condition = abs(self.ib_high - self.p_vpoc) <= self.remaining_atr
+            self.or_condition = self.cpl > self.orh
             
         # Driving Input
         logic = (
-            self.p_low + (self.exp_rng * 0.1) <= self.cpl <= self.p_high - (self.exp_rng * 0.1) # Need to Show Acceptance
+            self.p_low - (self.exp_rng * 0.15) <= self.day_open <= self.p_high + (self.exp_rng * 0.15)
+            and
+            self.atr_condition
             and
             abs(self.cpl - self.p_vpoc) > self.exp_rng * 0.1 
             and
-            self.atr_condition  
+            self.or_condition  
             )    
         
         logger.info(
