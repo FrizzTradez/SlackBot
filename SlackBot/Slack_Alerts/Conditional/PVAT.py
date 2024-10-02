@@ -42,19 +42,19 @@ class PVAT(Base_Conditional):
 
 # ---------------------------------- Specific Calculations ------------------------------------ #   
     def exp_range(self):
-        logger.info(f"Running exp_range Calculation For {self.product_name}")
+        logger.debug(f" PVAT | exp_range | Product: {self.product_name} | Note: Running")
 
         # Calculation (product specific or Not)
         if not self.prior_close:
-            logger.error(f"Prior close not found for product: {self.product_name}")
-            raise ValueError(f"Prior close is required for {self.product_name}")
+            logger.error(f" PVAT | exp_range | Product: {self.product_name} | Note: No Close Found")
+            raise ValueError(f" PVAT | exp_range | Product: {self.product_name} | Note: Need Close For Calculation!")
         
         if self.product_name == 'ES':
             exp_range = round(((self.prior_close * (self.es_impvol/100)) * math.sqrt(1/252)) , 2)
             exp_hi = (self.prior_close + exp_range)
             exp_lo = (self.prior_close - exp_range)
             
-            logger.info(f"|exp_range Success| Product : {self.product_name} | EXP_RNG : {exp_range} | EXP_HI : {exp_hi} | EXP_LO : {exp_lo} |")
+            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
             return exp_range, exp_hi, exp_lo
         
         elif self.product_name == 'NQ':
@@ -62,7 +62,7 @@ class PVAT(Base_Conditional):
             exp_hi = (self.prior_close + exp_range)
             exp_lo = (self.prior_close - exp_range)
             
-            logger.info(f"|exp_range Success| Product : {self.product_name} | EXP_RNG : {exp_range} | EXP_HI : {exp_hi} | EXP_LO : {exp_lo} |")
+            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
             return exp_range, exp_hi, exp_lo
         
         elif self.product_name == 'RTY':
@@ -70,7 +70,7 @@ class PVAT(Base_Conditional):
             exp_hi = (self.prior_close + exp_range)
             exp_lo = (self.prior_close - exp_range)
         
-            logger.info(f"|exp_range Success| Product : {self.product_name} | EXP_RNG : {exp_range} | EXP_HI : {exp_hi} | EXP_LO : {exp_lo} |")
+            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
             return exp_range, exp_hi, exp_lo
         
         elif self.product_name == 'CL':
@@ -78,22 +78,25 @@ class PVAT(Base_Conditional):
             exp_hi = (self.prior_close + exp_range)
             exp_lo = (self.prior_close - exp_range)
             
-            logger.info(f"|exp_range Success| Product : {self.product_name} | EXP_RNG : {exp_range} | EXP_HI : {exp_hi} | EXP_LO : {exp_lo} |")
+            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
             return exp_range, exp_hi, exp_lo
         
         else:
-            raise ValueError(f"Unknown product: {self.product_name}")
+            raise ValueError(f" PVAT | exp_range | Product: {self.product_name} | Note: Unknown Product")
         
     def total_delta(self):
-        logger.info(f"Running total_delta Calculation For {self.product_name}")
+        logger.debug(f" PVAT | total_delta | Product: {self.product_name} | Note: Running")
 
         # Calculation (Product Specific or Not)        
         total_delta = self.total_ovn_delta + self.total_rth_delta
-
+        
+        logger.debug(f" PVAT | total_delta | TOTAL_DELTA: {total_delta}")
         return total_delta   
     
 # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self):
+        logger.debug(f" PVAT | input | Product: {self.product_name} | Note: Running")
+        
         self.used_atr = self.ib_high - self.ib_low
         self.remaining_atr = max((self.ib_atr - self.used_atr), 0)
         
@@ -107,71 +110,68 @@ class PVAT(Base_Conditional):
             
         # Driving Input
         logic = (
-            self.p_low - (self.exp_rng * 0.15) <= self.day_open <= self.p_high + (self.exp_rng * 0.15) # Open in range or slight gap
+            self.p_low - (self.exp_rng * 0.15) <= self.day_open <= self.p_high + (self.exp_rng * 0.15) 
             and
-            self.p_low + (self.exp_rng * 0.10) <= self.cpl <= self.p_high - (self.exp_rng * 0.10) # Last Price acceptance in range
+            self.p_low + (self.exp_rng * 0.10) <= self.cpl <= self.p_high - (self.exp_rng * 0.10) 
             and
-            self.atr_condition # Must have enough IB To Achieve Target
+            self.atr_condition 
             and
-            abs(self.cpl - self.p_vpoc) > self.exp_rng * 0.1  # Must Have enough Distance Away from Target (Reward)
+            abs(self.cpl - self.p_vpoc) > self.exp_rng * 0.1 
             and
-            self.or_condition # Must Be Above/Below Opening Range
+            self.or_condition 
             )    
         
-        logger.info(
-            f"|pvat_input {logic} | "
-            f"Product: {self.product_name} | "
-            f"Direction: {self.direction} | "
-            f"Remaining ATR: {self.remaining_atr} | "
-            f"Initial ATR: {self.ib_atr}"
+        logger.debug(
+            f" PVAT | input | Product: {self.product_name} | LOGIC: {logic}"
             )
+        
         return logic
     
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def opp_window(self):
+        logger.debug(f" PVAT | opp_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
         self.current_datetime = datetime.now(self.est)
         self.current_time = self.current_datetime.time()
         
-        logger.info(f"Current EST Time: {self.current_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
-        
         # Define time windows based on product type
         if self.product_name == 'CL':
             start_time = self.crude_pvat_start
             end_time = self.crude_ib
-            logger.info(f"Product '{self.product_name}' detected. Time Window: {start_time} - {end_time}")
+            logger.debug(f" PVAT | opp_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
         elif self.product_name in ['ES', 'RTY', 'NQ']:
             start_time = self.equity_pvat_start
             end_time = self.equity_ib
-            logger.info(f"Product '{self.product_name}' detected. Time Window: {start_time} - {end_time}")
+            logger.debug(f" PVAT | opp_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
         else:
-            logger.warning(f"Unknown product '{self.product_name}'. No time window defined.")
+            logger.warning(f" PVAT | opp_window | Product: {self.product_name} | No time window defined.")
             return False  
         
         # Check if current time is within the window
         if start_time <= self.current_time <= end_time:
-            logger.info(f"Current time {self.current_time} is within the opportunity window.")
+            logger.debug(f" PVAT | opp_window | Product: {self.product_name} | Within Window: {self.current_time}.")
             return True
         else:
-            logger.info(f"Current time {self.current_time} is outside the opportunity window.")
+            logger.debug(f" PVAT | opp_window | Product: {self.product_name} | Outside Window {self.current_time}.")
             return False
 # ---------------------------------- Calculate Criteria ------------------------------------ #      
     def check(self):
+        logger.debug(f" PVAT | check | Product: {self.product_name} | Note: Running")
         
         # Define Direction
         self.direction = "short" if self.cpl > self.p_vpoc else "long"
         self.color = "red" if self.direction == "short" else "green"
-        
+    
         # Driving Input
         if self.input() and self.opp_window():
             
             with last_alerts_lock:
                 last_alert = last_alerts.get(self.product_name)   
-                logger.info(f"Current direction: {self.direction}, Last alert: {last_alert} for {self.product_name}")
+                logger.debug(f" PVAT | check | Product: {self.product_name} | Current Direction: {self.direction} | Last Direction: {last_alert}")
                 
                 if self.direction != last_alert: 
-                    logger.info("Condition met. Preparing to send Slack alert.")
+                    logger.info(f" PVAT | check | Product: {self.product_name} | Note: Condition Met")
                     
                     # Logic For c_within_atr 
                     if self.atr_condition: 
@@ -210,19 +210,21 @@ class PVAT(Base_Conditional):
                     # Logic for Score 
                     self.score = sum(1 for condition in [self.c_within_atr, self.c_orderflow, self.c_euro_ib, self.c_or, self.c_between, self.c_align] if condition == "x")   
                     try:
-                        logger.info(f"Current direction: {self.direction}, Last alert: {last_alert} for {self.product_name}")
                         last_alerts[self.product_name] = self.direction
                         self.execute()
                     except Exception as e:
-                        logger.error(f"Failed to send Slack alert: {e}")
+                        logger.error(f" PVAT | check | Product: {self.product_name} | Note: Failed to send Slack alert: {e}")
                 else:
-                    logger.info(f"Direction '{self.direction}' is the same as the last alerted direction. No alert sent to avoid spamming.")
+                    logger.debug(f" PVAT | check | Product: {self.product_name} | Note: Direction: {self.direction} Is Same")
         else:
-            logger.info("Condition not met. No action taken.")
+            logger.info(f" PVAT | check | Product: {self.product_name} | Note: Condition Not Met")
 # ---------------------------------- Alert Preparation------------------------------------ #  
     def slack_message(self):
+        logger.debug(f" PVAT | slack_message | Product: {self.product_name} | Note: Running")
+        
         pro_color = self.product_color.get(self.product_name)
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
+        
         direction_settings = {
             "long": {
                 "pv_indicator": "^",
@@ -265,13 +267,14 @@ class PVAT(Base_Conditional):
         return message_template  
     
     def execute(self):
-
+        logger.debug(f" PVAT | execute | Product: {self.product_name} | Note: Running")
+        
         message = self.slack_message()
         channel = self.slack_channels.get(self.product_name)
         
         if channel:
             self.send_slack_message(channel, message)
-            print(f"#PVAT ALert sent to {channel} for {self.product_name}")
+            logger.info(f" PVAT | execute | Product: {self.product_name} | Note: ALert Sent To {channel}")
         else:
-            print(f"No Slack channel configured for {self.product_name}")
+            logger.debug(f" PVAT | execute | Product: {self.product_name} | Note: No Slack Channel Configured")
             

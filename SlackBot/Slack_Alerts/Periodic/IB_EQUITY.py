@@ -14,6 +14,8 @@ class IB_Equity_Alert(Base_Periodic):
         
     # ---------------------- Specific Calculations ------------------------- #
     def ib_info(self, ib_high, ib_low, ib_atr):
+        logger.debug(f" IB_EQUITY | ib_info | Note: Running")
+        
         ib_range = (ib_high - ib_low)
         ib_vatr = round((ib_range / ib_atr), 2)
        
@@ -27,6 +29,8 @@ class IB_Equity_Alert(Base_Periodic):
         return ib_range, ib_type, ib_vatr*100
         
     def exp_range_info(self, prior_close, cpl, ovn_to_ibh, ovn_to_ibl, impvol):
+        logger.debug(f" IB_EQUITY | exp_range_info | Note: Running")
+        
         exp_range = round(((prior_close * (impvol / 100)) * math.sqrt(1 / 252)), 2)
         exp_hi = (prior_close + exp_range)
         exp_lo = (prior_close - exp_range)
@@ -50,6 +54,8 @@ class IB_Equity_Alert(Base_Periodic):
         return exhausted, range_used*100, range_up, range_down, exp_range
 
     def gap_info(self, day_open, prior_high, prior_low, exp_range):
+        logger.debug(f" IB_EQUITY | gap_info | Note: Running")
+        
         gap = ""
         gap_tier = ""
         
@@ -90,6 +96,8 @@ class IB_Equity_Alert(Base_Periodic):
         return gap, gap_tier
 
     def posture(self, cpl, fd_vpoc, td_vpoc, exp_range):
+        logger.debug(f" IB_EQUITY | posture | Note: Running")
+        
         threshold = round((exp_range * 0.68), 2)
 
         if (abs(cpl - fd_vpoc) <= threshold) and (abs(fd_vpoc - td_vpoc) <= threshold):
@@ -116,6 +124,8 @@ class IB_Equity_Alert(Base_Periodic):
         return posture
         
     def open_type(self, a_high, a_low, b_high, b_low, day_open, orh, orl, prior_high, prior_low):
+        logger.debug(f" IB_EQUITY | open_type | Note: Running")
+        
         a_period_mid = round(((a_high + a_low) / 2), 2)
         a_period_range = (a_high - a_low)
         overlap = max(0, min(max(a_high, b_high), prior_high) - max(min(a_low, b_low), prior_low))
@@ -160,7 +170,7 @@ class IB_Equity_Alert(Base_Periodic):
         try:
             variables = self.fetch_latest_variables(product_name)
             if not variables:
-                print(f"No data available for {product_name}")
+                logger.error(f" IB_EQUITY | process_product | Product: {product_name} |  Note: No data available ")
                 return
             
             # Variables (Round All Variables) 
@@ -192,7 +202,7 @@ class IB_Equity_Alert(Base_Periodic):
             elif product_name == 'RTY':
                 impvol = External_Config.rty_impvol
             else:
-                raise ValueError(f"Unknown product: {product_name}")
+                raise ValueError(f" IB_EQUITY | process_product | Note: {product_name}")
             
             color = self.product_color.get(product_name)
             current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -237,9 +247,9 @@ class IB_Equity_Alert(Base_Periodic):
             channel = self.slack_channels.get(product_name)
             if channel:
                 self.slack_client.chat_postMessage(channel=channel, text=message) 
-                logger.info(f"Message sent to {channel} for {product_name}")
+                logger.info(f" IB_EQUITY | process_product | Note: Message sent to {channel} for {product_name}")
             else:
-                logger.error(f"No Slack channel configured for {product_name}")
+                logger.error(f" IB_EQUITY | process_product | Note: No Slack channel configured for {product_name}")
         except Exception as e:
-            logger.error(f"Error processing {product_name}: {e}")
+            logger.error(f" IB_EQUITY | process_product | Product: {product_name} | Error processing: {e}")
                 

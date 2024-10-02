@@ -71,7 +71,7 @@ class FileChangeHandler(FileSystemEventHandler):
 
                 self.last_processed[filepath] = current_time
 
-            logger.info(f"{filepath} modified")
+            logger.debug(f" FileChange | Note: {filepath} modified")
 
             try:
 
@@ -82,7 +82,7 @@ class FileChangeHandler(FileSystemEventHandler):
                     product_name, file_id = self.extract_product_and_id(file_name)
                     
                     if not product_name or not file_id:
-                        logger.warning(f"Invalid task name format: {file_name}")
+                        logger.warning(f" FileChange | FileName: {file_name} | Note: Invalid task name")
                         return
 
                     with self.lock:
@@ -90,7 +90,7 @@ class FileChangeHandler(FileSystemEventHandler):
                         for condition in self.conditions:
                             if file_name in condition["required_files"]:
                                 self.updated_conditions[condition["name"]].add(file_name)
-                                logger.info(f"Updated files for {condition['name']}: {self.updated_conditions[condition['name']]}")
+                                logger.debug(f" FileChange | Condition: {condition['name']} | CurrentQueue: {self.updated_conditions[condition['name']]}")
 
                                 if self.updated_conditions[condition["name"]] == set(condition["required_files"]):
 
@@ -98,16 +98,16 @@ class FileChangeHandler(FileSystemEventHandler):
 
                                         self.processing_queue.put(condition)
                                         self.conditions_in_queue.add(condition["name"])
-                                        logger.info(f"All required files for {condition['name']} have been updated. Enqueued for processing.")
+                                        logger.debug(f" FileChange | Condition: {condition['name']} | Note: Enqueue For Processing")
 
                                         self.updated_conditions[condition["name"]] = set()
                                     else:
-                                        logger.info(f"Condition '{condition['name']}' is already in the queue or being processed.")
+                                        logger.debug(f" FileChange | Condition: {condition['name']} | Note: Already In Queue")
                 else:
-                    logger.warning(f"No task found for file {event.src_path}")
+                    logger.warning(f" FileChange | FilePath: {event.src_path} | Note: No task found for file")
                     
             except Exception as e:
-                logger.error(f"Error processing file {event.src_path}: {e}")
+                logger.error(f" FileChange | FilePath: {event.src_path} | Note: Error Processing File: {e}")
 
     def extract_product_and_id(self, task_name):
 
@@ -125,7 +125,7 @@ class FileChangeHandler(FileSystemEventHandler):
                 condition_name = condition["name"]
                 required_files = condition["required_files"]
 
-                logger.info(f"Processing {condition_name} with files: {required_files}")
+                logger.debug(f" FileChange | Condition: {condition_name} | Processing: {required_files}")
 
                 tasks = [self.file_to_task[file_name] for file_name in required_files]
 
@@ -136,16 +136,16 @@ class FileChangeHandler(FileSystemEventHandler):
                 variables = all_variables.get(product_name, {})
 
                 if not variables:
-                    logger.warning(f"No variables found for product '{product_name}'. Skipping processing.")
+                    logger.warning(f" FileChange | Product: {product_name} | Note: No variables found for product")
                     continue
                 
                 # IMPORTANT 
                 pvat = PVAT(product_name, variables)
                 pvat.check()
 
-                logger.info(f"Processing completed for {condition_name}.")
+                logger.debug(f" FileChange | Condition: {condition_name} | Note: Complete")
             except Exception as e:
-                logger.error(f"Error processing condition '{condition['name']}': {e}")
+                logger.error(f" FileChange | Condition: {condition['name']} | Note: Error Processing Condition: {e}")
             finally:
                 with self.lock:
                     self.conditions_in_queue.discard(condition["name"])

@@ -12,12 +12,11 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import os
 
-#                Necessary Improvements for 10/01/24
+#                Necessary Improvements for 10/02/24
 # ------------------------------------------------------------ #
 # Schedule when certain products should be monitored, You dont always need to monitor all products.
 # Load needs to be dynamic, Offset load when playbook is not in play, do this at the file change level.
 # Econ Alert If we are before 8:45 AM EST wait, if After send immediately
-# Improve Debugging and Logging And Make it Consistent and organized (Improve your feedback loop)
 # Easy Alert Addition (Add ALerts for IB Extension And Address if TIer Gap was closed in IB Checkin)
 # ------------------------------------------------------------ #
 
@@ -27,7 +26,7 @@ def main():
     setup_logging()
     logger = logging.getLogger(__name__)
     
-    logger.info("Fetching External Data...\n")
+    logger.debug(" Main | Note: Fetching External Data\n")
     # ------------------------- Startup Processes ------------------------------ #
     es_impvol, nq_impvol, rty_impvol, cl_impvol = Initialization.grab_impvol(external_data)
     External_Config.set_impvol(es_impvol, nq_impvol, rty_impvol, cl_impvol)
@@ -55,10 +54,10 @@ def main():
     )
     
     scheduler.start()
-    logger.info("APScheduler started with EST timezone.")
+    logger.info("APScheduler started.")
     
     # ---------------------- Start Monitoring Files ----------------------------- #
-    logger.info("Press Enter To Start Monitoring...")
+    logger.info(" Main | Note: Press Enter To Start Monitoring...\n")
     input("")
     
     event_handler = FileChangeHandler(files, conditions, debounce_interval=1.0)
@@ -70,13 +69,13 @@ def main():
     
     observer.start()
     
-    logger.info("Monitoring started. Press Ctrl+C to stop.")
+    logger.info(" Main | Note: Monitoring started. Press 'Ctrl+C' to stop.")
     
     try:
         while True:
             time.sleep(1)  # Keep the main thread alive
     except KeyboardInterrupt:
-        logger.info("Keyboard interrupt received. Shutting down...")
+        logger.info(" Main | Note: Shutting down...")
         observer.stop()
         scheduler.shutdown()
         
@@ -84,7 +83,7 @@ def main():
     
     end_time = time.time()
     elapsed_time = timedelta(seconds=end_time - start_time)
-    logger.info(f"Script ran for {elapsed_time}")
+    logger.info(f"\n Main | Note: Script ran for {elapsed_time}")
 
-if __name__ == '__main__':
+if __name__ == '__main__': 
     main()

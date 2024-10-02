@@ -17,10 +17,11 @@ class Initialization:
         output_dict = {}
 
         for task in external_params:
+            logger.debug(f" Startup | grab_impvol | Note: Running")
             workbook = client.open_by_key(task["sheet_id"])
             sheet = workbook.worksheet(task["sheet_name"])
             cell_value = sheet.cell(task["row_number"], task["col_number"]).value
-            logger.debug(f"Fetching ImpVol | Sheet Name : {task['sheet_name']} | Row Number : {task['row_number']}  | Col Number : {task['col_number']}")
+            logger.debug(f" Startup | grab_impvol | Sheet: {task['sheet_name']} | Row: {task['row_number']}  | Column: {task['col_number']}")
             
             if "ES" in task["sheet_name"]:
                 output_dict['es_impvol'] = cell_value
@@ -35,7 +36,7 @@ class Initialization:
         nq_impvol = float(output_dict['nq_impvol'].strip('%'))
         rty_impvol = float(output_dict['rty_impvol'].strip('%'))
         cl_impvol = float(output_dict['cl_impvol'].strip('%'))
-        logger.debug(f"ES_ImpVol : {es_impvol} | NQ_ImpVol : {nq_impvol}| RTY_ImpVol : {rty_impvol}| CL_ImpVol : {cl_impvol}")
+        logger.debug(f" Startup | grab_impvol | ES_IMP: {es_impvol} | NQ_IMP: {nq_impvol}| RTY_IMP: {rty_impvol}| CL_IMP: {cl_impvol}")
         
         return es_impvol, nq_impvol, rty_impvol, cl_impvol
 
@@ -101,7 +102,7 @@ class Initialization:
             for columns in task["columns"]:
                 data[columns] = data[columns].str.replace(',', '.').astype(float)
                 
-            logger.debug(f"Data Frame For {task["name"]}: \n{data.head()}")
+            logger.debug(f" Startup | prep_data | Task: {task["name"]} | Data-Frame: \n{data.head()}")
             variables = {}
             
             match task["name"]:
@@ -170,7 +171,7 @@ class Initialization:
                                     variables['ES_M_HIGH'] = float(data.loc[specific_datetime]['[ID22.SG1] M_High'])
                                     variables['ES_M_LOW'] = float(data.loc[specific_datetime]['[ID22.SG2] M_Low'])
                         else:
-                            logger.info(f"No Period Data for period {period_label} at time {specific_datetime}") # Better Way to Improve on this 
+                            pass
                 case "ES_2":
                     # ------------------- Use Integer Based Loc ----------------------- #
                     variables['ES_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
@@ -275,7 +276,7 @@ class Initialization:
                                     variables['NQ_M_HIGH'] = float(data.loc[specific_datetime]['[ID22.SG1] M_High'])
                                     variables['NQ_M_LOW'] = float(data.loc[specific_datetime]['[ID22.SG2] M_Low'])
                         else:
-                            logger.info(f"No Period Data for period {period_label} at time {specific_datetime}")
+                            pass
                 case "NQ_2":
                     variables['NQ_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
                     variables['NQ_ETH_TOP_1'] = float(data.iloc[0]['[ID7.SG2] Top_1'])
@@ -385,7 +386,7 @@ class Initialization:
                                     variables['RTY_M_HIGH'] = float(data.loc[specific_datetime]['[ID22.SG1] M_High'])
                                     variables['RTY_M_LOW'] = float(data.loc[specific_datetime]['[ID22.SG2] M_Low'])
                         else:
-                            logger.info(f"No Period Data for period {period_label} at time {specific_datetime}")
+                            pass
                 case "RTY_2":
                     variables['RTY_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
                     variables['RTY_ETH_TOP_1'] = float(data.iloc[0]['[ID7.SG2] Top_1'])
@@ -489,7 +490,7 @@ class Initialization:
                                     variables['CL_K_HIGH'] = float(data.loc[specific_datetime]['[ID20.SG1] K_High'])
                                     variables['CL_K_LOW'] = float(data.loc[specific_datetime]['[ID20.SG2] K_Low'])
                         else:
-                            logger.info(f"No Period Data for period {period_label} at time {specific_datetime}")
+                            pass
                 case "CL_2":
                     variables['CL_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
                     variables['CL_ETH_TOP_1'] = float(data.iloc[0]['[ID7.SG2] Top_1'])
@@ -535,12 +536,12 @@ class Initialization:
                     variables['CL_ORL'] = float(data.iloc[0]['[ID1.SG3] ORL'])
                 
                 case other:
-                    print("Ha What a Loser, Your code is broken!")
+                    logger.error(" Startup | prep_data | Note: No Such Switch Location")
                    
             product_name = task["name"].split('_')[0]
             if product_name not in all_variables:
                 all_variables[product_name] = {}
 
             all_variables[product_name].update(variables)  
-        logger.debug(f"All Extracted variables for Product '{product_name}': {all_variables}")
-        return all_variables
+        logger.debug(f" Startup | prep_data | Product: {product_name} | Variables: {all_variables}")
+        return all_variables 
