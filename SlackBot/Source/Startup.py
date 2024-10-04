@@ -4,7 +4,7 @@ from google.oauth2.service_account import Credentials
 import logging
 from SlackBot.Static.Lists import *
 from datetime import datetime, time
-
+from zoneinfo import ZoneInfo
 logger = logging.getLogger(__name__)
 
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -73,6 +73,30 @@ class Initialization:
         }        
         
         for task in files:  
+            
+            est = ZoneInfo('America/New_York')
+            now = datetime.now(est).time()
+            process_task = False
+            
+            if "CL" in task["name"]:
+                start_time = time(9, 0)
+                end_time = time(14, 30)
+                if start_time <= now <= end_time:
+                    process_task = True 
+                    logger.debug(f" Startup | prep_data | Task: {task["name"]} | Process: {process_task}")
+            elif any(name in task["name"] for name in ["ES", "NQ", "RTY"]):
+                start_time = time(9, 30)
+                end_time = time(16, 0)
+                if start_time <= now <= end_time:
+                    process_task = True 
+                    logger.debug(f" Startup | prep_data | Task: {task["name"]} | Process: {process_task}")
+            else:
+                process_task = False
+                logger.debug(f" Startup | prep_data | Task: {task["name"]} | Process: {process_task} | Note: Out of Time Range For Product")
+                
+            if not process_task:
+                continue
+            
             if task["header_row"] == 1:
                 data = pd.read_csv(task["filepath"], delimiter='\t', header=None)
             elif task["header_row"] == 0:

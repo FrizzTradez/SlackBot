@@ -1,8 +1,10 @@
 import threading
 from queue import Queue
-import time
 import logging
 import os
+import time as time_module
+from datetime import datetime, time as datetime_time
+from zoneinfo import ZoneInfo
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from SlackBot.Source.Startup import Initialization
@@ -13,22 +15,32 @@ logger = logging.getLogger(__name__)
 conditions = [
     {
         "name": "PVAT_ES",
-        "required_files": ["ES_1","ES_2","ES_3","ES_4","ES_6","ES_7"]
+        "required_files": ["ES_1","ES_2","ES_3","ES_4","ES_6","ES_7"],
+        "start_time": datetime_time(9, 32),
+        "end_time": datetime_time(10, 30),
     },
     {
         "name": "PVAT_NQ",
-        "required_files": ["NQ_1","NQ_2","NQ_3","NQ_4","NQ_6","NQ_7"]
+        "required_files": ["NQ_1","NQ_2","NQ_3","NQ_4","NQ_6","NQ_7"],
+        "start_time": datetime_time(9, 32),
+        "end_time": datetime_time(10, 30),
     },
     {
         "name": "PVAT_RTY",
-        "required_files": ["RTY_1","RTY_2","RTY_3","RTY_4","RTY_6","RTY_7"]
+        "required_files": ["RTY_1","RTY_2","RTY_3","RTY_4","RTY_6","RTY_7"],
+        "start_time": datetime_time(9, 32),
+        "end_time": datetime_time(10, 30),
     },
     {
         "name": "PVAT_CL",
-        "required_files": ["CL_1","CL_2","CL_3","CL_4","CL_6","CL_7"]
+        "required_files": ["CL_1","CL_2","CL_3","CL_4","CL_6","CL_7"],
+        "start_time": datetime_time(9, 2),
+        "end_time": datetime_time(10, 0),
     },
 ]
-
+condition_functions = {
+    "PVAT": PVAT,
+}
 class FileChangeHandler(FileSystemEventHandler):
     def __init__(self, files, conditions, debounce_interval=1.0):
 
@@ -62,7 +74,7 @@ class FileChangeHandler(FileSystemEventHandler):
         filepath = os.path.abspath(event.src_path)
 
         if filepath in self.file_paths:
-            current_time = time.time()
+            current_time = time_module.time()
             last_time = self.last_processed.get(filepath, 0)
             if current_time - last_time < self.debounce_interval:
 
@@ -98,7 +110,7 @@ class FileChangeHandler(FileSystemEventHandler):
 
                                         self.processing_queue.put(condition)
                                         self.conditions_in_queue.add(condition["name"])
-                                        logger.debug(f" FileChange | Condition: {condition['name']} | Note: Enqueue For Processing")
+                                        logger.debug(f" FileChange | Condition: {condition['name']} | Note: All Required Files")
 
                                         self.updated_conditions[condition["name"]] = set()
                                     else:
@@ -116,6 +128,12 @@ class FileChangeHandler(FileSystemEventHandler):
             return None, None
         return parts[0], parts[1]
     
+    def is_now_in_time_range(self, start_time, end_time, now):
+        if start_time <= end_time:
+            return start_time <= now <= end_time
+        else:  # Over midnight
+            return now >= start_time or now <= end_time
+        
     # The Funnel and Queueing system
     def process_queue(self):
 
@@ -124,6 +142,19 @@ class FileChangeHandler(FileSystemEventHandler):
             try:
                 condition_name = condition["name"]
                 required_files = condition["required_files"]
+                
+                est = ZoneInfo('America/New_York')
+                now = datetime.now(est).time()
+                
+                start_time = condition.get("start_time")
+                end_time = condition.get("end_time")
+                
+                if start_time and end_time:
+                    if not self.is_now_in_time_range(start_time, end_time, now):
+                        logger.debug(f" FileChange | Condition: {condition_name} | Note: Not within the time range")
+                        continue
+                else:
+                    logger.warning(f" FileChange | Condition: {condition_name} | Note: No time range specified for condition. Proceeding with processing.")
 
                 logger.debug(f" FileChange | Condition: {condition_name} | Processing: {required_files}")
 
@@ -131,21 +162,34 @@ class FileChangeHandler(FileSystemEventHandler):
 
                 all_variables = Initialization.prep_data(tasks)
                 
-                product_name = required_files[0].split('_')[0]
-                
+                # Extract function prefix and product name
+                condition_parts = condition_name.split('_')
+                if len(condition_parts) != 2:
+                    logger.error(f" FileChange | Condition: {condition_name} | Note: Invalid Condition Name Format")
+                    continue
+
+                function_prefix, product_name = condition_parts
+
                 variables = all_variables.get(product_name, {})
 
                 if not variables:
-                    logger.warning(f" FileChange | Product: {product_name} | Note: No variables found for product")
+                    logger.warning(f" FileChange | Condition: {condition_name} | Note: No Variables Found For {product_name}")
                     continue
-                
-                # IMPORTANT 
-                pvat = PVAT(product_name, variables)
-                pvat.check()
 
-                logger.debug(f" FileChange | Condition: {condition_name} | Note: Complete")
+                # Get the function to call based on the function prefix
+                function_class = condition_functions.get(function_prefix)
+                if not function_class:
+                    logger.error(f" FileChange | Condition: {condition_name} | Note: No Function Prefix Found For {function_prefix}")
+                    continue
+
+                # Instantiate and call the function
+                function_instance = function_class(product_name, variables)
+                function_instance.check()
+
+                logger.debug(f" FileChange | Condition: {condition_name} | Note: Completed Processing")
             except Exception as e:
-                logger.error(f" FileChange | Condition: {condition['name']} | Note: Error Processing Condition: {e}")
+                logger.error(f" FileChange | Condition: {condition['name']} | Note: Error processing condition: {e}")
+            
             finally:
                 with self.lock:
                     self.conditions_in_queue.discard(condition["name"])
