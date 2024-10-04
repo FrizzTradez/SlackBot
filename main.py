@@ -14,7 +14,6 @@ import os
 
 #                Necessary Improvements for 10/04/24
 # ------------------------------------------------------------ #
-# Build Dynamic Conditional Monitoring within FileChange (Efficiency)
 # Econ Alert If we are before 8:45 AM EST wait, if After send immediately (Addition)
 # Conditional Alerts for Gap Tier and Gap CLose (Use These to Modify IB Check-in) (Addition)
 # Pre IB Bias Violation Alert (Fetch from Google Sheets) (Addition)
