@@ -34,7 +34,7 @@ class IB_Equity_Alert(Base_Periodic):
         exp_range = round(((prior_close * (impvol / 100)) * math.sqrt(1 / 252)), 2)
         exp_hi = (prior_close + exp_range)
         exp_lo = (prior_close - exp_range)
-        range_used = round((ovn_to_ibh - ovn_to_ibl) / exp_range, 2)
+        range_used = round(((ovn_to_ibh - ovn_to_ibl) / exp_range), 2)
 
         if abs(range_used) >= 1:
             exhausted = "Exhausted"
