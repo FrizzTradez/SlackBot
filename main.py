@@ -12,12 +12,16 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import os
 
-#                Necessary Improvements for 10/02/24
+#                Necessary Improvements for 10/04/24
 # ------------------------------------------------------------ #
-# Schedule when certain products should be monitored, You dont always need to monitor all products.
-# Load needs to be dynamic, Offset load when playbook is not in play, do this at the file change level.
-# Econ Alert If we are before 8:45 AM EST wait, if After send immediately
-# Easy Alert Addition (Add ALerts for IB Extension And Address if TIer Gap was closed in IB Checkin)
+# Build Dynamic Product monitoring within Startup (Efficiency)
+# Build Dynamic Conditional Monitoring within FileChange (Efficiency)
+# Econ Alert If we are before 8:45 AM EST wait, if After send immediately (Addition)
+# Conditional Alerts for Gap Tier and Gap CLose (Use These to Modify IB Check-in) (Addition)
+# Pre IB Bias Violation Alert (Fetch from Google Sheets) (Addition)
+# Implement Changes That Were made to Day and Open Types Within Google Sheets (Check)
+# Implement Posture Change Alerts (Addition)
+# Do Something With Overnight Stat (Addition)
 # ------------------------------------------------------------ #
 
 def main():

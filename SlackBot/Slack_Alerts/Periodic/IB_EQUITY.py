@@ -16,7 +16,7 @@ class IB_Equity_Alert(Base_Periodic):
     def ib_info(self, ib_high, ib_low, ib_atr):
         logger.debug(f" IB_EQUITY | ib_info | Note: Running")
         
-        ib_range = (ib_high - ib_low)
+        ib_range = round((ib_high - ib_low), 2)
         ib_vatr = round((ib_range / ib_atr), 2)
        
         if ib_vatr > 1.1:
@@ -38,6 +38,8 @@ class IB_Equity_Alert(Base_Periodic):
 
         if abs(range_used) >= 1:
             exhausted = "Exhausted"
+        elif abs(range_used) <= 0.55:
+            exhausted = "Below Avg"
         else:
             exhausted = "Nominal"
 
@@ -60,8 +62,8 @@ class IB_Equity_Alert(Base_Periodic):
         gap_tier = ""
         
         if day_open > prior_high:
-            gap_size = (day_open - prior_high)
-            gap = f"Gap Up: {gap_size}"
+            gap_size = round((day_open - prior_high), 2)
+            gap = "Gap Up"
             
             if exp_range == 0:
                 gap_tier = "Undefined"  
@@ -75,8 +77,8 @@ class IB_Equity_Alert(Base_Periodic):
                     gap_tier = "Tier 3"
         
         elif day_open < prior_low:
-            gap_size = (prior_low - day_open)
-            gap = f"Gap Down: {gap_size}"
+            gap_size = round((prior_low - day_open), 2)
+            gap = "Gap Down"
             
             if exp_range == 0:
                 gap_tier = "Undefined" 
@@ -93,7 +95,7 @@ class IB_Equity_Alert(Base_Periodic):
             gap = "No Gap"
             gap_tier = "Tier 0"
         
-        return gap, gap_tier
+        return gap, gap_tier, gap_size
 
     def posture(self, cpl, fd_vpoc, td_vpoc, exp_range):
         logger.debug(f" IB_EQUITY | posture | Note: Running")
@@ -145,9 +147,9 @@ class IB_Equity_Alert(Base_Periodic):
             open_type = "ORR v"
         elif overlap >= 0.5 * total_range:
             open_type = "OAIR"
-        elif (overlap < 0.5 * total_range) and (day_open > prior_high):
+        elif (overlap < 0.5 * total_range) and (day_open >= prior_high):
             open_type = "OAOR ^"
-        elif (overlap < 0.5 * total_range) and (day_open < prior_low):
+        elif (overlap < 0.5 * total_range) and (day_open <= prior_low):
             open_type = "OAOR v"
         else:
             open_type = "Other"
@@ -214,7 +216,7 @@ class IB_Equity_Alert(Base_Periodic):
             exhausted, range_used, range_up, range_down, exp_range = self.exp_range_info(
                 prior_close, cpl, ovn_to_ibh, ovn_to_ibl, impvol
                 )
-            gap, gap_tier = self.gap_info(
+            gap, gap_tier, gap_size = self.gap_info(
                 day_open, prior_high, prior_low, exp_range
                 )
             posture = self.posture(
@@ -231,7 +233,7 @@ class IB_Equity_Alert(Base_Periodic):
                 f">                *Session Stats*\n"             
                 f"*Open Type*: _{open_type}_\n"
                 f"*{ib_type}*: _{ib_range}p_ = _{ib_vatr}%_ of Avg\n"
-                f"{f'*{gap}* = _{gap_tier}_\n' if gap != 'No Gap' else ''}"
+                f"{f'*{gap}*: _{gap_size}_ = _{gap_tier}_\n' if gap != 'No Gap' else ''}"
                 f"*Rvol*: _{rvol}%_\n"
                 f"*Current Posture*: _{posture}_\n"
                 "────────────────────\n"
