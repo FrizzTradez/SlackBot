@@ -131,10 +131,9 @@ class FileChangeHandler(FileSystemEventHandler):
     def is_now_in_time_range(self, start_time, end_time, now):
         if start_time <= end_time:
             return start_time <= now <= end_time
-        else:  # Over midnight
+        else:
             return now >= start_time or now <= end_time
         
-    # The Funnel and Queueing system
     def process_queue(self):
 
         while True:
@@ -162,7 +161,6 @@ class FileChangeHandler(FileSystemEventHandler):
 
                 all_variables = Initialization.prep_data(tasks)
                 
-                # Extract function prefix and product name
                 condition_parts = condition_name.split('_')
                 if len(condition_parts) != 2:
                     logger.error(f" FileChange | Condition: {condition_name} | Note: Invalid Condition Name Format")
@@ -176,13 +174,11 @@ class FileChangeHandler(FileSystemEventHandler):
                     logger.warning(f" FileChange | Condition: {condition_name} | Note: No Variables Found For {product_name}")
                     continue
 
-                # Get the function to call based on the function prefix
                 function_class = condition_functions.get(function_prefix)
                 if not function_class:
                     logger.error(f" FileChange | Condition: {condition_name} | Note: No Function Prefix Found For {function_prefix}")
                     continue
 
-                # Instantiate and call the function
                 function_instance = function_class(product_name, variables)
                 function_instance.check()
 

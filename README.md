@@ -11,8 +11,8 @@ Pip install python-dotenv /
 Pip install google-auth-httplib2 / 
 Pip install slackclient / 
 Pip install watchdog / 
-Pip install APScheduler
-
+Pip install APScheduler /
+Pip install Investpy /
 # Credentials.json
  
 You can Get your key from console.cloud.google.com
