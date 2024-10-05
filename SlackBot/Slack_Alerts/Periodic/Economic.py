@@ -18,7 +18,6 @@ class Economic(Base_Periodic):
         today_str = today.strftime('%m/%d/%Y')
         logger.debug(f" ECON | send_alert | Note: Fetching economic data for {today_str}...")
 
-        # Get the economic calendar for the day
         try:
             calendar = investpy.news.economic_calendar(
                 time_zone=None,
@@ -26,7 +25,7 @@ class Economic(Base_Periodic):
                 countries=['united states'],
                 importances=['high', 'medium'],
                 categories=None,
-                from_date=None,  # Defaults to today's data
+                from_date=None,  
                 to_date=None
             )
         except Exception as e:

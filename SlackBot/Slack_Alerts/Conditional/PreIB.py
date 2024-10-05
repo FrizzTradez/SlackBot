@@ -34,7 +34,7 @@ class PRE_IB_BIAS(Base_Conditional):
             self.bias_string = self.rty_bias
         elif self.product_name == 'CL':
             self.bias_string = self.cl_bias
-
+        
         self.price = None
         self.bias_char = ''
         if self.bias_string:
@@ -77,7 +77,7 @@ class PRE_IB_BIAS(Base_Conditional):
         )    
 
         logger.debug(
-            f" PRE_IB | input | Product: {self.product_name} | LOGIC: {logic}"
+            f" PRE_IB | input | Product: {self.product_name} | Bias_Symbol: {self.bias_char} | Bias_Price: {self.price} | Last_Price: {self.cpl} | LOGIC: {logic}"
         )
         
         return logic
@@ -141,10 +141,10 @@ class PRE_IB_BIAS(Base_Conditional):
         
         direction_settings = {
             "above": {
-                "text": "above"
+                "text": "Above"
             },
             "below": {
-                "text": "below"
+                "text": "Below"
             }
         }
     
@@ -153,12 +153,12 @@ class PRE_IB_BIAS(Base_Conditional):
             raise ValueError(f" PVAT | slack_message | Note: Invalid direction '{self.direction}'")
     
         message_template = (
-            f">:large_{pro_color}_square:  *{self.product_name} - Context Alert - PreIB*  :warning:\n"
+            f">:large_{pro_color}_square:  *{self.product_name} - Context Alert - Bias*  :large_{pro_color}_square:\n"
             "────────────────────\n"
-            f">                *VIOLATION*\n"      
-            f"- Price trading {settings['text']} {self.price}"
+            f">         :warning:   *VIOLATION*    :warning:\n"      
+            f"- Price Trading {settings['text']} *_{self.price}_*!\n"
             "────────────────────\n"            
-            f">*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_\n"
+            f">*Alert Time*: _{alert_time_formatted}_ EST\n"
         )
         
         return message_template  

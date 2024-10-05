@@ -45,7 +45,7 @@ class Base_Conditional:
         # Time Regulations for Crude 
         self.crude_open = time(9, 00)
         self.crude_ib = time(10, 00)
-        self.crude_close = time(14, 30)
+        self.crude_close = time(14, 30) 
         
         # Custom Time Regulations for Playbook
         self.crude_pvat_start = time(9, 2)

@@ -58,7 +58,7 @@ conditions = [
     {
         "name": "PREIB_CL",
         "required_files": ["CL_2"],
-        "start_time": datetime_time(9, 0),
+        "start_time": datetime_time(9, 0), 
         "end_time": datetime_time(14, 30),
     },                
 ]
@@ -186,7 +186,7 @@ class FileChangeHandler(FileSystemEventHandler):
 
                 all_variables = Initialization.prep_data(tasks)
                 condition_parts = condition_name.split('_')
-                
+
                 if len(condition_parts) != 2:
                     logger.error(f" FileChange | Condition: {condition_name} | Note: Invalid Condition Name Format")
                     continue

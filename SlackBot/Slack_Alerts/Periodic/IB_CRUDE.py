@@ -234,7 +234,7 @@ class IB_Crude_Alert(Base_Periodic):
                 f"*Range Left Up*: _{range_up}{'' if range_up == 'Exhausted' else '%'}_\n"
                 f"*Range Left Down*: _{range_down}{'' if range_down == 'Exhausted' else '%'}_\n"
                 "────────────────────\n"                
-                f">*Alert Time*: _{current_time} EST_\n"
+                f">*Alert Time*: _{current_time}_ EST\n"
             )
             
             # Send Slack Alert
