@@ -4,6 +4,7 @@ from SlackBot.External import External_Config
 from SlackBot.Source.Startup import *
 from SlackBot.Slack_Alerts.Periodic.IB_CRUDE import IB_Crude_Alert
 from SlackBot.Slack_Alerts.Periodic.IB_EQUITY import IB_Equity_Alert
+from SlackBot.Slack_Alerts.Periodic.ECON import Economic
 from logs.Logging_Config import setup_logging
 from zoneinfo import ZoneInfo
 import time
@@ -36,11 +37,19 @@ def main():
     
     ib_equity_alert = IB_Equity_Alert(files)
     ib_crude_alert = IB_Crude_Alert(files)
+    economic_alert = Economic(files)
     
     est = ZoneInfo('America/New_York')  # Define EST timezone
     
     # ---------------------- Initialize APScheduler ----------------------------- #
     scheduler = BackgroundScheduler(timezone=est)
+    
+    # Schedule Econ Alert at 5:45 AM EST every day
+    scheduler.add_job(
+        economic_alert.send_alert,
+        trigger=CronTrigger(hour=23, minute=42, timezone=est),
+        name='Econ Alert'
+    )
     
     # Schedule IB Equity Alert at 10:30 AM EST every day
     scheduler.add_job(
@@ -60,7 +69,7 @@ def main():
     logger.info("APScheduler started.")
     
     # ---------------------- Start Monitoring Files ----------------------------- #
-    logger.info(" Main | Note: Press Enter To Start Monitoring...\n")
+    logger.info(" Main | Note: Press Enter To Start Monitoring...")
     input("")
     
     event_handler = FileChangeHandler(files, conditions, debounce_interval=1.0)
