@@ -1,10 +1,15 @@
-external_data = [
+external_impvol = [
     {"sheet_name": "ES_Data", "sheet_id": "1miVoDpHI40Nff7PZB5QVKAGaB-QaGEJzijo8uf2wtCU", "row_number": 17, "col_number": 130},
     {"sheet_name": "NQ_Data", "sheet_id": "1sypXFWOHl5-wBihCBSLDMv0Z-wYUoU-QoUXXfKfqB7Y", "row_number": 17, "col_number": 130},
     {"sheet_name": "RTY_Data", "sheet_id": "1G-gnb5ZYEnQdd9nJyraguPhlnLYMA09Cpz9EH-_8nkM", "row_number": 17, "col_number": 130},
     {"sheet_name": "CL_Data", "sheet_id": "1SFfvZyBj5XvCuzx8bodqQ29yWtuIoTrPqmmCBaHGRzY", "row_number": 17, "col_number": 130}
-] # ALSO REMEMBER TO FETCH BIAS STUFF FOR ALERTS AND WHATEVER
-
+] 
+external_bias = [
+    {"sheet_name": "ES_PREP", "sheet_id": "1miVoDpHI40Nff7PZB5QVKAGaB-QaGEJzijo8uf2wtCU", "row_number": 52, "col_number": 3},
+    {"sheet_name": "NQ_PREP", "sheet_id": "1sypXFWOHl5-wBihCBSLDMv0Z-wYUoU-QoUXXfKfqB7Y", "row_number": 52, "col_number": 3},
+    {"sheet_name": "RTY_PREP", "sheet_id": "1G-gnb5ZYEnQdd9nJyraguPhlnLYMA09Cpz9EH-_8nkM", "row_number": 52, "col_number": 3},
+    {"sheet_name": "CL_PREP", "sheet_id": "1SFfvZyBj5XvCuzx8bodqQ29yWtuIoTrPqmmCBaHGRzY", "row_number": 52, "col_number": 3}
+]
 es_1 = [
     '[ID2.SG1] Day_Open', '[ID2.SG2] Day_High', '[ID2.SG3] Day_Low', 
     '[ID2.SG4] Day_Close', '[ID1.SG1] Day_Vpoc', '[ID9.SG1] Prior_Vpoc', '[ID8.SG2] Prior_High', '[ID8.SG3] Prior_Low', '[ID8.SG4] Prior_Close',

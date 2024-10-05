@@ -31,14 +31,17 @@ def main():
     
     logger.debug(" Main | Note: Fetching External Data\n")
     # ------------------------- Startup Processes ------------------------------ #
-    es_impvol, nq_impvol, rty_impvol, cl_impvol = Initialization.grab_impvol(external_data)
+    es_impvol, nq_impvol, rty_impvol, cl_impvol = Initialization.grab_impvol(external_impvol)
     External_Config.set_impvol(es_impvol, nq_impvol, rty_impvol, cl_impvol)
+    
+    es_bias, nq_bias, rty_bias, cl_bias = Initialization.grab_bias(external_bias)
+    External_Config.set_bias(es_bias, nq_bias, rty_bias, cl_bias)
     
     ib_equity_alert = IB_Equity_Alert(files)
     ib_crude_alert = IB_Crude_Alert(files)
     economic_alert = Economic(files)
     
-    est = ZoneInfo('America/New_York')  # Define EST timezone
+    est = ZoneInfo('America/New_York')
     
     # ---------------------- Initialize APScheduler ----------------------------- #
     scheduler = BackgroundScheduler(timezone=est)
@@ -84,7 +87,7 @@ def main():
     
     try:
         while True:
-            time.sleep(1)  # Keep the main thread alive
+            time.sleep(1) 
     except KeyboardInterrupt:
         logger.info(" Main | Note: Shutting down...")
         observer.stop()

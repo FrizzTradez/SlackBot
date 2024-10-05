@@ -5,6 +5,7 @@ import logging
 from logs.Logging_Config import setup_logging
 from SlackBot.Source.Startup import Initialization 
 from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
 
 load_dotenv()
 setup_logging()
@@ -29,7 +30,12 @@ class Base_Periodic:
         slack_token = os.getenv("SLACK_TOKEN") 
         self.slack_client = slack.WebClient(token=slack_token)
         self.current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+        
+        # TimeZone Setup
+        self.est = ZoneInfo('America/New_York')
+        self.current_datetime = datetime.now(self.est)
+        self.current_time = self.current_datetime.time()
+        
     def fetch_latest_variables(self, product_name):
         all_variables = Initialization.prep_data(self.files)
         return all_variables.get(product_name)

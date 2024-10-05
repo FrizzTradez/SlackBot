@@ -9,7 +9,7 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from SlackBot.Source.Startup import Initialization
 from SlackBot.Slack_Alerts.Conditional.Pvat import PVAT
-
+from SlackBot.Slack_Alerts.Conditional.PreIB import PRE_IB_BIAS
 logger = logging.getLogger(__name__)
 
 conditions = [
@@ -37,9 +37,34 @@ conditions = [
         "start_time": datetime_time(9, 2),
         "end_time": datetime_time(10, 0),
     },
+    {
+        "name": "PREIB_ES",
+        "required_files": ["ES_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "PREIB_NQ",
+        "required_files": ["NQ_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "PREIB_RTY",
+        "required_files": ["RTY_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "PREIB_CL",
+        "required_files": ["CL_2"],
+        "start_time": datetime_time(9, 0),
+        "end_time": datetime_time(14, 30),
+    },                
 ]
 condition_functions = {
     "PVAT": PVAT,
+    "PREIB": PRE_IB_BIAS,
 }
 class FileChangeHandler(FileSystemEventHandler):
     def __init__(self, files, conditions, debounce_interval=1.0):
@@ -160,8 +185,8 @@ class FileChangeHandler(FileSystemEventHandler):
                 tasks = [self.file_to_task[file_name] for file_name in required_files]
 
                 all_variables = Initialization.prep_data(tasks)
-                
                 condition_parts = condition_name.split('_')
+                
                 if len(condition_parts) != 2:
                     logger.error(f" FileChange | Condition: {condition_name} | Note: Invalid Condition Name Format")
                     continue

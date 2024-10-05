@@ -12,34 +12,64 @@ creds = Credentials.from_service_account_file(r"SlackBot\External\Credentials.js
 client = gspread.authorize(creds)
 
 class Initialization:
-    def grab_impvol(external_params):
+    def grab_impvol(external_impvol):
+        logger.debug(f" Startup | grab_impvol | Note: Running")
         
-        output_dict = {}
+        output_impvol = {}
 
-        for task in external_params:
-            logger.debug(f" Startup | grab_impvol | Note: Running")
+        for task in external_impvol:
             workbook = client.open_by_key(task["sheet_id"])
             sheet = workbook.worksheet(task["sheet_name"])
             cell_value = sheet.cell(task["row_number"], task["col_number"]).value
+            
             logger.debug(f" Startup | grab_impvol | Sheet: {task['sheet_name']} | Row: {task['row_number']}  | Column: {task['col_number']}")
             
             if "ES" in task["sheet_name"]:
-                output_dict['es_impvol'] = cell_value
+                output_impvol['es_impvol'] = cell_value
             elif "NQ" in task["sheet_name"]:
-                output_dict['nq_impvol'] = cell_value
+                output_impvol['nq_impvol'] = cell_value
             elif "RTY" in task["sheet_name"]:
-                output_dict['rty_impvol'] = cell_value
+                output_impvol['rty_impvol'] = cell_value
             elif "CL" in task["sheet_name"]:
-                output_dict['cl_impvol'] = cell_value
+                output_impvol['cl_impvol'] = cell_value
                 
-        es_impvol = float(output_dict['es_impvol'].strip('%'))
-        nq_impvol = float(output_dict['nq_impvol'].strip('%'))
-        rty_impvol = float(output_dict['rty_impvol'].strip('%'))
-        cl_impvol = float(output_dict['cl_impvol'].strip('%'))
-        logger.debug(f" Startup | grab_impvol | ES_IMP: {es_impvol} | NQ_IMP: {nq_impvol}| RTY_IMP: {rty_impvol}| CL_IMP: {cl_impvol}")
+        es_impvol = float(output_impvol['es_impvol'].strip('%'))
+        nq_impvol = float(output_impvol['nq_impvol'].strip('%'))
+        rty_impvol = float(output_impvol['rty_impvol'].strip('%'))
+        cl_impvol = float(output_impvol['cl_impvol'].strip('%'))
         
+        logger.debug(f" Startup | grab_impvol | ES_IMP: {es_impvol} | NQ_IMP: {nq_impvol} | RTY_IMP: {rty_impvol} | CL_IMP: {cl_impvol}")
         return es_impvol, nq_impvol, rty_impvol, cl_impvol
+    
+    def grab_bias(external_bias):
+        logger.debug(f" Startup | grab_impvol | Note: Running")
+        
+        output_bias = {}
 
+        for task in external_bias:
+            workbook = client.open_by_key(task["sheet_id"])
+            sheet = workbook.worksheet(task["sheet_name"])
+            cell_value = sheet.cell(task["row_number"], task["col_number"]).value
+            
+            logger.debug(f" Startup | grab_bias | Sheet: {task['sheet_name']} | Row: {task['row_number']}  | Column: {task['col_number']}")
+            
+            if "ES" in task["sheet_name"]:
+                output_bias['es_bias'] = cell_value
+            elif "NQ" in task["sheet_name"]:
+                output_bias['nq_bias'] = cell_value
+            elif "RTY" in task["sheet_name"]:
+                output_bias['rty_bias'] = cell_value
+            elif "CL" in task["sheet_name"]:
+                output_bias['cl_bias'] = cell_value
+                
+        es_bias = output_bias['es_bias']
+        nq_bias = output_bias['nq_bias']
+        rty_bias = output_bias['rty_bias']
+        cl_bias = output_bias['cl_bias']
+        
+        logger.debug(f" Startup | grab_bias | ES_Bias: {es_bias} | NQ_Bias: {nq_bias} | RTY_Bias: {rty_bias} | CL_Bias: {cl_bias}")
+        return es_bias, nq_bias, rty_bias, cl_bias
+    
     def prep_data(files):
         all_variables = {}
         

@@ -199,7 +199,7 @@ class IB_Crude_Alert(Base_Periodic):
             impvol = External_Config.cl_impvol
 
             color = self.product_color.get(product_name)
-            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            current_time = datetime.now(self.est).strftime('%H:%M:%S')
             
             # Calculations
             ib_range, ib_type, ib_vatr = self.ib_info(
@@ -234,7 +234,7 @@ class IB_Crude_Alert(Base_Periodic):
                 f"*Range Left Up*: _{range_up}{'' if range_up == 'Exhausted' else '%'}_\n"
                 f"*Range Left Down*: _{range_down}{'' if range_down == 'Exhausted' else '%'}_\n"
                 "────────────────────\n"                
-                f">*Alert Time*: _{current_time}_\n"
+                f">*Alert Time*: _{current_time} EST_\n"
             )
             
             # Send Slack Alert

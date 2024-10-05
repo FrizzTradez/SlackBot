@@ -128,7 +128,7 @@ class PVAT(Base_Conditional):
         return logic
     
 # ---------------------------------- Opportunity Window ------------------------------------ #   
-    def opp_window(self):
+    def time_window(self):
         logger.debug(f" PVAT | opp_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
@@ -164,11 +164,11 @@ class PVAT(Base_Conditional):
         self.color = "red" if self.direction == "short" else "green"
     
         # Driving Input
-        if self.input() and self.opp_window():
+        if self.input() and self.time_window():
             
             with last_alerts_lock:
                 last_alert = last_alerts.get(self.product_name)   
-                logger.debug(f" PVAT | check | Product: {self.product_name} | Current Direction: {self.direction} | Last Direction: {last_alert}")
+                logger.debug(f" PVAT | check | Product: {self.product_name} | Current Alert: {self.direction} | Last Alert: {last_alert}")
                 
                 if self.direction != last_alert: 
                     logger.info(f" PVAT | check | Product: {self.product_name} | Note: Condition Met")
@@ -215,7 +215,7 @@ class PVAT(Base_Conditional):
                     except Exception as e:
                         logger.error(f" PVAT | check | Product: {self.product_name} | Note: Failed to send Slack alert: {e}")
                 else:
-                    logger.debug(f" PVAT | check | Product: {self.product_name} | Note: Direction: {self.direction} Is Same")
+                    logger.debug(f" PVAT | check | Product: {self.product_name} | Note: Alert: {self.direction} Is Same")
         else:
             logger.info(f" PVAT | check | Product: {self.product_name} | Note: Condition Not Met")
 # ---------------------------------- Alert Preparation------------------------------------ #  
@@ -242,7 +242,7 @@ class PVAT(Base_Conditional):
     
         settings = direction_settings.get(self.direction)
         if not settings:
-            raise ValueError(f"Invalid direction: {self.direction}")
+            raise ValueError(f" PVAT | slack_message | Note: Invalid direction '{self.direction}'")
     
         message_template = (
             f">:large_{pro_color}_square: *{self.product_name} - Playbook Alert - PVAT {settings['pv_indicator']}* :{settings['large']}{self.color}_circle:\n"
