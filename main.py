@@ -15,8 +15,9 @@ import os
 
 #                Necessary Improvements for 10/04/24
 # ------------------------------------------------------------ #
-# Conditional Alerts for Gap Tier and Gap CLose (Use These to Modify IB Check-in) (Addition)
+# Conditional Alerts for GAP , Gap Tier, and Gap CLose (Use These to Modify IB Check-in) (Addition)
 # Implement Posture Change Alerts (Addition)
+# IB Neutral Alert (Addition)
 # Do Something With Overnight Stat (Addition)
 # Start to Work On More Playbook Setups!
 # Make Sure Alert Messages Are Consistent Looking

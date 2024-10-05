@@ -10,6 +10,7 @@ from watchdog.observers import Observer
 from SlackBot.Source.Startup import Initialization
 from SlackBot.Slack_Alerts.Conditional.Pvat import PVAT
 from SlackBot.Slack_Alerts.Conditional.PreIB import PRE_IB_BIAS
+from SlackBot.Slack_Alerts.Conditional.Posture import POSTURE
 logger = logging.getLogger(__name__)
 
 conditions = [
@@ -60,11 +61,36 @@ conditions = [
         "required_files": ["CL_2"],
         "start_time": datetime_time(9, 0), 
         "end_time": datetime_time(14, 30),
-    },                
+    },  
+    {
+        "name": "POSTURE_ES",
+        "required_files": ["ES_1","ES_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "POSTURE_NQ",
+        "required_files": ["NQ_1","NQ_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "POSTURE_RTY",
+        "required_files": ["RTY_1","RTY_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "POSTURE_CL",
+        "required_files": ["CL_1","CL_2"],
+        "start_time": datetime_time(9, 0), 
+        "end_time": datetime_time(14, 30),
+    },                   
 ]
 condition_functions = {
     "PVAT": PVAT,
     "PREIB": PRE_IB_BIAS,
+    "POSTURE": POSTURE,
 }
 class FileChangeHandler(FileSystemEventHandler):
     def __init__(self, files, conditions, debounce_interval=1.0):

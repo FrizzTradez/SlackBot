@@ -129,7 +129,7 @@ class PVAT(Base_Conditional):
     
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
-        logger.debug(f" PVAT | opp_window | Product: {self.product_name} | Note: Running")
+        logger.debug(f" PVAT | time_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
         self.current_datetime = datetime.now(self.est)
@@ -139,21 +139,21 @@ class PVAT(Base_Conditional):
         if self.product_name == 'CL':
             start_time = self.crude_pvat_start
             end_time = self.crude_ib
-            logger.debug(f" PVAT | opp_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
+            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
         elif self.product_name in ['ES', 'RTY', 'NQ']:
             start_time = self.equity_pvat_start
             end_time = self.equity_ib
-            logger.debug(f" PVAT | opp_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
+            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
         else:
-            logger.warning(f" PVAT | opp_window | Product: {self.product_name} | No time window defined.")
+            logger.warning(f" PVAT | time_window | Product: {self.product_name} | No time window defined.")
             return False  
         
         # Check if current time is within the window
         if start_time <= self.current_time <= end_time:
-            logger.debug(f" PVAT | opp_window | Product: {self.product_name} | Within Window: {self.current_time}.")
+            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Within Window: {self.current_time}.")
             return True
         else:
-            logger.debug(f" PVAT | opp_window | Product: {self.product_name} | Outside Window {self.current_time}.")
+            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Outside Window {self.current_time}.")
             return False
 # ---------------------------------- Calculate Criteria ------------------------------------ #      
     def check(self):

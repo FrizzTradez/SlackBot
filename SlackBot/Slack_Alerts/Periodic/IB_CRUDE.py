@@ -103,23 +103,23 @@ class IB_Crude_Alert(Base_Periodic):
         threshold = round((exp_range * 0.68), 2)
 
         if (abs(cpl - fd_vpoc) <= threshold) and (abs(fd_vpoc - td_vpoc) <= threshold):
-            posture = "Price=5D=20D"
+            posture = "PRICE=5D=20D"
         elif (cpl > fd_vpoc + threshold) and (fd_vpoc > td_vpoc + threshold):
-            posture = "Price^5D^20D"
+            posture = "PRICE^5D^20D"
         elif (cpl < fd_vpoc - threshold) and (fd_vpoc < td_vpoc - threshold):
-            posture = "Pricev5Dv20D"
+            posture = "PRICEv5Dv20D"
         elif (abs(cpl - fd_vpoc) <= threshold) and (fd_vpoc > td_vpoc + threshold):
-            posture = "Price=5D^20D"
+            posture = "PRICE=5D^20D"
         elif (cpl > fd_vpoc + threshold) and (abs(fd_vpoc - td_vpoc) <= threshold):
-            posture = "Price^5D=20D"
+            posture = "PRICE^5D=20D"
         elif (cpl < fd_vpoc - threshold) and (abs(fd_vpoc - td_vpoc) <= threshold):
-            posture = "Pricev5D=20D"
+            posture = "PRICEv5D=20D"
         elif (abs(cpl - fd_vpoc) <= threshold) and (fd_vpoc < td_vpoc - threshold):
-            posture = "Price=5Dv20D"
+            posture = "PRICE=5Dv20D"
         elif (cpl > fd_vpoc + threshold) and (fd_vpoc < td_vpoc - threshold):
-            posture = "Price^5Dv20D"
+            posture = "PRICE^5Dv20D"
         elif (cpl < fd_vpoc - threshold) and (fd_vpoc > td_vpoc + threshold):
-            posture = "Pricev5D^20D"
+            posture = "PRICEv5D^20D"
         else:
             posture = "Other"
 

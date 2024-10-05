@@ -83,7 +83,7 @@ class PRE_IB_BIAS(Base_Conditional):
         return logic
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
-        logger.debug(f" PRE_IB | opp_window | Product: {self.product_name} | Note: Running")
+        logger.debug(f" PRE_IB | time_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
         self.current_datetime = datetime.now(self.est)
@@ -93,21 +93,21 @@ class PRE_IB_BIAS(Base_Conditional):
         if self.product_name == 'CL':
             start_time = self.crude_open
             end_time = self.crude_close
-            logger.debug(f" PRE_IB | opp_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
+            logger.debug(f" PRE_IB | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
         elif self.product_name in ['ES', 'RTY', 'NQ']:
             start_time = self.equity_open
             end_time = self.equity_close
-            logger.debug(f" PRE_IB | opp_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
+            logger.debug(f" PRE_IB | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
         else:
-            logger.warning(f" PRE_IB | opp_window | Product: {self.product_name} | No time window defined.")
+            logger.warning(f" PRE_IB | time_window | Product: {self.product_name} | No time window defined.")
             return False  
         
         # Check if current time is within the window
         if start_time <= self.current_time <= end_time:
-            logger.debug(f" PRE_IB | opp_window | Product: {self.product_name} | Within Window: {self.current_time}.")
+            logger.debug(f" PRE_IB | time_window | Product: {self.product_name} | Within Window: {self.current_time}.")
             return True
         else:
-            logger.debug(f" PRE_IB | opp_window | Product: {self.product_name} | Outside Window {self.current_time}.")
+            logger.debug(f" PRE_IB | time_window | Product: {self.product_name} | Outside Window {self.current_time}.")
             return False   
 # ---------------------------------- Main Function ------------------------------------ #                  
     def check(self):
