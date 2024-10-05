@@ -5,6 +5,8 @@ from SlackBot.Source.Startup import *
 from SlackBot.Slack_Alerts.Periodic.Ib_Crude import IB_Crude_Alert
 from SlackBot.Slack_Alerts.Periodic.Ib_Equity import IB_Equity_Alert
 from SlackBot.Slack_Alerts.Periodic.Economic import Economic
+from SlackBot.Slack_Alerts.Mixed.Gap_Equity import Gap_Check_Equity
+from SlackBot.Slack_Alerts.Mixed.Gap_Crude import Gap_Check_Crude
 from logs.Logging_Config import setup_logging
 from zoneinfo import ZoneInfo
 import time
@@ -15,7 +17,8 @@ import os
 
 #                Necessary Improvements for 10/04/24
 # ------------------------------------------------------------ #
-# Conditional Alerts for GAP , Gap Tier, and Gap CLose (Use These to Modify IB Check-in) (Addition)  
+# Conditional Alerts for GAP , Gap Tier(Use These to Modify IB Check-in) (Addition)  
+# Conditional Alert for Gap Close if Gap
 # IB Neutral Alert (Addition)
 # Do Something With Overnight Stat (Addition)
 # Start to Work On More Playbook Setups! 
@@ -39,7 +42,8 @@ def main():
     ib_equity_alert = IB_Equity_Alert(files)
     ib_crude_alert = IB_Crude_Alert(files)
     economic_alert = Economic(files)
-    
+    gap_check_equity_alert = Gap_Check_Equity(files)
+    gap_check_crude_alert = Gap_Check_Crude(files)
     est = ZoneInfo('America/New_York')
     
     # ---------------------- Initialize APScheduler ----------------------------- #
@@ -51,7 +55,18 @@ def main():
         trigger=CronTrigger(hour=8, minute=45, timezone=est),
         name='Economic Alert'
     )
-    
+    # Schedule Gap Check Equity 9:30 AM EST every day
+    scheduler.add_job(
+        gap_check_equity_alert.send_alert,
+        trigger=CronTrigger(hour=9, minute=30, timezone=est),
+        name='Gap Check Equity'
+    )      
+    # Schedule Gap Check Crude at 9:00 AM EST every day
+    scheduler.add_job(
+        gap_check_crude_alert.send_alert,
+        trigger=CronTrigger(hour=9, minute=0, timezone=est),
+        name='Gap Check Crude'
+    )    
     # Schedule IB Equity Alert at 10:30 AM EST every day
     scheduler.add_job(
         ib_equity_alert.send_alert,
@@ -65,7 +80,6 @@ def main():
         trigger=CronTrigger(hour=10, minute=00, timezone=est),
         name='IB Crude Alert'
     )
-    
     scheduler.start()
     logger.info("APScheduler started.")
     
