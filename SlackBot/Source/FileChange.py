@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from SlackBot.Source.Startup import Initialization
-from SlackBot.Slack_Alerts.Conditional.PVAT import PVAT
+from SlackBot.Slack_Alerts.Conditional.Pvat import PVAT
 
 logger = logging.getLogger(__name__)
 

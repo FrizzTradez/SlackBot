@@ -2,9 +2,9 @@ from watchdog.observers import Observer
 from SlackBot.Source.FileChange import *
 from SlackBot.External import External_Config
 from SlackBot.Source.Startup import *
-from SlackBot.Slack_Alerts.Periodic.IB_CRUDE import IB_Crude_Alert
-from SlackBot.Slack_Alerts.Periodic.IB_EQUITY import IB_Equity_Alert
-from SlackBot.Slack_Alerts.Periodic.ECON import Economic
+from SlackBot.Slack_Alerts.Periodic.Ib_Crude import IB_Crude_Alert
+from SlackBot.Slack_Alerts.Periodic.Ib_Equity import IB_Equity_Alert
+from SlackBot.Slack_Alerts.Periodic.Economic import Economic
 from logs.Logging_Config import setup_logging
 from zoneinfo import ZoneInfo
 import time
@@ -15,7 +15,6 @@ import os
 
 #                Necessary Improvements for 10/04/24
 # ------------------------------------------------------------ #
-# Econ Alert If we are before 8:45 AM EST wait, if After send immediately (Addition)
 # Conditional Alerts for Gap Tier and Gap CLose (Use These to Modify IB Check-in) (Addition)
 # Pre IB Bias Violation Alert (Fetch from Google Sheets) (Addition)
 # Implement Changes That Were made to Day and Open Types Within Google Sheets (Check)
@@ -44,11 +43,11 @@ def main():
     # ---------------------- Initialize APScheduler ----------------------------- #
     scheduler = BackgroundScheduler(timezone=est)
     
-    # Schedule Econ Alert at 5:45 AM EST every day
+    # Schedule Econ Alert at 8:45 AM EST every day
     scheduler.add_job(
         economic_alert.send_alert,
-        trigger=CronTrigger(hour=23, minute=42, timezone=est),
-        name='Econ Alert'
+        trigger=CronTrigger(hour=8, minute=45, timezone=est),
+        name='Economic Alert'
     )
     
     # Schedule IB Equity Alert at 10:30 AM EST every day
