@@ -66,7 +66,7 @@ class POSTURE(Base_Conditional):
         
 # ---------------------------------- Driving Input Logic ------------------------------------ #      
     def input(self):
-        logger.debug(f" POSTURE | posture | Note: Running")
+        logger.debug(f" POSTURE | input | Note: Running")
         
         threshold = round((self.exp_rng * 0.68), 2)
 
