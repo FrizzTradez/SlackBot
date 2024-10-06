@@ -17,8 +17,6 @@ import os
 
 #                Necessary Improvements for 10/04/24
 # ------------------------------------------------------------ #
-# Conditional Alerts for GAP , Gap Tier(Use These to Modify IB Check-in) (Addition)  
-# Conditional Alert for Gap Close if Gap
 # IB Neutral Alert (Addition)
 # Do Something With Overnight Stat (Addition)
 # Start to Work On More Playbook Setups! 
@@ -73,7 +71,6 @@ def main():
         trigger=CronTrigger(hour=10, minute=30, timezone=est),
         name='IB Equity Alert'
     )
-    
     # Schedule IB Crude Alert at 10:00 AM EST every day
     scheduler.add_job(
         ib_crude_alert.send_alert,
