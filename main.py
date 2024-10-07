@@ -18,6 +18,7 @@ import os
 #                Necessary Improvements for 10/04/24
 # ------------------------------------------------------------ #
 # IB Neutral Alert (Addition)
+# Swing Bias Alert Similar to Pre IB Bias (Addition)
 # Do Something With Overnight Stat (Addition)
 # Start to Work On More Playbook Setups! 
 # Make Sure Alert Messages Are Consistent Looking
