@@ -18,7 +18,11 @@ import os
 #                Necessary Improvements for 10/10/24
 # ------------------------------------------------------------ #
 # IB Neutral Alert (Addition)
+<<<<<<< HEAD
 # Work on Ways to Automate Journal in Notion and Transferring Data to Excel
+=======
+# Swing Bias Alert Similar to Pre IB Bias (Addition)
+>>>>>>> ff60621a449521ecf3e2faa37adf0d7b206cfd91
 # Do Something With Overnight Stat (Addition)
 # Start to Work On More Playbook Setups! 
 # Make Sure Alert Messages Are Consistent Looking
