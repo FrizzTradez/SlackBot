@@ -7,6 +7,8 @@ from SlackBot.Slack_Alerts.Periodic.Ib_Equity import IB_Equity_Alert
 from SlackBot.Slack_Alerts.Periodic.Economic import Economic
 from SlackBot.Slack_Alerts.Mixed.Gap_Equity import Gap_Check_Equity
 from SlackBot.Slack_Alerts.Mixed.Gap_Crude import Gap_Check_Crude
+from SlackBot.Slack_Alerts.Mixed.Overnight_Crude import Overnight_Crude
+from SlackBot.Slack_Alerts.Mixed.Overnight_Equity import Overnight_Equity
 from logs.Logging_Config import setup_logging
 from zoneinfo import ZoneInfo
 import time
@@ -43,6 +45,8 @@ def main():
     economic_alert = Economic(files)
     gap_check_equity_alert = Gap_Check_Equity(files)
     gap_check_crude_alert = Gap_Check_Crude(files)
+    overnight_equity = Overnight_Crude(files)
+    overnight_crude = Overnight_Equity(files)
     est = ZoneInfo('America/New_York')
     
     # ---------------------- Initialize APScheduler ----------------------------- #
@@ -77,6 +81,18 @@ def main():
         ib_crude_alert.send_alert,
         trigger=CronTrigger(hour=10, minute=0, timezone=est),
         name='IB Crude Alert'
+    )
+    # Schedule Overnight Stat Check Equity At 9:30 AM EST
+    scheduler.add_job(
+        overnight_equity.send_alert,
+        trigger=CronTrigger(hour=9, minute=30, second=1, timezone=est),
+        name='Overnight Equity Alert'
+    )
+    # Schedule Overnight Stat Check Crude At 9:00 AM EST
+    scheduler.add_job(
+        overnight_crude.send_alert,
+        trigger=CronTrigger(hour=9, minute=0, second=1, timezone=est),
+        name='Overnight Crude Alert'
     )
     scheduler.start()
     logger.info("APScheduler started.")

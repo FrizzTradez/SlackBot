@@ -113,30 +113,6 @@ conditions = [
         "start_time": datetime_time(10, 0), 
         "end_time": datetime_time(14, 30),
     }, 
-    {
-        "name": "OVERNIGHT_ES",
-        "required_files": ["CL_1","CL_2"],
-        "start_time": datetime_time(10, 30), 
-        "end_time": datetime_time(16, 0),
-    },   
-    {
-        "name": "OVERNIGHT_NQ",
-        "required_files": ["CL_1","CL_2"],
-        "start_time": datetime_time(10, 30), 
-        "end_time": datetime_time(16, 0),
-    },   
-    {
-        "name": "OVERNIGHT_RTY",
-        "required_files": ["CL_1","CL_2"],
-        "start_time": datetime_time(10, 30), 
-        "end_time": datetime_time(16, 0),
-    },   
-    {
-        "name": "OVERNIGHT_CL",
-        "required_files": ["CL_1","CL_2"],
-        "start_time": datetime_time(10, 0), 
-        "end_time": datetime_time(14, 30),
-    },               
 ]
 condition_functions = {
     "PVAT": PVAT,
