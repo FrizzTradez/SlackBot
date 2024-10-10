@@ -69,29 +69,33 @@ class POSTURE(Base_Conditional):
         logger.debug(f" POSTURE | input | Note: Running")
         
         threshold = round((self.exp_rng * 0.68), 2)
-        hysteresis_buffer = round((threshold * 0.1), 2)  # Add 10% buffer
+        hysteresis_buffer = round((threshold * 0.25), 2)  # 25% Buffer
+
+        # Calculate upper and lower thresholds
+        upper_threshold = threshold + hysteresis_buffer
+        lower_threshold = threshold - hysteresis_buffer
         
-        if (abs(self.cpl - self.fd_vpoc) <= threshold - hysteresis_buffer) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold - hysteresis_buffer):
+        if (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
             posture = "PRICE=5D=20D"
-        elif (self.cpl > self.fd_vpoc + threshold + hysteresis_buffer) and (self.fd_vpoc > self.td_vpoc + threshold + hysteresis_buffer):
+        elif (self.cpl > self.fd_vpoc + upper_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
             posture = "PRICE^5D^20D"
-        elif (self.cpl < self.fd_vpoc - threshold - hysteresis_buffer) and (self.fd_vpoc < self.td_vpoc - threshold - hysteresis_buffer):
+        elif (self.cpl < self.fd_vpoc - upper_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
             posture = "PRICEv5Dv20D"
-        elif (abs(self.cpl - self.fd_vpoc) <= threshold - hysteresis_buffer) and (self.fd_vpoc > self.td_vpoc + threshold + hysteresis_buffer):
+        elif (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
             posture = "PRICE=5D^20D"
-        elif (self.cpl > self.fd_vpoc + threshold + hysteresis_buffer) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold - hysteresis_buffer):
+        elif (self.cpl > self.fd_vpoc + upper_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
             posture = "PRICE^5D=20D"
-        elif (self.cpl < self.fd_vpoc - threshold - hysteresis_buffer) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold - hysteresis_buffer):
+        elif (self.cpl < self.fd_vpoc - upper_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
             posture = "PRICEv5D=20D"
-        elif (abs(self.cpl - self.fd_vpoc) <= threshold - hysteresis_buffer) and (self.fd_vpoc < self.td_vpoc - threshold - hysteresis_buffer):
+        elif (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
             posture = "PRICE=5Dv20D"
-        elif (self.cpl > self.fd_vpoc + threshold + hysteresis_buffer) and (self.fd_vpoc < self.td_vpoc - threshold - hysteresis_buffer):
+        elif (self.cpl > self.fd_vpoc + upper_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
             posture = "PRICE^5Dv20D"
-        elif (self.cpl < self.fd_vpoc - threshold - hysteresis_buffer) and (self.fd_vpoc > self.td_vpoc + threshold + hysteresis_buffer):
+        elif (self.cpl < self.fd_vpoc - upper_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
             posture = "PRICEv5D^20D"
         else:
-            posture = "Other"
-            
+            pass
+
         logger.debug(f" POSTURE | posture | Current_Posture: {posture}") 
         return posture  
 # ---------------------------------- Opportunity Window ------------------------------------ #   
