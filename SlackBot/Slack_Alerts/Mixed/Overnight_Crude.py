@@ -6,7 +6,7 @@ import time
 
 logger = logging.getLogger(__name__)
 
-class Overnight_Equity(Base_Periodic):
+class Overnight_Crude(Base_Periodic):
     def __init__(self, files):
         super().__init__(files)
         
