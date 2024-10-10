@@ -1,6 +1,4 @@
 import logging
-import math
-from SlackBot.External import External_Config
 from SlackBot.Slack_Alerts.Periodic.Base import Base_Periodic
 import threading
 from datetime import datetime
