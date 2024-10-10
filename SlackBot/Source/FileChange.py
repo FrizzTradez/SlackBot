@@ -87,36 +87,11 @@ conditions = [
         "start_time": datetime_time(9, 0), 
         "end_time": datetime_time(14, 30),
     },   
-    {
-        "name": "NEUTRAL_ES",
-        "required_files": ["ES_1","ES_2"],
-        "start_time": datetime_time(10, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "NEUTRAL_NQ",
-        "required_files": ["NQ_1","NQ_2"],
-        "start_time": datetime_time(10, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "NEUTRAL_RTY",
-        "required_files": ["RTY_1","RTY_2"],
-        "start_time": datetime_time(10, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "NEUTRAL_CL",
-        "required_files": ["CL_1","CL_2"],
-        "start_time": datetime_time(10, 0), 
-        "end_time": datetime_time(14, 30),
-    },                     
 ]
 condition_functions = {
     "PVAT": PVAT,
     "PREIB": PRE_IB_BIAS,
     "POSTURE": POSTURE,
-    "NEUTRAL": NEUTRAL,
 }
 class FileChangeHandler(FileSystemEventHandler):
     def __init__(self, files, conditions, debounce_interval=1.0):

@@ -69,30 +69,31 @@ class POSTURE(Base_Conditional):
         logger.debug(f" POSTURE | input | Note: Running")
         
         threshold = round((self.exp_rng * 0.68), 2)
-
-        if (abs(self.cpl - self.fd_vpoc) <= threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold):
+        hysteresis_buffer = round((threshold * 0.1), 2)  # Add 10% buffer
+        
+        if (abs(self.cpl - self.fd_vpoc) <= threshold - hysteresis_buffer) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold - hysteresis_buffer):
             posture = "PRICE=5D=20D"
-        elif (self.cpl > self.fd_vpoc + threshold) and (self.fd_vpoc > self.td_vpoc + threshold):
+        elif (self.cpl > self.fd_vpoc + threshold + hysteresis_buffer) and (self.fd_vpoc > self.td_vpoc + threshold + hysteresis_buffer):
             posture = "PRICE^5D^20D"
-        elif (self.cpl < self.fd_vpoc - threshold) and (self.fd_vpoc < self.td_vpoc - threshold):
+        elif (self.cpl < self.fd_vpoc - threshold - hysteresis_buffer) and (self.fd_vpoc < self.td_vpoc - threshold - hysteresis_buffer):
             posture = "PRICEv5Dv20D"
-        elif (abs(self.cpl - self.fd_vpoc) <= threshold) and (self.fd_vpoc > self.td_vpoc + threshold):
+        elif (abs(self.cpl - self.fd_vpoc) <= threshold - hysteresis_buffer) and (self.fd_vpoc > self.td_vpoc + threshold + hysteresis_buffer):
             posture = "PRICE=5D^20D"
-        elif (self.cpl > self.fd_vpoc + threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold):
+        elif (self.cpl > self.fd_vpoc + threshold + hysteresis_buffer) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold - hysteresis_buffer):
             posture = "PRICE^5D=20D"
-        elif (self.cpl < self.fd_vpoc - threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold):
+        elif (self.cpl < self.fd_vpoc - threshold - hysteresis_buffer) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold - hysteresis_buffer):
             posture = "PRICEv5D=20D"
-        elif (abs(self.cpl - self.fd_vpoc) <= threshold) and (self.fd_vpoc < self.td_vpoc - threshold):
+        elif (abs(self.cpl - self.fd_vpoc) <= threshold - hysteresis_buffer) and (self.fd_vpoc < self.td_vpoc - threshold - hysteresis_buffer):
             posture = "PRICE=5Dv20D"
-        elif (self.cpl > self.fd_vpoc + threshold) and (self.fd_vpoc < self.td_vpoc - threshold):
+        elif (self.cpl > self.fd_vpoc + threshold + hysteresis_buffer) and (self.fd_vpoc < self.td_vpoc - threshold - hysteresis_buffer):
             posture = "PRICE^5Dv20D"
-        elif (self.cpl < self.fd_vpoc - threshold) and (self.fd_vpoc > self.td_vpoc + threshold):
+        elif (self.cpl < self.fd_vpoc - threshold - hysteresis_buffer) and (self.fd_vpoc > self.td_vpoc + threshold + hysteresis_buffer):
             posture = "PRICEv5D^20D"
         else:
             posture = "Other"
             
         logger.debug(f" POSTURE | posture | Current_Posture: {posture}") 
-        return posture    
+        return posture  
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
         logger.debug(f" POSTURE | time_window | Product: {self.product_name} | Note: Running")
@@ -152,13 +153,13 @@ class POSTURE(Base_Conditional):
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
         
         message_template = (
-            f">:large_{pro_color}_square:  *{self.product_name} - Context Alert - Posture*  :large_{pro_color}_square:\n"
+            f">:large_{pro_color}_square:  *{self.product_name} - Context Alert - Pos*  :large_{pro_color}_square:\n"
             "────────────────────\n"
             f">         :warning:   *CHANGE*    :warning:\n"      
             f"- Prev Posture: *_{self.last_posture}_*!\n"
             f"- New Posture: *_{self.current_posture}_*!\n"
             "────────────────────\n"            
-            f">*Alert Time*: _{alert_time_formatted}_ EST\n"
+            f">*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_\n"
         )
         return message_template  
     

@@ -120,7 +120,7 @@ class Gap_Check_Equity(Base_Periodic):
                 message = (
                     f">:large_{color}_square:  *{product_name} - Context Alert - Gap*  :large_{color}_square:\n"
                     "────────────────────\n"
-                    f">         :warning:   *Opening In Gap*    :warning:\n"      
+                    f">      :warning:   *Opening In Gap*    :warning:\n"      
                     f"- *_{gap_tier}_* Gap {direction_emojis.get(gap)} : {gap_size}p\n"
                     "────────────────────\n"            
                     f">*Alert Time*: _{current_time}_ EST\n"
