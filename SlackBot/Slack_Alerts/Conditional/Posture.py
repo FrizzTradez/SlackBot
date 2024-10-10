@@ -71,33 +71,46 @@ class POSTURE(Base_Conditional):
         threshold = round((self.exp_rng * 0.68), 2)
         hysteresis_buffer = round((threshold * 0.25), 2)  # 25% Buffer
 
-        # Calculate upper and lower thresholds
         upper_threshold = threshold + hysteresis_buffer
         lower_threshold = threshold - hysteresis_buffer
-        
-        if (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
-            posture = "PRICE=5D=20D"
-        elif (self.cpl > self.fd_vpoc + upper_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
-            posture = "PRICE^5D^20D"
-        elif (self.cpl < self.fd_vpoc - upper_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
-            posture = "PRICEv5Dv20D"
-        elif (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
-            posture = "PRICE=5D^20D"
-        elif (self.cpl > self.fd_vpoc + upper_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
-            posture = "PRICE^5D=20D"
-        elif (self.cpl < self.fd_vpoc - upper_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
-            posture = "PRICEv5D=20D"
-        elif (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
-            posture = "PRICE=5Dv20D"
-        elif (self.cpl > self.fd_vpoc + upper_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
-            posture = "PRICE^5Dv20D"
-        elif (self.cpl < self.fd_vpoc - upper_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
-            posture = "PRICEv5D^20D"
-        else:
-            pass
 
-        logger.debug(f" POSTURE | posture | Current_Posture: {posture}") 
-        return posture  
+        with last_alerts_lock:
+            prev_posture = last_alerts.get(self.product_name)
+        posture = prev_posture or "Other"
+
+        # Use upper_threshold when transitioning out of a posture
+        if (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
+            new_posture = "PRICE=5D=20D"
+        elif (self.cpl > self.fd_vpoc + upper_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
+            new_posture = "PRICE^5D^20D"
+        elif (self.cpl < self.fd_vpoc - upper_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
+            new_posture = "PRICEv5Dv20D"
+        elif (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
+            new_posture = "PRICE=5D^20D"
+        elif (self.cpl > self.fd_vpoc + upper_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
+            new_posture = "PRICE^5D=20D"
+        elif (self.cpl < self.fd_vpoc - upper_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
+            new_posture = "PRICEv5D=20D"
+        elif (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
+            new_posture = "PRICE=5Dv20D"
+        elif (self.cpl > self.fd_vpoc + upper_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
+            new_posture = "PRICE^5Dv20D"
+        elif (self.cpl < self.fd_vpoc - upper_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
+            new_posture = "PRICEv5D^20D"
+        else:
+            new_posture = "Other"
+
+        # Apply hysteresis: Only change posture if it differs significantly from previous posture
+        if prev_posture != new_posture:
+            posture = new_posture
+
+        logger.debug(f" POSTURE | input | Current_Posture: {posture} | Previous_Posture: {prev_posture} | Price: {self.cpl} | 5DVPOC: {self.fd_vpoc} | 20DVPOC: {self.td_vpoc}") 
+
+        # Store current posture for next iteration
+        with last_alerts_lock:
+            last_alerts[self.product_name] = posture
+
+        return posture
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
         logger.debug(f" POSTURE | time_window | Product: {self.product_name} | Note: Running")

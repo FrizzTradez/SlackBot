@@ -60,6 +60,7 @@ class IB_Equity_Alert(Base_Periodic):
         
         gap = ""
         gap_tier = ""
+        gap_size = 0
         
         if day_open > prior_high:
             gap_size = round((day_open - prior_high), 2)
@@ -94,6 +95,7 @@ class IB_Equity_Alert(Base_Periodic):
         else:
             gap = "No Gap"
             gap_tier = "Tier 0"
+            gap_size = 0
         
         return gap, gap_tier, gap_size
 

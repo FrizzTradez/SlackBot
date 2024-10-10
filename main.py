@@ -18,7 +18,8 @@ import os
 #                Necessary Improvements for 10/10/24
 # ------------------------------------------------------------ #
 # IB Neutral Alert (Addition)
-# Work on Ways to Automate Journal in Notion and Transferring Data to Excel
+# Work on Ways to Automate Journal in Notion and Transferring Data to Excel (Possible)
+# Work on Ways to Implement Real Time Trade Logging? Real Time Decision Making Process? Real Time Risk Management ()
 # Do Something With Overnight Stat (Addition)
 # Start to Work On More Playbook Setups! 
 # Make Sure Alert Messages Are Consistent Looking
