@@ -1,7 +1,7 @@
 import logging
 import math
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 from SlackBot.External import External_Config
 from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
 
@@ -69,46 +69,29 @@ class POSTURE(Base_Conditional):
         logger.debug(f" POSTURE | input | Note: Running")
         
         threshold = round((self.exp_rng * 0.68), 2)
-        hysteresis_buffer = round((threshold * 0.25), 2)  # 25% Buffer
 
-        upper_threshold = threshold + hysteresis_buffer
-        lower_threshold = threshold - hysteresis_buffer
-
-        with last_alerts_lock:
-            prev_posture = last_alerts.get(self.product_name)
-        posture = prev_posture or "Other"
-
-        # Use upper_threshold when transitioning out of a posture
-        if (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
-            new_posture = "PRICE=5D=20D"
-        elif (self.cpl > self.fd_vpoc + upper_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
-            new_posture = "PRICE^5D^20D"
-        elif (self.cpl < self.fd_vpoc - upper_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
-            new_posture = "PRICEv5Dv20D"
-        elif (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
-            new_posture = "PRICE=5D^20D"
-        elif (self.cpl > self.fd_vpoc + upper_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
-            new_posture = "PRICE^5D=20D"
-        elif (self.cpl < self.fd_vpoc - upper_threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= lower_threshold):
-            new_posture = "PRICEv5D=20D"
-        elif (abs(self.cpl - self.fd_vpoc) <= lower_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
-            new_posture = "PRICE=5Dv20D"
-        elif (self.cpl > self.fd_vpoc + upper_threshold) and (self.fd_vpoc < self.td_vpoc - upper_threshold):
-            new_posture = "PRICE^5Dv20D"
-        elif (self.cpl < self.fd_vpoc - upper_threshold) and (self.fd_vpoc > self.td_vpoc + upper_threshold):
-            new_posture = "PRICEv5D^20D"
+        if (abs(self.cpl - self.fd_vpoc) <= threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold):
+            posture = "PRICE=5D=20D"
+        elif (self.cpl > self.fd_vpoc + threshold) and (self.fd_vpoc > self.td_vpoc + threshold):
+            posture = "PRICE^5D^20D"
+        elif (self.cpl < self.fd_vpoc - threshold) and (self.fd_vpoc < self.td_vpoc - threshold):
+            posture = "PRICEv5Dv20D"
+        elif (abs(self.cpl - self.fd_vpoc) <= threshold) and (self.fd_vpoc > self.td_vpoc + threshold):
+            posture = "PRICE=5D^20D"
+        elif (self.cpl > self.fd_vpoc + threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold):
+            posture = "PRICE^5D=20D"
+        elif (self.cpl < self.fd_vpoc - threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold):
+            posture = "PRICEv5D=20D"
+        elif (abs(self.cpl - self.fd_vpoc) <= threshold) and (self.fd_vpoc < self.td_vpoc - threshold):
+            posture = "PRICE=5Dv20D"
+        elif (self.cpl > self.fd_vpoc + threshold) and (self.fd_vpoc < self.td_vpoc - threshold):
+            posture = "PRICE^5Dv20D"
+        elif (self.cpl < self.fd_vpoc - threshold) and (self.fd_vpoc > self.td_vpoc + threshold):
+            posture = "PRICEv5D^20D"
         else:
-            new_posture = "Other"
+            posture = "Other"
 
-        # Apply hysteresis: Only change posture if it differs significantly from previous posture
-        if prev_posture != new_posture:
-            posture = new_posture
-
-        logger.debug(f" POSTURE | input | Current_Posture: {posture} | Previous_Posture: {prev_posture} | Price: {self.cpl} | 5DVPOC: {self.fd_vpoc} | 20DVPOC: {self.td_vpoc}") 
-
-        # Store current posture for next iteration
-        with last_alerts_lock:
-            last_alerts[self.product_name] = posture
+        logger.debug(f" POSTURE | input | Current_Posture: {posture} | Price: {self.cpl} | 5DVPOC: {self.fd_vpoc} | 20DVPOC: {self.td_vpoc}") 
 
         return posture
 # ---------------------------------- Opportunity Window ------------------------------------ #   
@@ -139,30 +122,47 @@ class POSTURE(Base_Conditional):
         else:
             logger.debug(f" POSTURE | time_window | Product: {self.product_name} | Outside Window {self.current_time}.")
             return False
-# ---------------------------------- Main Function ------------------------------------ #      
+        
     def check(self):
         logger.debug(f" POSTURE | check | Product: {self.product_name} | Note: Running")
         self.current_posture = self.input()
         logic = False
-            
+
         with last_alerts_lock:
             self.last_posture = last_alerts.get(self.product_name)
+            self.last_alert_time = last_alerts.get(f"{self.product_name}_alert_time")
+            current_time = datetime.now()
+
             if self.last_posture is None:
+                # First time, initialize posture and alert time
                 last_alerts[self.product_name] = self.current_posture
-                logger.debug(f" POSTURE | check | Product: {self.product_name} | Note: Initial posture set to {self.current_posture}")                
-            elif self.current_posture != self.last_posture: 
-                logic = True
-                last_alerts[self.product_name] = self.current_posture
-                logger.info(f" POSTURE | check | Product: {self.product_name} | Current_Posture: {self.current_posture} | Last_Posture: {self.last_posture} | Note: Posture Change Detected")
-                               
-        if logic and self.time_window():      
-            try: 
+                last_alerts[f"{self.product_name}_alert_time"] = current_time
+                logger.debug(f" POSTURE | check | Product: {self.product_name} | Note: Initial posture set to {self.current_posture}")
+                # Do not send an alert on initialization
+            elif self.current_posture != self.last_posture:
+                time_since_last_alert = (current_time - self.last_alert_time).total_seconds() if self.last_alert_time else None
+                if self.last_alert_time is None or time_since_last_alert >= 1800:
+                    # Posture has changed and at least 30 minutes have passed since last alert
+                    logic = True
+                    self.alert_reason = 'Posture Change after 30 minutes'
+                    last_alerts[self.product_name] = self.current_posture
+                    last_alerts[f"{self.product_name}_alert_time"] = current_time
+                    logger.info(f" POSTURE | check | Product: {self.product_name} | Current_Posture: {self.current_posture} | Last_Posture: {self.last_posture} | Time Since Last Alert: {time_since_last_alert} seconds | Note: Posture Change Detected")
+                else:
+                    # Posture changed but not enough time has passed
+                    logger.info(f" POSTURE | check | Product: {self.product_name} | Time Since Last Alert: {time_since_last_alert} seconds | Note: Posture changed but alert sent less than 30 minutes ago")
+            else:
+                # No posture change
+                logger.info(f" POSTURE | check | Product: {self.product_name} | Note: No posture change")
+
+        if logic and self.time_window():
+            try:
                 self.execute()
             except Exception as e:
                 logger.error(f" POSTURE | check | Product: {self.product_name} | Note: Failed to send Slack alert: {e}")
         else:
-            logger.info(f" POSTURE | check | Product: {self.product_name} | Current_Posture: {self.current_posture} | Last_Posture: {self.last_posture} | Note: No Posture Change")
-# ---------------------------------- Alert Preparation------------------------------------ #  
+            logger.info(f" POSTURE | check | Product: {self.product_name} | Current_Posture: {self.current_posture} | Note: No Alert Sent")
+
     def slack_message(self):
         logger.debug(f" POSTURE | slack_message | Product: {self.product_name} | Note: Running")
         
