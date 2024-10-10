@@ -3,96 +3,15 @@ from queue import Queue
 import logging
 import os
 import time as time_module
-from datetime import datetime, time as datetime_time
+from datetime import datetime
 from zoneinfo import ZoneInfo
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from SlackBot.Source.Startup import Initialization
-from SlackBot.Slack_Alerts.Conditional.Pvat import PVAT
-from SlackBot.Slack_Alerts.Conditional.PreIB import PRE_IB_BIAS
-from SlackBot.Slack_Alerts.Conditional.Posture import POSTURE
-from SlackBot.Slack_Alerts.Conditional.Neutral import NEUTRAL
+from SlackBot.Static.Constants import conditions, condition_functions
+
 logger = logging.getLogger(__name__)
 
-conditions = [
-    {
-        "name": "PVAT_ES",
-        "required_files": ["ES_1","ES_2","ES_3","ES_4","ES_6","ES_7"],
-        "start_time": datetime_time(9, 32),
-        "end_time": datetime_time(10, 30),
-    },
-    {
-        "name": "PVAT_NQ",
-        "required_files": ["NQ_1","NQ_2","NQ_3","NQ_4","NQ_6","NQ_7"],
-        "start_time": datetime_time(9, 32),
-        "end_time": datetime_time(10, 30),
-    },
-    {
-        "name": "PVAT_RTY",
-        "required_files": ["RTY_1","RTY_2","RTY_3","RTY_4","RTY_6","RTY_7"],
-        "start_time": datetime_time(9, 32),
-        "end_time": datetime_time(10, 30),
-    },
-    {
-        "name": "PVAT_CL",
-        "required_files": ["CL_1","CL_2","CL_3","CL_4","CL_6","CL_7"],
-        "start_time": datetime_time(9, 2),
-        "end_time": datetime_time(10, 0),
-    },
-    {
-        "name": "PREIB_ES",
-        "required_files": ["ES_2"],
-        "start_time": datetime_time(9, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "PREIB_NQ",
-        "required_files": ["NQ_2"],
-        "start_time": datetime_time(9, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "PREIB_RTY",
-        "required_files": ["RTY_2"],
-        "start_time": datetime_time(9, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "PREIB_CL",
-        "required_files": ["CL_2"],
-        "start_time": datetime_time(9, 0), 
-        "end_time": datetime_time(14, 30),
-    },  
-    {
-        "name": "POSTURE_ES",
-        "required_files": ["ES_1","ES_2"],
-        "start_time": datetime_time(9, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "POSTURE_NQ",
-        "required_files": ["NQ_1","NQ_2"],
-        "start_time": datetime_time(9, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "POSTURE_RTY",
-        "required_files": ["RTY_1","RTY_2"],
-        "start_time": datetime_time(9, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "POSTURE_CL",
-        "required_files": ["CL_1","CL_2"],
-        "start_time": datetime_time(9, 0), 
-        "end_time": datetime_time(14, 30),
-    },   
-]
-condition_functions = {
-    "PVAT": PVAT,
-    "PREIB": PRE_IB_BIAS,
-    "POSTURE": POSTURE,
-}
 class FileChangeHandler(FileSystemEventHandler):
     def __init__(self, files, conditions, debounce_interval=1.0):
 

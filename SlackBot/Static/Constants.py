@@ -1,3 +1,9 @@
+from datetime import time as datetime_time
+from SlackBot.Slack_Alerts.Conditional.Pvat import PVAT
+from SlackBot.Slack_Alerts.Conditional.PreIB import PRE_IB_BIAS
+from SlackBot.Slack_Alerts.Conditional.Posture import POSTURE
+from SlackBot.Slack_Alerts.Conditional.Neutral import NEUTRAL
+
 external_impvol = [
     {"sheet_name": "ES_Data", "sheet_id": "1miVoDpHI40Nff7PZB5QVKAGaB-QaGEJzijo8uf2wtCU", "row_number": 17, "col_number": 130},
     {"sheet_name": "NQ_Data", "sheet_id": "1sypXFWOHl5-wBihCBSLDMv0Z-wYUoU-QoUXXfKfqB7Y", "row_number": 17, "col_number": 130},
@@ -10,6 +16,134 @@ external_bias = [
     {"sheet_name": "RTY_PREP", "sheet_id": "1G-gnb5ZYEnQdd9nJyraguPhlnLYMA09Cpz9EH-_8nkM", "row_number": 52, "col_number": 3},
     {"sheet_name": "CL_PREP", "sheet_id": "1SFfvZyBj5XvCuzx8bodqQ29yWtuIoTrPqmmCBaHGRzY", "row_number": 52, "col_number": 3}
 ]
+conditions = [
+    {
+        "name": "PVAT_ES",
+        "required_files": ["ES_1","ES_2","ES_3","ES_4","ES_6","ES_7"],
+        "start_time": datetime_time(9, 32),
+        "end_time": datetime_time(10, 30),
+    },
+    {
+        "name": "PVAT_NQ",
+        "required_files": ["NQ_1","NQ_2","NQ_3","NQ_4","NQ_6","NQ_7"],
+        "start_time": datetime_time(9, 32),
+        "end_time": datetime_time(10, 30),
+    },
+    {
+        "name": "PVAT_RTY",
+        "required_files": ["RTY_1","RTY_2","RTY_3","RTY_4","RTY_6","RTY_7"],
+        "start_time": datetime_time(9, 32),
+        "end_time": datetime_time(10, 30),
+    },
+    {
+        "name": "PVAT_CL",
+        "required_files": ["CL_1","CL_2","CL_3","CL_4","CL_6","CL_7"],
+        "start_time": datetime_time(9, 2),
+        "end_time": datetime_time(10, 0),
+    },
+    {
+        "name": "PREIB_ES",
+        "required_files": ["ES_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "PREIB_NQ",
+        "required_files": ["NQ_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "PREIB_RTY",
+        "required_files": ["RTY_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "PREIB_CL",
+        "required_files": ["CL_2"],
+        "start_time": datetime_time(9, 0), 
+        "end_time": datetime_time(14, 30),
+    },  
+    {
+        "name": "POSTURE_ES",
+        "required_files": ["ES_1","ES_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "POSTURE_NQ",
+        "required_files": ["NQ_1","NQ_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "POSTURE_RTY",
+        "required_files": ["RTY_1","RTY_2"],
+        "start_time": datetime_time(9, 30),
+        "end_time": datetime_time(16, 0),
+    },
+    {
+        "name": "POSTURE_CL",
+        "required_files": ["CL_1","CL_2"],
+        "start_time": datetime_time(9, 0), 
+        "end_time": datetime_time(14, 30),
+    },   
+    {
+        "name": "NEUTRAL_ES",
+        "required_files": ["CL_1","CL_2"],
+        "start_time": datetime_time(10, 30), 
+        "end_time": datetime_time(16, 0),
+    },   
+    {
+        "name": "NEUTRAL_NQ",
+        "required_files": ["CL_1","CL_2"],
+        "start_time": datetime_time(10, 30), 
+        "end_time": datetime_time(16, 0),
+    },   
+    {
+        "name": "NEUTRAL_RTY",
+        "required_files": ["CL_1","CL_2"],
+        "start_time": datetime_time(10, 30), 
+        "end_time": datetime_time(16, 0),
+    },   
+    {
+        "name": "NEUTRAL_CL",
+        "required_files": ["CL_1","CL_2"],
+        "start_time": datetime_time(10, 0), 
+        "end_time": datetime_time(14, 30),
+    }, 
+    {
+        "name": "OVERNIGHT_ES",
+        "required_files": ["CL_1","CL_2"],
+        "start_time": datetime_time(10, 30), 
+        "end_time": datetime_time(16, 0),
+    },   
+    {
+        "name": "OVERNIGHT_NQ",
+        "required_files": ["CL_1","CL_2"],
+        "start_time": datetime_time(10, 30), 
+        "end_time": datetime_time(16, 0),
+    },   
+    {
+        "name": "OVERNIGHT_RTY",
+        "required_files": ["CL_1","CL_2"],
+        "start_time": datetime_time(10, 30), 
+        "end_time": datetime_time(16, 0),
+    },   
+    {
+        "name": "OVERNIGHT_CL",
+        "required_files": ["CL_1","CL_2"],
+        "start_time": datetime_time(10, 0), 
+        "end_time": datetime_time(14, 30),
+    },               
+]
+condition_functions = {
+    "PVAT": PVAT,
+    "PREIB": PRE_IB_BIAS,
+    "POSTURE": POSTURE,
+    "NEUTRAL": NEUTRAL,
+}
 es_1 = [
     '[ID2.SG1] Day_Open', '[ID2.SG2] Day_High', '[ID2.SG3] Day_Low', 
     '[ID2.SG4] Day_Close', '[ID1.SG1] Day_Vpoc', '[ID9.SG1] Prior_Vpoc', '[ID8.SG2] Prior_High', '[ID8.SG3] Prior_Low', '[ID8.SG4] Prior_Close',

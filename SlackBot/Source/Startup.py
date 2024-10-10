@@ -2,7 +2,7 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 import logging
-from SlackBot.Static.Lists import *
+from SlackBot.Static.Constants import *
 from datetime import datetime, time
 from zoneinfo import ZoneInfo
 logger = logging.getLogger(__name__)

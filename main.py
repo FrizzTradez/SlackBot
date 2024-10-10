@@ -22,7 +22,6 @@ import os
 # Work on Ways to Implement Real Time Trade Logging? Real Time Decision Making Process? Real Time Risk Management ()
 # Do Something With Overnight Stat (Addition)
 # Start to Work On More Playbook Setups! 
-# Make Sure Alert Messages Are Consistent Looking
 # ------------------------------------------------------------ #
 
 def main():

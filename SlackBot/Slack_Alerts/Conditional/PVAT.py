@@ -121,9 +121,7 @@ class PVAT(Base_Conditional):
             self.or_condition 
             )    
         
-        logger.debug(
-            f" PVAT | input | Product: {self.product_name} | LOGIC: {logic}"
-            )
+        logger.debug(f" PVAT | input | Product: {self.product_name} | LOGIC: {logic}")
         
         return logic
     
