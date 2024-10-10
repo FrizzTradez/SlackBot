@@ -23,48 +23,35 @@ class NEUTRAL(Base_Conditional):
     def input(self, last_state):
         logger.debug(f" NEUTRAL | input | Product: {self.product_name} | Note: Running")
 
-        last_extension = last_state['last_extension']
-        neutral_alert_sent = last_state['neutral_alert_sent']
-        has_gone_neutral = last_state.get('has_gone_neutral', False)
+        # Initialize variables to keep track of alerts
+        has_alerted_neutral_lower = last_state.get('has_alerted_neutral_lower', False)
+        has_alerted_neutral_higher = last_state.get('has_alerted_neutral_higher', False)
 
-        logic = False
         self.neutral_type = None
 
-        # Update last_extension based on current day_high and day_low
-        extension_occurred = False
+        # Check if both IBH and IBL have been extended
+        if self.day_high > self.ib_high and self.day_low < self.ib_low:
+            # Both sides have been extended, do not send an alert
+            logger.debug(f" NEUTRAL | input | Product: {self.product_name} | Note: Both IBH and IBL have been extended, no alert will be sent")
+            return False
 
-        if self.day_high > self.ib_high and last_extension != 'IBH':
-            last_state['last_extension'] = 'IBH'
-            last_state['neutral_alert_sent'] = False  # Reset alert flag
-            extension_occurred = True
-            logger.debug(f" NEUTRAL | input | Product: {self.product_name} | Note: Extended IB High")
-        elif self.day_low < self.ib_low and last_extension != 'IBL':
-            last_state['last_extension'] = 'IBL'
-            last_state['neutral_alert_sent'] = False  # Reset alert flag
-            extension_occurred = True
-            logger.debug(f" NEUTRAL | input | Product: {self.product_name} | Note: Extended IB Low")
+        logic = False
 
-        if not has_gone_neutral:
-            # Check for first neutral condition
-            if last_state['last_extension'] == 'IBH' and self.day_low < self.ib_low and not neutral_alert_sent:
+        # Check for Neutral Lower scenario
+        if self.day_high > self.ib_high and not has_alerted_neutral_lower:
+            if self.cpl < self.ib_low:
                 logic = True
-                self.neutral_type = 'Neutral_Lower'
-                last_state['has_gone_neutral'] = True
-                logger.debug(f" NEUTRAL | input | Product: {self.product_name} | Note: Neutral Lower detected (First Neutral)")
-            elif last_state['last_extension'] == 'IBL' and self.day_high > self.ib_high and not neutral_alert_sent:
+                self.neutral_type = 'Lower'
+                last_state['has_alerted_neutral_lower'] = True
+                logger.debug(f" NEUTRAL | input | Product: {self.product_name} | Note: Neutral Lower detected")
+
+        # Check for Neutral Higher scenario
+        elif self.day_low < self.ib_low and not has_alerted_neutral_higher:
+            if self.cpl > self.ib_high:
                 logic = True
-                self.neutral_type = 'Neutral_Higher'
-                last_state['has_gone_neutral'] = True
-                logger.debug(f" NEUTRAL | input | Product: {self.product_name} | Note: Neutral Higher detected (First Neutral)")
-        else:
-            # After first neutral, any new extension is considered neutral
-            if extension_occurred and not neutral_alert_sent:
-                logic = True
-                if last_state['last_extension'] == 'IBH':
-                    self.neutral_type = 'Neutral_Higher'
-                elif last_state['last_extension'] == 'IBL':
-                    self.neutral_type = 'Neutral_Lower'
-                logger.debug(f" NEUTRAL | input | Product: {self.product_name} | Note: {self.neutral_type} detected (Subsequent Neutral)")
+                self.neutral_type = 'Higher'
+                last_state['has_alerted_neutral_higher'] = True
+                logger.debug(f" NEUTRAL | input | Product: {self.product_name} | Note: Neutral Higher detected")
 
         return logic
 # ---------------------------------- Opportunity Window ------------------------------------ #   
@@ -99,12 +86,15 @@ class NEUTRAL(Base_Conditional):
     def check(self):
         logger.debug(f" NEUTRAL | check | Product: {self.product_name} | Note: Running")
         logic = False
-            
+
         with last_alerts_lock:
             # Retrieve or initialize the last state
             last_state = last_alerts.get(self.product_name)
             if last_state is None:
-                last_state = {'last_extension': None, 'neutral_alert_sent': False, 'has_gone_neutral': False}
+                last_state = {
+                    'has_alerted_neutral_lower': False,
+                    'has_alerted_neutral_higher': False
+                }
                 last_alerts[self.product_name] = last_state
                 logger.debug(f" NEUTRAL | check | Product: {self.product_name} | Note: Initialized last_state")
 
@@ -113,13 +103,10 @@ class NEUTRAL(Base_Conditional):
 
             # Update the last state
             last_alerts[self.product_name] = last_state
-                            
-        if logic and self.time_window():      
-            try: 
+
+        if logic and self.time_window():
+            try:
                 self.execute()
-                # Set the alert flag to prevent duplicate alerts for the same extension
-                with last_alerts_lock:
-                    last_state['neutral_alert_sent'] = True
             except Exception as e:
                 logger.error(f" NEUTRAL | check | Product: {self.product_name} | Note: Failed to send Slack alert: {e}")
         else:
@@ -132,15 +119,15 @@ class NEUTRAL(Base_Conditional):
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
 
         direction_emojis = {
-            'Neutral_Higher': ':arrow_up:',
-            'Neutral_Lower': ':arrow_down:',
+            'Higher': ':arrow_up:',
+            'Lower': ':arrow_down:',
             }
 
         message_template = (
             f">:large_{pro_color}_square:  *{self.product_name} - Context Alert - IB*  :large_{pro_color}_square:\n"
             "────────────────────\n"
-            f">       :warning:   *NEUTRAL*    :warning:\n"      
-            f"- Neutral: Ib Extension {direction_emojis.get(self.neutral_type)}!\n"
+            f">          {direction_emojis.get(self.neutral_type)}   *NEUTRAL*    {direction_emojis.get(self.neutral_type)}\n"      
+            f"- Neutral Activity: Ib Extension {direction_emojis.get(self.neutral_type)}!\n"
             "────────────────────\n"            
             f">*Alert Time*: _{alert_time_formatted}_ EST\n"
         )
