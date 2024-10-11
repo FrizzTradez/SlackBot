@@ -20,6 +20,7 @@ import os
 #                Necessary Improvements for 10/10/24
 # ------------------------------------------------------------ #
 # Work on Ways to Automate Journal in Notion and Transferring Data to Excel (Possible)
+# Transition over to slack_sdk to be able to send blocks (Nicer Messages)
 # Work on Ways to Implement Real Time Trade Logging? Real Time Decision Making Process? Real Time Risk Management ()
 # Start to Work On More Playbook Setups! 
 # ------------------------------------------------------------ #

@@ -9,7 +9,7 @@ Pip install Gspread /
 Pip install google-api-python-client / 
 Pip install python-dotenv / 
 Pip install google-auth-httplib2 / 
-Pip install slackclient / 
+Pip install slack_sdk / 
 Pip install watchdog / 
 Pip install APScheduler /
 Pip install Investpy /
