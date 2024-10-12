@@ -44,8 +44,8 @@ def main():
     economic_alert = Economic(files)
     gap_check_equity_alert = Gap_Check_Equity(files)
     gap_check_crude_alert = Gap_Check_Crude(files)
-    overnight_equity = Overnight_Crude(files)
-    overnight_crude = Overnight_Equity(files)
+    overnight_equity = Overnight_Equity(files)
+    overnight_crude = Overnight_Crude(files)
     est = ZoneInfo('America/New_York')
     
     # ---------------------- Initialize APScheduler ----------------------------- #
@@ -54,7 +54,7 @@ def main():
     # Schedule Econ Alert at 8:45 AM EST every day
     scheduler.add_job(
         economic_alert.send_alert,
-        trigger=CronTrigger(hour=8, minute=45, timezone=est),
+        trigger=CronTrigger(hour=9, minute=29, timezone=est),
         name='Economic Alert'
     )
     # Schedule Gap Check Equity 9:30 AM EST every day

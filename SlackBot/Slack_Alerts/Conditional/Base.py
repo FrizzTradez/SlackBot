@@ -1,5 +1,5 @@
 import os
-import slack
+from slack_sdk import WebClient
 import logging
 from datetime import datetime, time
 from zoneinfo import ZoneInfo
@@ -28,7 +28,7 @@ class Base_Conditional:
         self.product_name = product_name
         self.variables = variables
         slack_token = os.getenv("SLACK_TOKEN") 
-        self.slack_client = slack.WebClient(token=slack_token)
+        self.slack_client = WebClient(token=slack_token)
         
         # TimeZone Setup
         self.est = ZoneInfo('America/New_York')

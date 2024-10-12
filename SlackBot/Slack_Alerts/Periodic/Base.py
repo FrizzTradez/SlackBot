@@ -1,5 +1,5 @@
 import os
-import slack
+from slack_sdk import WebClient
 from datetime import datetime
 import logging
 from logs.Logging_Config import setup_logging
@@ -28,7 +28,7 @@ class Base_Periodic:
     def __init__(self, files):
         self.files = files
         slack_token = os.getenv("SLACK_TOKEN") 
-        self.slack_client = slack.WebClient(token=slack_token)
+        self.slack_client = WebClient(token=slack_token)
         self.current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         # TimeZone Setup

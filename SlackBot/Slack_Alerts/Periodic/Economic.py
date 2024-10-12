@@ -1,6 +1,6 @@
 import investpy
 import pandas as pd
-import slack
+from slack_sdk.errors import SlackApiError
 from datetime import datetime
 from dotenv import load_dotenv
 from SlackBot.Slack_Alerts.Periodic.Base import Base_Periodic
@@ -39,20 +39,60 @@ class Economic(Base_Periodic):
         calendar_df = calendar_df[columns_to_keep]
         
         formatted_events = [self.format_event(row) for _, row in calendar_df.iterrows()]
-        formatted_message = "\n".join(formatted_events) if formatted_events else "No significant events today."
+        if not formatted_events:
+            formatted_events = ["No significant events today."]
+        
+        slack_channel = "#econ_outlook"  # Ensure the channel name is correct and includes the '#'
 
-        slack_channel = "econ_outlook"  
-        header_message = (
-            f":black_large_square: *Economic Outlook for {today_str}* :black_large_square:\n"
-            "───────────────────────────\n"
-        )
-        footer_message = "\n───────────────────────────\n`Control Risk and Trade Well!`"
+        # Construct the blocks
+        block = []
 
-        full_message = f"{header_message}{formatted_message}{footer_message}"
+        # Header block
+        block.append({
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": f"Economic Outlook for {today_str}",
+                "emoji": True
+            }
+        })
 
-        self.send_slack_message(slack_channel, full_message)
-        logger.info(f" ECON | send_alert | Channel: econ_outlook | Note: Message Sent")
+        # Divider
+        block.append({"type": "divider"})
 
+        # Event blocks
+        for event in formatted_events:
+            block.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": event
+                }
+            })
+
+        # Footer block
+        block.append({"type": "divider"})
+        block.append({
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": "`Control Risk and Trade Well!`"
+                }
+            ]
+        })
+
+        # Send the message
+        try:
+            response = self.client.chat_postMessage(
+                channel=slack_channel,
+                blocks=block,
+                text=f"Economic Outlook for {today_str}"  # Fallback text
+            )
+            logger.info(f" ECON | send_alert | Channel: {slack_channel} | Note: Message Sent")
+        except SlackApiError as e:
+            logger.error(f"Error sending message: {e.response['error']}")
+            
     def format_event(self, row):
         logger.debug(f" ECON | format_event | Note: Running")
         
