@@ -4,6 +4,7 @@ import threading
 from datetime import datetime
 from SlackBot.External import External_Config
 from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
+from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
 
 logger = logging.getLogger(__name__)
 
@@ -162,32 +163,63 @@ class POSTURE(Base_Conditional):
                 logger.error(f" POSTURE | check | Product: {self.product_name} | Note: Failed to send Slack alert: {e}")
         else:
             logger.info(f" POSTURE | check | Product: {self.product_name} | Current_Posture: {self.current_posture} | Note: No Alert Sent")
-
+# ---------------------------------- Alert Preparation------------------------------------ # 
     def slack_message(self):
         logger.debug(f" POSTURE | slack_message | Product: {self.product_name} | Note: Running")
         
         pro_color = self.product_color.get(self.product_name)
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
         
-        message_template = (
-            f">:large_{pro_color}_square:  *{self.product_name} - Context Alert - Pos*  :large_{pro_color}_square:\n"
-            "────────────────────\n"
-            f">         :warning:   *CHANGE*    :warning:\n"      
+        blocks = []
+
+        # Title Block
+        title_text = f":large_{pro_color}_square:  *{self.product_name} - Context Alert - Pos*  :large_{pro_color}_square:"
+        title_block = SectionBlock(text=title_text)
+        blocks.append(title_block)
+
+        # Divider
+        blocks.append(DividerBlock())
+
+        # Change Warning Block
+        change_text = f"> :warning:   *CHANGE*    :warning:"
+        change_block = SectionBlock(text=change_text)
+        blocks.append(change_block)
+
+        # Posture Changes Block
+        posture_text = (
             f"- Prev Posture: *_{self.last_posture}_*!\n"
             f"- New Posture: *_{self.current_posture}_*!\n"
-            "────────────────────\n"            
-            f">*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_\n"
         )
-        return message_template  
-    
+        posture_block = SectionBlock(text=posture_text)
+        blocks.append(posture_block)
+
+        # Divider
+        blocks.append(DividerBlock())
+
+        # Alert Time / Price Context Block
+        alert_time_text = f"*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_"
+        alert_time_block = ContextBlock(elements=[
+            MarkdownTextObject(text=alert_time_text)
+        ])
+        blocks.append(alert_time_block)
+
+        # Convert blocks to dicts
+        blocks = [block.to_dict() for block in blocks]
+
+        return blocks  
+
     def execute(self):
         logger.debug(f" POSTURE | execute | Product: {self.product_name} | Note: Running")
         
-        message = self.slack_message()
+        blocks = self.slack_message()
         channel = self.slack_channels.get(self.product_name)
         
         if channel:
-            self.send_slack_message(channel, message)
-            logger.info(f" POSTURE | execute | Product: {self.product_name} | Note: ALert Sent To {channel}")
+            self.slack_client.chat_postMessage(
+                channel=channel,
+                blocks=blocks,
+                text=f"Context Alert - Pos for {self.product_name}"
+            )
+            logger.info(f" POSTURE | execute | Product: {self.product_name} | Note: Alert Sent To {channel}")
         else:
             logger.debug(f" POSTURE | execute | Product: {self.product_name} | Note: No Slack Channel Configured")

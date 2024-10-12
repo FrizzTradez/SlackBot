@@ -2,6 +2,7 @@ import logging
 import threading
 from datetime import datetime
 from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
+from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +112,7 @@ class NEUTRAL(Base_Conditional):
                 logger.error(f" NEUTRAL | check | Product: {self.product_name} | Note: Failed to send Slack alert: {e}")
         else:
             logger.debug(f" NEUTRAL | check | Product: {self.product_name} | Note: No alert sent")
-
+# ---------------------------------- Alert Preparation------------------------------------ # 
     def slack_message(self):
         logger.debug(f" NEUTRAL | slack_message | Product: {self.product_name} | Note: Running")
         
@@ -121,26 +122,57 @@ class NEUTRAL(Base_Conditional):
         direction_emojis = {
             'Higher': ':arrow_up:',
             'Lower': ':arrow_down:',
-            }
+        }
 
-        message_template = (
-            f">:large_{pro_color}_square:  *{self.product_name} - Context Alert - IB*  :large_{pro_color}_square:\n"
-            "────────────────────\n"
-            f">          {direction_emojis.get(self.neutral_type)}   *NEUTRAL*    {direction_emojis.get(self.neutral_type)}\n"      
-            f"- Neutral Activity: Ib Extension {direction_emojis.get(self.neutral_type)}!\n"
-            "────────────────────\n"            
-            f">*Alert Time*: _{alert_time_formatted}_ EST\n"
-        )
-        return message_template  
-    
+        arrow = direction_emojis.get(self.neutral_type)
+
+        blocks = []
+
+        # Title Block
+        title_text = f":large_{pro_color}_square:  *{self.product_name} - Context Alert - IB*  :large_{pro_color}_square:"
+        title_block = SectionBlock(text=title_text)
+        blocks.append(title_block)
+
+        # Divider
+        blocks.append(DividerBlock())
+
+        # Neutral Block
+        neutral_text = f"> {arrow}   *NEUTRAL*    {arrow}"
+        neutral_block = SectionBlock(text=neutral_text)
+        blocks.append(neutral_block)
+
+        # Neutral Activity Block
+        activity_text = f"- Neutral Activity: IB Extension {arrow}!"
+        activity_block = SectionBlock(text=activity_text)
+        blocks.append(activity_block)
+
+        # Divider
+        blocks.append(DividerBlock())
+
+        # Alert Time Context Block
+        alert_time_text = f"*Alert Time*: _{alert_time_formatted}_ EST"
+        alert_time_block = ContextBlock(elements=[
+            MarkdownTextObject(text=alert_time_text)
+        ])
+        blocks.append(alert_time_block)
+
+        # Convert blocks to dicts
+        blocks = [block.to_dict() for block in blocks]
+
+        return blocks  
+
     def execute(self):
         logger.debug(f" NEUTRAL | execute | Product: {self.product_name} | Note: Running")
         
-        message = self.slack_message()
+        blocks = self.slack_message()
         channel = self.slack_channels.get(self.product_name)
         
         if channel:
-            self.send_slack_message(channel, message)
-            logger.info(f" NEUTRAL | execute | Product: {self.product_name} | Note: ALert Sent To {channel}")
+            self.slack_client.chat_postMessage(
+                channel=channel,
+                blocks=blocks,
+                text=f"Context Alert - IB for {self.product_name}"
+            )
+            logger.info(f" NEUTRAL | execute | Product: {self.product_name} | Note: Alert Sent To {channel}")
         else:
             logger.debug(f" NEUTRAL | execute | Product: {self.product_name} | Note: No Slack Channel Configured")

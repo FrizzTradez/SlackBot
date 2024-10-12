@@ -42,35 +42,27 @@ class Economic(Base_Periodic):
         if not formatted_events:
             formatted_events = ["No significant events today."]
         
-        slack_channel = "#econ_outlook"  # Ensure the channel name is correct and includes the '#'
+        slack_channel = "#econ_outlook" 
+        events_text = "\n".join(formatted_events)
 
-        # Construct the blocks
         block = []
 
-        # Header block
         block.append({
             "type": "header",
             "text": {
                 "type": "plain_text",
-                "text": f"Economic Outlook for {today_str}",
+                "text": f" :black_large_square:  Economic Events for {today_str}  :black_large_square:",
                 "emoji": True
             }
         })
-
-        # Divider
         block.append({"type": "divider"})
-
-        # Event blocks
-        for event in formatted_events:
-            block.append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": event
-                }
-            })
-
-        # Footer block
+        block.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": events_text
+            }
+        })
         block.append({"type": "divider"})
         block.append({
             "type": "context",
@@ -82,17 +74,16 @@ class Economic(Base_Periodic):
             ]
         })
 
-        # Send the message
         try:
-            response = self.client.chat_postMessage(
+            response = self.slack_client.chat_postMessage(
                 channel=slack_channel,
                 blocks=block,
-                text=f"Economic Outlook for {today_str}"  # Fallback text
+                text=f"Economic Events for {today_str}"  # Fallback text
             )
             logger.info(f" ECON | send_alert | Channel: {slack_channel} | Note: Message Sent")
         except SlackApiError as e:
-            logger.error(f"Error sending message: {e.response['error']}")
-            
+            logger.error(f" ECON | send_alert | Channel: {slack_channel} | Note: Error Sending Message: {e}")
+                
     def format_event(self, row):
         logger.debug(f" ECON | format_event | Note: Running")
         
@@ -107,6 +98,10 @@ class Economic(Base_Periodic):
         }
         
         importance_emoji = importance_emojis.get(importance, ':grey_question:')
-        formatted_event = f">{importance_emoji}  *{event_time}* - *{event_name}*"
+
+        if importance == 'High':
+            formatted_event = f">{importance_emoji}  *{event_time}* - *{event_name}*"
+        else:
+            formatted_event = f">{importance_emoji}  *{event_time}* - *{event_name}*"
         
         return formatted_event

@@ -3,6 +3,7 @@ import math
 from datetime import datetime
 from SlackBot.External import External_Config
 from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
+from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
 import threading
 import re
 logger = logging.getLogger(__name__)
@@ -147,31 +148,59 @@ class PRE_IB_BIAS(Base_Conditional):
                 "text": "Below"
             }
         }
-    
+
         settings = direction_settings.get(self.direction)
         if not settings:
-            raise ValueError(f" PVAT | slack_message | Note: Invalid direction '{self.direction}'")
-    
-        message_template = (
-            f">:large_{pro_color}_square:  *{self.product_name} - Context Alert - Bias*  :large_{pro_color}_square:\n"
-            "────────────────────\n"
-            f">         :warning:   *VIOLATION*    :warning:\n"      
-            f"- Price Trading {settings['text']} *_{self.price}_*!\n"
-            "────────────────────\n"            
-            f">*Alert Time*: _{alert_time_formatted}_ EST\n"
-        )
-        
-        return message_template  
-    
+            raise ValueError(f" PRE_IB | slack_message | Note: Invalid direction '{self.direction}'")
+
+        blocks = []
+
+        # Title Block
+        title_text = f":large_{pro_color}_square:  *{self.product_name} - Context Alert - Bias*  :large_{pro_color}_square:"
+        title_block = SectionBlock(text=title_text)
+        blocks.append(title_block)
+
+        # Divider
+        blocks.append(DividerBlock())
+
+        # Violation Block
+        violation_text = f"> :warning:   *VIOLATION*    :warning:"
+        violation_block = SectionBlock(text=violation_text)
+        blocks.append(violation_block)
+
+        # Price Trading Block
+        price_text = f"- Price Trading {settings['text']} *_{self.price}_*!"
+        price_block = SectionBlock(text=price_text)
+        blocks.append(price_block)
+
+        # Divider
+        blocks.append(DividerBlock())
+
+        # Alert Time Context Block
+        alert_time_text = f"*Alert Time*: _{alert_time_formatted}_ EST"
+        alert_time_block = ContextBlock(elements=[
+            MarkdownTextObject(text=alert_time_text)
+        ])
+        blocks.append(alert_time_block)
+
+        # Convert blocks to dicts
+        blocks = [block.to_dict() for block in blocks]
+
+        return blocks  
+
     def execute(self):
         logger.debug(f" PRE_IB | execute | Product: {self.product_name} | Note: Running")
         
-        message = self.slack_message()
+        blocks = self.slack_message()
         channel = self.slack_channels.get(self.product_name)
         
         if channel:
-            self.send_slack_message(channel, message)
-            logger.info(f" PRE_IB | execute | Product: {self.product_name} | Note: ALert Sent To {channel}")
+            self.slack_client.chat_postMessage(
+                channel=channel,
+                blocks=blocks,
+                text=f"Context Alert - Bias for {self.product_name}"
+            )
+            logger.info(f" PRE_IB | execute | Product: {self.product_name} | Note: Alert Sent To {channel}")
         else:
             logger.debug(f" PRE_IB | execute | Product: {self.product_name} | Note: No Slack Channel Configured")
- 
+    

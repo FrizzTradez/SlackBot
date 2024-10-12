@@ -2,6 +2,7 @@ import logging
 import math
 from SlackBot.External import External_Config
 from SlackBot.Slack_Alerts.Periodic.Base import Base_Periodic
+from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
 import threading
 from datetime import datetime
 import time
@@ -107,20 +108,49 @@ class Gap_Check_Crude(Base_Periodic):
                     'Gap Down': ':arrow_down:',
                 }
                 
-                # Message Template
-                message = (
-                    f">:large_{color}_square:  *{product_name} - Context Alert - Gap*  :large_{color}_square:\n"
-                    "────────────────────\n"
-                    f">          :warning:   *GAP*    :warning:\n"      
-                    f"- *_{gap_tier}_* Gap {direction_emojis.get(gap)} : {gap_size}p\n"
-                    "────────────────────\n"            
-                    f">*Alert Time*: _{current_time}_ EST\n"
+                # Build the blocks
+                blocks = []
+
+                # Title Block
+                title_block = SectionBlock(
+                    text=f":large_{color}_square:  *{product_name} - Context Alert - Gap*  :large_{color}_square:"
                 )
-                
+                blocks.append(title_block)
+
+                # Divider
+                blocks.append(DividerBlock())
+
+                # Gap Alert Header
+                gap_alert_header = SectionBlock(
+                    text=">:warning:   *GAP*    :warning:"
+                )
+                blocks.append(gap_alert_header)
+
+                # Gap Details
+                gap_details_text = f"- *_{gap_tier}_* Gap {direction_emojis.get(gap)} : {gap_size}p"
+                gap_details_block = SectionBlock(text=gap_details_text)
+                blocks.append(gap_details_block)
+
+                # Divider
+                blocks.append(DividerBlock())
+
+                # Alert Time Context Block
+                alert_time_context = ContextBlock(elements=[
+                    MarkdownTextObject(text=f"*Alert Time*: _{current_time}_ EST")
+                ])
+                blocks.append(alert_time_context)
+
+                # Convert blocks to dicts
+                blocks = [block.to_dict() for block in blocks]
+
                 # Send Slack Alert
                 channel = self.slack_channels.get(product_name)
                 if channel:
-                    self.slack_client.chat_postMessage(channel=channel, text=message) 
+                    self.slack_client.chat_postMessage(
+                        channel=channel,
+                        blocks=blocks,
+                        text=f"Context Alert - Gap for {product_name}"
+                    ) 
                     logger.info(f" GAP_CRUDE | process_product | Note: Message sent to {channel} for {product_name}")
                 else:
                     logger.error(f" GAP_CRUDE | process_product | Note: No Slack channel configured for {product_name}")

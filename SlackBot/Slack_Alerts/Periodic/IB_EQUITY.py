@@ -1,5 +1,6 @@
 import logging
 import math
+from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
 from SlackBot.External import External_Config
 from SlackBot.Slack_Alerts.Periodic.Base import Base_Periodic
 import threading
@@ -197,7 +198,11 @@ class IB_Equity_Alert(Base_Periodic):
             orh = round(variables.get(f'{product_name}_ORH'), 2)
             orl = round(variables.get(f'{product_name}_ORL'), 2)
             rvol = round(variables.get(f'{product_name}_CUMULATIVE_RVOL'), 2)
-            
+            overnight_high = round(variables.get(f'{product_name}_OVNH'), 2)
+            overnight_low = round(variables.get(f'{product_name}_OVNL'), 2)
+            day_high = round(variables.get(f'{product_name}_DAY_HIGH'), 2)
+            day_low = round(variables.get(f'{product_name}_DAY_LOW'), 2) 
+                        
             # Implied volatility specific to the product
             if product_name == 'ES':
                 impvol = External_Config.es_impvol
@@ -228,32 +233,68 @@ class IB_Equity_Alert(Base_Periodic):
                 a_high, a_low, b_high, b_low, day_open, orh, orl, prior_high, prior_low
                 )
             
-            # Message Template
-            message = (
-                f">:large_{color}_square:  *{product_name} - Alert - IB Check-In*  :large_{color}_square:\n"
-                "────────────────────\n"
-                f">                *Session Stats*\n"             
-                f"*Open Type*: _{open_type}_\n"
-                f"*{ib_type}*: _{ib_range}p_ = _{ib_vatr}%_ of Avg\n"
-                f"{f'*{gap}*: _{gap_size}_ = _{gap_tier}_\n' if gap != 'No Gap' else ''}"
-                f"*Rvol*: _{rvol}%_\n"
-                f"*Current Posture*: _{posture}_\n"
-                "────────────────────\n"
-                f">             *Expected Range*\n"
-                f"*Rng Used*: _{exhausted}_ | _{range_used}%_ Used\n"
-                f"*Range Left Up*: _{range_up}{'' if range_up == 'Exhausted' else '%'}_\n"
-                f"*Range Left Down*: _{range_down}{'' if range_down == 'Exhausted' else '%'}_\n"
-                "────────────────────\n"                
-                f">*Alert Time*: _{current_time}_ EST\n"
+            # Build the blocks
+            blocks = []
+
+            # Title block
+            title_block = SectionBlock(
+                text=f":large_{color}_square:  *{product_name} - Context - IB Check-In*  :loudspeaker:"
             )
+            blocks.append(title_block)
+
+            # Divider
+            blocks.append(DividerBlock())
+
+            # Session Stats Header
+            session_stats_header = SectionBlock(text=">              *Session Stats*")
+            blocks.append(session_stats_header)
+
+            # Session Stats Text
+            session_stats_text = f"*Open Type*: _{open_type}_\n" \
+                                f"*{ib_type}*: _{ib_range}p_ = _{ib_vatr}%_ of Avg\n"
+            if gap != 'No Gap':
+                session_stats_text += f"*{gap}*: _{gap_size}_ = _{gap_tier}_\n"
                 
+            if day_high < overnight_high and day_low > overnight_low:
+                session_stats_text += f"*Overnight Stat*: _In Play_\n"    
+                
+            session_stats_text += f"*Rvol*: _{rvol}%_\n" \
+                                f"*Current Posture*: _{posture}_"
+
+            session_stats_block = SectionBlock(text=session_stats_text)
+            blocks.append(session_stats_block)
+
+            # Expected Range Header
+            expected_range_header = SectionBlock(text=">           *Expected Range*")
+            blocks.append(expected_range_header)
+
+            # Expected Range Text
+            expected_range_text = f"*Rng Used*: _{exhausted}_ | _{range_used}%_ Used\n" \
+                                f"*Range Left Up*: _{range_up}{'' if range_up == 'Exhausted' else '%'}_\n" \
+                                f"*Range Left Down*: _{range_down}{'' if range_down == 'Exhausted' else '%'}_"
+
+            expected_range_block = SectionBlock(text=expected_range_text)
+            blocks.append(expected_range_block)
+            
+            # Alert Time Block
+            alert_time_context = ContextBlock(elements=[
+                MarkdownTextObject(text=f"*Alert Time*: _{current_time}_ EST\n")
+            ])
+            blocks.append(alert_time_context)
+            
+            # Divider
+            blocks.append(DividerBlock())
+
+            # Convert blocks to dicts
+            blocks = [block.to_dict() for block in blocks]
+
             # Send Slack Alert
             channel = self.slack_channels.get(product_name)
+            
             if channel:
-                self.slack_client.chat_postMessage(channel=channel, text=message) 
-                logger.info(f" IB_EQUITY | process_product | Note: Message sent to {channel} for {product_name}")
+                self.slack_client.chat_postMessage(channel=channel, blocks=blocks, text=f"Alert for {product_name}") 
+                logger.info(f" IB_CRUDE | process_product | Note: Message sent to {channel} for {product_name}")
             else:
-                logger.error(f" IB_EQUITY | process_product | Note: No Slack channel configured for {product_name}")
+                logger.error(f" IB_CRUDE | process_product | Note: No Slack channel configured for {product_name}")
         except Exception as e:
-            logger.error(f" IB_EQUITY | process_product | Product: {product_name} | Error processing: {e}")
-                
+            logger.error(f" IB_CRUDE | process_product | Product: {product_name} | Error processing: {e}")

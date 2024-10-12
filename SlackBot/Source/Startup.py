@@ -109,7 +109,7 @@ class Initialization:
             process_task = False
             
             if "CL" in task["name"]:
-                start_time = time(9, 0)
+                start_time = time(1, 0)
                 end_time = time(14, 30)
                 if start_time <= now <= end_time:
                     process_task = True 

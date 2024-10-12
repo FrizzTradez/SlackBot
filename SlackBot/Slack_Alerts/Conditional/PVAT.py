@@ -3,6 +3,7 @@ import math
 import threading
 from datetime import datetime
 from SlackBot.External import External_Config
+from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
 from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
 
 logger = logging.getLogger(__name__)
@@ -237,42 +238,86 @@ class PVAT(Base_Conditional):
                 "large": ""
             }
         }
-    
+
         settings = direction_settings.get(self.direction)
         if not settings:
             raise ValueError(f" PVAT | slack_message | Note: Invalid direction '{self.direction}'")
-    
-        message_template = (
-            f">:large_{pro_color}_square: *{self.product_name} - Playbook Alert - PVAT {settings['pv_indicator']}* :{settings['large']}{self.color}_circle:\n"
-            "────────────────────\n"
-            f"*Destination*: _{self.p_vpoc} (Prior Session Vpoc)_\n" 
-            f"*Risk*: _Wrong if auction fails to complete PVPOC test before IB, or accepts away form value_\n" 
-            f"*Driving Input*: _Auction opening in range or slightly outside range, divergent from prior session Vpoc_\n" 
-            "────────────────────\n"
-            f">                    *Criteria*\n"
-            f"*[{self.c_within_atr}]* Target Within ATR Of IB\n" 
-            f"*[{self.c_orderflow}]* Orderflow In Direction Of Target (*_{self.delta}_*)\n" 
-            f"*[{self.c_euro_ib}]* {settings['c_euro_ib_text']}\n" 
-            f"*[{self.c_or}]* {settings['c_or_text']}\n" 
-            f"\n*[{self.c_between}]* Between DVWAP and PVPOC\n" 
-            "Or\n"
-            f"*[{self.c_align}]* DVWAP and PVPOC aligned\n" 
-            "────────────────────\n"
-            f">             *Playbook Score*: _{self.score} / 5_\n"    
-            "────────────────────\n"
-            f">*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_\n"
+
+        blocks = []
+
+        # Title Block
+        title_text = f":large_{pro_color}_square: *{self.product_name} - Playbook Alert - PVAT {settings['pv_indicator']}* :{settings['large']}{self.color}_circle:"
+        title_block = SectionBlock(text=title_text)
+        blocks.append(title_block)
+
+        # Divider
+        blocks.append(DividerBlock())
+
+        # Description Block
+        description_text = (
+            f"*Destination*: _{self.p_vpoc} (Prior Session Vpoc)_\n"
+            f"*Risk*: _Wrong if auction fails to complete PVPOC test before IB, or accepts away from value_\n"
+            f"*Driving Input*: _Auction opening in range or slightly outside range, divergent from prior session Vpoc_\n"
         )
-        return message_template  
+        description_block = SectionBlock(text=description_text)
+        blocks.append(description_block)
+
+        # Divider
+        blocks.append(DividerBlock())
+
+        # Criteria Header
+        criteria_header = SectionBlock(text=">*Criteria*")
+        blocks.append(criteria_header)
+
+        # Criteria Details
+        criteria_text = (
+            f"*[{self.c_within_atr}]* Target Within ATR Of IB\n"
+            f"*[{self.c_orderflow}]* Orderflow In Direction Of Target (*_{self.delta}_*)\n"
+            f"*[{self.c_euro_ib}]* {settings['c_euro_ib_text']}\n"
+            f"*[{self.c_or}]* {settings['c_or_text']}\n"
+            f"\n*[{self.c_between}]* Between DVWAP and PVPOC\n"
+            "Or\n"
+            f"*[{self.c_align}]* DVWAP and PVPOC aligned\n"
+        )
+        criteria_block = SectionBlock(text=criteria_text)
+        blocks.append(criteria_block)
+
+        # Divider
+        blocks.append(DividerBlock())
+
+        # Playbook Score Block
+        score_text = f">*Playbook Score*: _{self.score} / 5_"
+        score_block = SectionBlock(text=score_text)
+        blocks.append(score_block)
+
+        # Divider
+        blocks.append(DividerBlock())
+
+        # Alert Time and Price Context Block
+        alert_time_text = f"*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_"
+        alert_time_block = ContextBlock(elements=[
+            MarkdownTextObject(text=alert_time_text)
+        ])
+        blocks.append(alert_time_block)
+
+        # Convert blocks to dicts
+        blocks = [block.to_dict() for block in blocks]
+
+        return blocks  
     
     def execute(self):
         logger.debug(f" PVAT | execute | Product: {self.product_name} | Note: Running")
         
-        message = self.slack_message()
+        blocks = self.slack_message()
         channel = self.slack_channels.get(self.product_name)
         
         if channel:
-            self.send_slack_message(channel, message)
-            logger.info(f" PVAT | execute | Product: {self.product_name} | Note: ALert Sent To {channel}")
+            self.slack_client.chat_postMessage(
+                channel=channel,
+                blocks=blocks,
+                text=f"Playbook Alert - PVAT for {self.product_name}"
+            )
+            logger.info(f" PVAT | execute | Product: {self.product_name} | Note: Alert Sent To {channel}")
         else:
             logger.debug(f" PVAT | execute | Product: {self.product_name} | Note: No Slack Channel Configured")
             
