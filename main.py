@@ -23,10 +23,6 @@ import os
 # Start to Work On More Playbook Setups! 
 # Build the IB trade information into IB Contextual Alerts. OR not Do More Info
 # Finish Mental Prep and Auction Prep
-# IB Trade Info for IB Check
-# Postural Extreme ?
-# Slope to ETH VWAP
-# DVPOC Location
 # ------------------------------------------------------------ #
 
 def main():
@@ -80,7 +76,7 @@ def main():
     # Schedule IB Crude Alert at 10:00 AM EST every day
     scheduler.add_job(
         ib_crude_alert.send_alert,
-        trigger=CronTrigger(hour=12, minute=56, second=1, timezone=est),
+        trigger=CronTrigger(hour=10, minute=00, second=1, timezone=est),
         name='IB Crude Alert'
     )
     scheduler.start()
