@@ -192,7 +192,7 @@ class PRE_IB_BIAS(Base_Conditional):
         logger.debug(f" PRE_IB | execute | Product: {self.product_name} | Note: Running")
         
         blocks = self.slack_message()
-        channel = self.slack_channels.get(self.product_name)
+        channel = self.slack_channels_alert.get(self.product_name)
         
         if channel:
             self.slack_client.chat_postMessage(

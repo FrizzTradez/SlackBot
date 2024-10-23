@@ -11,7 +11,13 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 class Base_Conditional:
-    slack_channels = {
+    slack_channels_playbook = {
+        'ES': 'playbook_es',
+        'NQ': 'playbook_nq',
+        'RTY': 'playbook_rty',
+        'CL': 'playbook_cl'
+    }
+    slack_channels_alert = {
         'ES': 'alert_es',
         'NQ': 'alert_nq',
         'RTY': 'alert_rty',

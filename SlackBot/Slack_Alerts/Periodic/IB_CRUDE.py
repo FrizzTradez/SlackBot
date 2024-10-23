@@ -281,7 +281,7 @@ class IB_Crude_Alert(Base_Periodic):
             blocks = [block.to_dict() for block in blocks]
 
             # Send Slack Alert
-            channel = self.slack_channels.get(product_name)
+            channel = self.slack_channels_alert.get(product_name)
             
             if channel:
                 self.slack_client.chat_postMessage(channel=channel, blocks=blocks, text=f"Alert for {product_name}") 
