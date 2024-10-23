@@ -21,6 +21,12 @@ import os
 # Transition over to slack_sdk to be able to send blocks (Nicer Messages)
 # Work on Ways to Implement Real Time Trade Logging? Real Time Decision Making Process? Real Time Risk Management ()
 # Start to Work On More Playbook Setups! 
+# Build the IB trade information into IB Contextual Alerts. OR not Do More Info
+# Finish Mental Prep and Auction Prep
+# IB Trade Info for IB Check
+# Postural Extreme ?
+# Slope to ETH VWAP
+# DVPOC Location
 # ------------------------------------------------------------ #
 
 def main():
@@ -62,19 +68,19 @@ def main():
     # Schedule Gap Check Crude at 9:00 AM EST every day
     scheduler.add_job(
         gap_check_crude_alert.send_alert,
-        trigger=CronTrigger(hour=9, minute=0, second=5, timezone=est),
+        trigger=CronTrigger(hour=9, minute=0, second=6, timezone=est),
         name='Gap Check Crude'
     )    
     # Schedule IB Equity Alert at 10:30 AM EST every day
     scheduler.add_job(
         ib_equity_alert.send_alert,
-        trigger=CronTrigger(hour=10, minute=30, timezone=est),
+        trigger=CronTrigger(hour=10, minute=30, second=1, timezone=est),
         name='IB Equity Alert'
     )
     # Schedule IB Crude Alert at 10:00 AM EST every day
     scheduler.add_job(
         ib_crude_alert.send_alert,
-        trigger=CronTrigger(hour=10, minute=00, timezone=est),
+        trigger=CronTrigger(hour=12, minute=56, second=1, timezone=est),
         name='IB Crude Alert'
     )
     scheduler.start()

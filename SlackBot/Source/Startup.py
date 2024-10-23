@@ -229,6 +229,7 @@ class Initialization:
                 case "ES_2":
                     # ------------------- Use Integer Based Loc ----------------------- #
                     variables['ES_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
+                    variables['ES_ETH_VWAP_P2'] = float(data.iloc[2]['[ID7.SG1] ETH_VWAP'])
                     variables['ES_ETH_TOP_1'] = float(data.iloc[0]['[ID7.SG2] Top_1'])
                     variables['ES_ETH_BOTTOM_1'] = float(data.iloc[0]['[ID7.SG3] Bottom_1'])
                     variables['ES_ETH_TOP_2'] = float(data.iloc[0]['[ID7.SG4] Top_2'])
@@ -333,6 +334,7 @@ class Initialization:
                             pass
                 case "NQ_2":
                     variables['NQ_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
+                    variables['NQ_ETH_VWAP_P2'] = float(data.iloc[2]['[ID7.SG1] ETH_VWAP'])
                     variables['NQ_ETH_TOP_1'] = float(data.iloc[0]['[ID7.SG2] Top_1'])
                     variables['NQ_ETH_BOTTOM_1'] = float(data.iloc[0]['[ID7.SG3] Bottom_1'])
                     variables['NQ_ETH_TOP_2'] = float(data.iloc[0]['[ID7.SG4] Top_2'])
@@ -443,6 +445,7 @@ class Initialization:
                             pass
                 case "RTY_2":
                     variables['RTY_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
+                    variables['RTY_ETH_VWAP_P2'] = float(data.iloc[2]['[ID7.SG1] ETH_VWAP'])
                     variables['RTY_ETH_TOP_1'] = float(data.iloc[0]['[ID7.SG2] Top_1'])
                     variables['RTY_ETH_BOTTOM_1'] = float(data.iloc[0]['[ID7.SG3] Bottom_1'])
                     variables['RTY_ETH_TOP_2'] = float(data.iloc[0]['[ID7.SG4] Top_2'])
@@ -547,6 +550,7 @@ class Initialization:
                             pass
                 case "CL_2":
                     variables['CL_ETH_VWAP'] = float(data.iloc[0]['[ID7.SG1] ETH_VWAP'])
+                    variables['CL_ETH_VWAP_P2'] = float(data.iloc[2]['[ID7.SG1] ETH_VWAP'])
                     variables['CL_ETH_TOP_1'] = float(data.iloc[0]['[ID7.SG2] Top_1'])
                     variables['CL_ETH_BOTTOM_1'] = float(data.iloc[0]['[ID7.SG3] Bottom_1'])
                     variables['CL_ETH_TOP_2'] = float(data.iloc[0]['[ID7.SG4] Top_2'])

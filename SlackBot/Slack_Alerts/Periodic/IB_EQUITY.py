@@ -28,6 +28,24 @@ class IB_Equity_Alert(Base_Periodic):
             ib_type = "Average IB"
         
         return ib_range, ib_type, ib_vatr*100
+
+    def slope_to_vwap(self, delta_price, scale_price=1.0, scale_time=1.0):
+        delta_time = 0.5
+        
+        delta_y = delta_price * scale_price
+        delta_x = delta_time * scale_time
+        
+        slope = delta_y / delta_x
+        
+        theta_radians = math.atan(slope)
+        theta_degrees = round((math.degrees(theta_radians)), 2)
+        
+        if theta_degrees >= 10:
+            vwap_type = 'Strong' 
+        else:
+            vwap_type = 'Flat'
+            
+        return theta_degrees, vwap_type
         
     def exp_range_info(self, prior_close, cpl, ovn_to_ibh, ovn_to_ibl, impvol):
         logger.debug(f" IB_EQUITY | exp_range_info | Note: Running")
@@ -202,7 +220,10 @@ class IB_Equity_Alert(Base_Periodic):
             overnight_low = round(variables.get(f'{product_name}_OVNL'), 2)
             day_high = round(variables.get(f'{product_name}_DAY_HIGH'), 2)
             day_low = round(variables.get(f'{product_name}_DAY_LOW'), 2) 
-                        
+            eth_vwap = variables.get(f'{product_name}_ETH_VWAP')
+            eth_vwap_pt = variables.get(f'{product_name}_ETH_VWAP_P2') 
+            delta_price = abs(eth_vwap - eth_vwap_pt)
+
             # Implied volatility specific to the product
             if product_name == 'ES':
                 impvol = External_Config.es_impvol
@@ -232,6 +253,9 @@ class IB_Equity_Alert(Base_Periodic):
             open_type = self.open_type(
                 a_high, a_low, b_high, b_low, day_open, orh, orl, prior_high, prior_low
                 )
+            vwap_slope, vwap_type = self.slope_to_vwap(
+                delta_price, scale_time=1.0, scale_price=1.0
+                )
             
             # Build the blocks
             blocks = []
@@ -251,7 +275,8 @@ class IB_Equity_Alert(Base_Periodic):
 
             # Session Stats Text
             session_stats_text = f"*Open Type*: _{open_type}_\n" \
-                                f"*{ib_type}*: _{ib_range}p_ = _{ib_vatr}%_ of Avg\n"
+                                f"*{ib_type}*: _{ib_range}p_ = _{ib_vatr}%_ of Avg\n" \
+                               f"*Vwap {vwap_type}*: _{vwap_slope}°_\n"
             if gap != 'No Gap':
                 session_stats_text += f"*{gap}*: _{gap_size}_ = _{gap_tier}_\n"
                 
