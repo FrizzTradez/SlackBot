@@ -30,11 +30,11 @@ class IB_Equity_Alert(Base_Periodic):
         return ib_range, ib_type, ib_vatr*100
 
     def slope_to_vwap(self, delta_price, scale_price=1.0, scale_time=1.0):
+        logger.debug(f" IB_EQUITY | slope_to_vwap | delta_price: {delta_price} | Note: Running")
         delta_time = 0.5
         
         delta_y = delta_price * scale_price
         delta_x = delta_time * scale_time
-        
         slope = delta_y / delta_x
         
         theta_radians = math.atan(slope)
@@ -44,6 +44,8 @@ class IB_Equity_Alert(Base_Periodic):
             vwap_type = 'Strong' 
         else:
             vwap_type = 'Flat'
+            
+        logger.debug(f" IB_EQUITY | slope_to_vwap | delta_x: {delta_price} | delta_y: {delta_y} | slope: {slope} | theta_degrees: {theta_degrees} | Note: Complete")
             
         return theta_degrees, vwap_type
         
@@ -275,7 +277,7 @@ class IB_Equity_Alert(Base_Periodic):
 
             # Session Stats Text
             session_stats_text = f"*Open Type*: _{open_type}_\n" \
-                                f"*{ib_type}*: _{ib_range}p_ = _{ib_vatr}%_ of Avg\n" \
+                                f"*{ib_type}*: _{ib_range}p_ = _{round(ib_vatr, 2)}%_ of Avg\n" \
                                f"*Vwap {vwap_type}*: _{vwap_slope}°_\n"
             if gap != 'No Gap':
                 session_stats_text += f"*{gap}*: _{gap_size}_ = _{gap_tier}_\n"

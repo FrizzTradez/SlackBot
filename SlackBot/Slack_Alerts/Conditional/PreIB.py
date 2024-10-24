@@ -172,16 +172,16 @@ class PRE_IB_BIAS(Base_Conditional):
         price_text = f"- Price Trading {settings['text']} *_{self.price}_*!"
         price_block = SectionBlock(text=price_text)
         blocks.append(price_block)
-
-        # Divider
-        blocks.append(DividerBlock())
-
+        
         # Alert Time Context Block
         alert_time_text = f"*Alert Time*: _{alert_time_formatted}_ EST"
         alert_time_block = ContextBlock(elements=[
             MarkdownTextObject(text=alert_time_text)
         ])
         blocks.append(alert_time_block)
+        
+        # Divider
+        blocks.append(DividerBlock())
 
         # Convert blocks to dicts
         blocks = [block.to_dict() for block in blocks]

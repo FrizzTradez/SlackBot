@@ -69,7 +69,7 @@ class POSTURE(Base_Conditional):
     def input(self):
         logger.debug(f" POSTURE | input | Note: Running")
         
-        threshold = round((self.exp_rng * 0.68), 2)
+        threshold = round((self.exp_rng * 0.25), 2)
 
         if (abs(self.cpl - self.fd_vpoc) <= threshold) and (abs(self.fd_vpoc - self.td_vpoc) <= threshold):
             posture = "PRICE=5D=20D"
@@ -192,16 +192,16 @@ class POSTURE(Base_Conditional):
         )
         posture_block = SectionBlock(text=posture_text)
         blocks.append(posture_block)
-
-        # Divider
-        blocks.append(DividerBlock())
-
+        
         # Alert Time / Price Context Block
         alert_time_text = f"*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_"
         alert_time_block = ContextBlock(elements=[
             MarkdownTextObject(text=alert_time_text)
         ])
         blocks.append(alert_time_block)
+
+        # Divider
+        blocks.append(DividerBlock())
 
         # Convert blocks to dicts
         blocks = [block.to_dict() for block in blocks]

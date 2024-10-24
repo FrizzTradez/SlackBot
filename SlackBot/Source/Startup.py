@@ -359,7 +359,8 @@ class Initialization:
                     variables['NQ_IB_ATR'] = float(data.iloc[1]['[ID2.SG1] IB ATR'])
                     variables['NQ_IB_HIGH'] = float(data.iloc[0]['[ID1.SG2] IBH'])
                     variables['NQ_IB_LOW'] = float(data.iloc[0]['[ID1.SG3] IBL'])
-                 
+                    variables['NQ_PRIOR_IB_HIGH'] = float(data.iloc[1]['[ID1.SG2] IBH'])
+                    variables['NQ_PRIOR_IB_LOW'] = float(data.iloc[1]['[ID1.SG3] IBL'])
                 case "NQ_4":
                     variables['NQ_OVNH'] = float(data.iloc[0]['[ID1.SG2] OVN H'])
                     variables['NQ_OVNL'] = float(data.iloc[0]['[ID1.SG3] OVN L'])
@@ -470,7 +471,8 @@ class Initialization:
                     variables['RTY_IB_ATR'] = float(data.iloc[1]['[ID2.SG1] IB ATR'])
                     variables['RTY_IB_HIGH'] = float(data.iloc[0]['[ID1.SG2] IBH'])
                     variables['RTY_IB_LOW'] = float(data.iloc[0]['[ID1.SG3] IBL'])
-               
+                    variables['RTY_PRIOR_IB_HIGH'] = float(data.iloc[1]['[ID1.SG2] IBH'])
+                    variables['RTY_PRIOR_IB_LOW'] = float(data.iloc[1]['[ID1.SG3] IBL'])
                 case "RTY_4":
                     variables['RTY_OVNH'] = float(data.iloc[0]['[ID1.SG2] OVN H'])
                     variables['RTY_OVNL'] = float(data.iloc[0]['[ID1.SG3] OVN L'])
@@ -575,7 +577,8 @@ class Initialization:
                     variables['CL_IB_ATR'] = float(data.iloc[1]['[ID2.SG1] IB ATR'])
                     variables['CL_IB_HIGH'] = float(data.iloc[0]['[ID1.SG2] IBH'])
                     variables['CL_IB_LOW'] = float(data.iloc[0]['[ID1.SG3] IBL'])
-                
+                    variables['CL_PRIOR_IB_HIGH'] = float(data.iloc[1]['[ID1.SG2] IBH'])
+                    variables['CL_PRIOR_IB_LOW'] = float(data.iloc[1]['[ID1.SG3] IBL'])                
                 case "CL_4":
                     variables['CL_OVNH'] = float(data.iloc[0]['[ID1.SG2] OVN H'])
                     variables['CL_OVNL'] = float(data.iloc[0]['[ID1.SG3] OVN L'])

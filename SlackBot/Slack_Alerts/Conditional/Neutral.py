@@ -145,16 +145,16 @@ class NEUTRAL(Base_Conditional):
         activity_text = f"- Neutral Activity: IB Extension {arrow}!"
         activity_block = SectionBlock(text=activity_text)
         blocks.append(activity_block)
-
-        # Divider
-        blocks.append(DividerBlock())
-
+        
         # Alert Time Context Block
         alert_time_text = f"*Alert Time*: _{alert_time_formatted}_ EST"
         alert_time_block = ContextBlock(elements=[
             MarkdownTextObject(text=alert_time_text)
         ])
         blocks.append(alert_time_block)
+        
+        # Divider
+        blocks.append(DividerBlock())
 
         # Convert blocks to dicts
         blocks = [block.to_dict() for block in blocks]

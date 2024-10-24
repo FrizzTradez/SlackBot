@@ -286,7 +286,7 @@ class PVAT(Base_Conditional):
         blocks.append(DividerBlock())
 
         # Playbook Score Block
-        score_text = f">*Playbook Score*: _{self.score} / 5_"
+        score_text = f">*Playbook Score*: _{self.score} / 5_\n"
         score_block = SectionBlock(text=score_text)
         blocks.append(score_block)
         
