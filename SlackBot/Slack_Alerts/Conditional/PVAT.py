@@ -289,16 +289,16 @@ class PVAT(Base_Conditional):
         score_text = f">*Playbook Score*: _{self.score} / 5_"
         score_block = SectionBlock(text=score_text)
         blocks.append(score_block)
-
-        # Divider
-        blocks.append(DividerBlock())
-
+        
         # Alert Time and Price Context Block
         alert_time_text = f"*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_"
         alert_time_block = ContextBlock(elements=[
             MarkdownTextObject(text=alert_time_text)
         ])
         blocks.append(alert_time_block)
+
+        # Divider
+        blocks.append(DividerBlock())
 
         # Convert blocks to dicts
         blocks = [block.to_dict() for block in blocks]
