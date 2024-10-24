@@ -1,7 +1,6 @@
 from datetime import time as datetime_time
 from SlackBot.Slack_Alerts.Conditional.Pvat import PVAT
 from SlackBot.Slack_Alerts.Conditional.PreIB import PRE_IB_BIAS
-from SlackBot.Slack_Alerts.Conditional.Posture import POSTURE
 from SlackBot.Slack_Alerts.Conditional.Neutral import NEUTRAL
 from SlackBot.Slack_Alerts.Conditional.Datr import DATR
 
@@ -65,30 +64,6 @@ conditions = [
         "required_files": ["CL_2"],
         "start_time": datetime_time(9, 0), 
         "end_time": datetime_time(14, 30),
-    },  
-    {
-        "name": "POSTURE_ES",
-        "required_files": ["ES_1","ES_2"],
-        "start_time": datetime_time(9, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "POSTURE_NQ",
-        "required_files": ["NQ_1","NQ_2"],
-        "start_time": datetime_time(9, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "POSTURE_RTY",
-        "required_files": ["RTY_1","RTY_2"],
-        "start_time": datetime_time(9, 30),
-        "end_time": datetime_time(16, 0),
-    },
-    {
-        "name": "POSTURE_CL",
-        "required_files": ["CL_1","CL_2"],
-        "start_time": datetime_time(9, 0), 
-        "end_time": datetime_time(14, 30),
     },   
     {
         "name": "NEUTRAL_ES",
@@ -143,7 +118,6 @@ condition_functions = {
     "PVAT": PVAT,
     "DATR": DATR,
     "PREIB": PRE_IB_BIAS,
-    "POSTURE": POSTURE,
     "NEUTRAL": NEUTRAL,
 }
 es_1 = [
