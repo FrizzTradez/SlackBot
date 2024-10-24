@@ -253,6 +253,8 @@ class Initialization:
                     variables['ES_IB_ATR'] = float(data.iloc[1]['[ID2.SG1] IB ATR'])
                     variables['ES_IB_HIGH'] = float(data.iloc[0]['[ID1.SG2] IBH'])
                     variables['ES_IB_LOW'] = float(data.iloc[0]['[ID1.SG3] IBL'])
+                    variables['ES_PRIOR_IB_HIGH'] = float(data.iloc[1]['[ID1.SG2] IBH'])
+                    variables['ES_PRIOR_IB_LOW'] = float(data.iloc[1]['[ID1.SG3] IBL'])                    
                 case "ES_4":
                     variables['ES_OVNH'] = float(data.iloc[0]['[ID1.SG2] OVN H'])
                     variables['ES_OVNL'] = float(data.iloc[0]['[ID1.SG3] OVN L'])

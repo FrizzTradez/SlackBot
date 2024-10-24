@@ -246,7 +246,7 @@ class PVAT(Base_Conditional):
         blocks = []
 
         # Title Block
-        title_text = f":large_{pro_color}_square: *{self.product_name} - Playbook Alert - PVAT {settings['pv_indicator']}* :{settings['large']}{self.color}_circle:"
+        title_text = f":large_{pro_color}_square: *{self.product_name} - Playbook Alert -* :{settings['large']}{self.color}_circle: *PVAT {settings['pv_indicator']}*"
         title_block = SectionBlock(text=title_text)
         blocks.append(title_block)
 
