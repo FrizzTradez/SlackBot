@@ -52,7 +52,7 @@ def main():
     # Schedule Econ Alert at 8:45 AM EST every day
     scheduler.add_job(
         economic_alert.send_alert,
-        trigger=CronTrigger(hour=9, minute=18, timezone=est),
+        trigger=CronTrigger(hour=0, minute=33, timezone=est),
         name='Economic Alert'
     )
     # Schedule Gap Check Equity 9:30 AM EST every day

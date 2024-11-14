@@ -209,6 +209,7 @@ class DATR(Base_Conditional):
         logger.debug(f" DATR | check | Product: {self.product_name} | Note: Running")
         
         # Define Direction
+        self.direction = None
         if self.prior_day_type == 'Trend ^':
             self.direction = 'Higher'
         elif self.prior_day_type == 'Trend v':
