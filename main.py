@@ -31,13 +31,18 @@ def main():
     setup_logging()
     logger = logging.getLogger(__name__)
     
+    initialization = Initialization()
+    
     logger.debug(" Main | Note: Fetching External Data\n")
     # ------------------------- Startup Processes ------------------------------ #
-    es_impvol, nq_impvol, rty_impvol, cl_impvol = Initialization.grab_impvol(external_impvol)
+    es_impvol, nq_impvol, rty_impvol, cl_impvol = initialization.grab_impvol(external_impvol)
     External_Config.set_impvol(es_impvol, nq_impvol, rty_impvol, cl_impvol)
     
-    es_bias, nq_bias, rty_bias, cl_bias = Initialization.grab_bias(external_bias)
+    es_bias, nq_bias, rty_bias, cl_bias = initialization.grab_bias(external_bias)
     External_Config.set_bias(es_bias, nq_bias, rty_bias, cl_bias)
+    
+    # ---------------------- Publish Prep PDFs to Slack ------------------------ #
+    initialization.publish_prep()
     
     ib_equity_alert = IB_Equity_Alert(files)
     ib_crude_alert = IB_Crude_Alert(files)
