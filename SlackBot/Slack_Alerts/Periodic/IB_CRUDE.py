@@ -27,7 +27,7 @@ class IB_Crude_Alert(Base_Periodic):
         elif 0.85 <= ib_vatr <= 1.1:
             ib_type = "Average IB"
         
-        return ib_range, ib_type, ib_vatr*100
+        return ib_range, ib_type, round((ib_vatr*100), 2)
         
     def exp_range_info(self, prior_close, cpl, ovn_to_ibh, ovn_to_ibl, impvol):
         logger.debug(f" IB_CRUDE | exp_range_info | Note: Running")

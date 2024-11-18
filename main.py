@@ -15,14 +15,18 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import os
 
-#                Necessary Improvements for 10/10/24
+#                Necessary Improvements for 11/18/24
 # ------------------------------------------------------------ #
-# Work on Ways to Automate Journal in Notion and Transferring Data to Excel (Possible)
-# Transition over to slack_sdk to be able to send blocks (Nicer Messages)
-# Work on Ways to Implement Real Time Trade Logging? Real Time Decision Making Process? Real Time Risk Management ()
-# Start to Work On More Playbook Setups! 
-# Build the IB trade information into IB Contextual Alerts. OR not Do More Info
-# Finish Mental Prep and Auction Prep
+# DOGW
+# TRCT
+# BSND 
+# HVNR
+# TRFD
+# TREV
+# STRC
+# IBGW
+# IBGP
+# XTFD
 # ------------------------------------------------------------ #
 
 def main():

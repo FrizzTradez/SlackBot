@@ -27,7 +27,7 @@ class IB_Equity_Alert(Base_Periodic):
         elif 0.85 <= ib_vatr <= 1.1:
             ib_type = "Average IB"
         
-        return ib_range, ib_type, ib_vatr*100
+        return ib_range, ib_type, round((ib_vatr*100), 2)
 
     def slope_to_vwap(self, delta_price, scale_price=1.0, scale_time=1.0):
         logger.debug(f" IB_EQUITY | slope_to_vwap | delta_price: {delta_price} | Note: Running")
