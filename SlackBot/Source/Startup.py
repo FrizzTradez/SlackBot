@@ -1,6 +1,7 @@
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
+from slack_sdk import WebClient
 import logging
 from SlackBot.Static.Constants import *
 from datetime import datetime, time
@@ -10,6 +11,9 @@ import pickle
 import requests
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+import io
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +21,8 @@ scopes = ["https://www.googleapis.com/auth/spreadsheets"]
 creds = Credentials.from_service_account_file(r"SlackBot\External\Credentials.json", scopes=scopes)
 client = gspread.authorize(creds)
 
-class Initialization:
-    def grab_impvol(external_impvol):
+class Initialization():
+    def grab_impvol(self, external_impvol):
         logger.debug(f" Startup | grab_impvol | Note: Running")
         
         output_impvol = {}
@@ -47,7 +51,7 @@ class Initialization:
         logger.debug(f" Startup | grab_impvol | ES_IMP: {es_impvol} | NQ_IMP: {nq_impvol} | RTY_IMP: {rty_impvol} | CL_IMP: {cl_impvol}")
         return es_impvol, nq_impvol, rty_impvol, cl_impvol
     
-    def grab_bias(external_bias):
+    def grab_bias(self, external_bias):
         logger.debug(f" Startup | grab_impvol | Note: Running")
         
         output_bias = {}
@@ -72,10 +76,119 @@ class Initialization:
         nq_bias = output_bias['nq_bias']
         rty_bias = output_bias['rty_bias']
         cl_bias = output_bias['cl_bias']
-        
+ 
         logger.debug(f" Startup | grab_bias | ES_Bias: {es_bias} | NQ_Bias: {nq_bias} | RTY_Bias: {rty_bias} | CL_Bias: {cl_bias}")
         return es_bias, nq_bias, rty_bias, cl_bias
     
+    def publish_prep(self):
+        
+        logger.info("Startup | publish_prep | Starting publish_prep function.")
+        
+        slack_token = os.getenv('SLACK_TOKEN') 
+        if not slack_token:
+            logger.error(" Startup | publish_prep | Note: Slack Token Non existent")
+            
+        client = WebClient(token=slack_token)
+        
+        preps = {
+            'ES': {
+                'drive_folder_id': '1FjvgLwW4I7lLZmv33IeDcsL1X2urOOSy', 
+                'slack_channel': 'C07RPPLTPKN',  
+                'icon': ':large_blue_square:',
+            },
+            'NQ': {
+                'drive_folder_id': '10RPtoqSu5okb2g8628avMFj6dNhJztEi', 
+                'slack_channel': 'C07RM6R9N4B',
+                'icon': ':large_green_square:',
+            },
+            'RTY': {
+                'drive_folder_id': '1PHlBBlnawCpkzEAr_L3Rg5m4wFnpEeyJ', 
+                'slack_channel': 'C07RJDL05A9',  
+                'icon': ':large_orange_square:',
+            },
+            'CL': {
+                'drive_folder_id': '164e7-8yvec_EoAdG0T4Px36xL2sFxAcz', 
+                'slack_channel': 'C07S001K5GR',  
+                'icon': ':large_purple_square:',
+            }
+        }
+        
+        try:
+            creds = Credentials.from_service_account_file(
+                r"SlackBot\External\Credentials.json",
+                scopes=['https://www.googleapis.com/auth/drive.readonly']
+            )
+            drive_service = build('drive', 'v3', credentials=creds)
+            logger.info("Startup | publish_prep | Google Drive API client initialized.")
+        except Exception as e:
+            logger.error(f"Startup | publish_prep | Failed to initialize Google Drive API client: {e}")
+            return
+        
+        for product, config in preps.items():
+            drive_folder_id = config['drive_folder_id']
+            slack_channel = config['slack_channel']
+            icon = config['icon']
+            date_str = datetime.now().strftime('%m-%d-%Y')
+            filename = f"{product}_PREP_{date_str}.pdf"
+            
+            logger.info(f"Startup | publish_prep | Processing {product} prep.")
+            logger.debug(f"Startup | publish_prep | Expected filename: {filename}")
+            
+            query = f"name='{filename}' and '{drive_folder_id}' in parents and trashed=false"
+            try:
+                results = drive_service.files().list(
+                    q=query,
+                    spaces='drive',
+                    fields='files(id, name)',
+                    pageSize=1
+                ).execute()
+                files = results.get('files', [])
+                
+                if not files:
+                    logger.error(f"Startup | publish_prep | File {filename} not found in Drive folder {drive_folder_id}.")
+                    continue
+                
+                file_id = files[0]['id']
+                logger.info(f"Startup | publish_prep | Found file {filename} with ID {file_id}.")
+            except Exception as e:
+                logger.error(f"Startup | publish_prep | Error searching for file {filename}: {e}")
+                continue
+
+            try:
+                request = drive_service.files().get_media(fileId=file_id)
+                fh = io.BytesIO()
+                downloader = MediaIoBaseDownload(fh, request)
+                done = False
+                while not done:
+                    status, done = downloader.next_chunk()
+                    if status:
+                        logger.debug(f"Startup | publish_prep | Downloading {filename}: {int(status.progress() * 100)}%.")
+                fh.seek(0)
+                with open(filename, 'wb') as f:
+                    f.write(fh.read())
+                logger.info(f"Startup | publish_prep | Downloaded {filename} successfully.")
+            except Exception as e:
+                logger.error(f"Startup | publish_prep | Error downloading file {filename}: {e}")
+                continue
+            
+            try:
+                upload_file = client.files_upload_v2(
+                    channel= f"{slack_channel}",
+                    title= f"{product} Prep",
+                    file= f"{filename}",
+                    initial_comment= f"{icon} *{product} Prep For {date_str}* {icon}",
+                )
+            except Exception as e:
+                logger.error(f"Failed to upload {product} prep to {slack_channel}")
+            
+            try:
+                os.remove(filename)
+                logger.info(f"Startup | publish_prep | Deleted local file {filename}.")
+            except Exception as e:
+                logger.warning(f"Startup | publish_prep | Could not delete local file {filename}: {e}")
+        
+        logger.info("Startup | publish_prep | Completed publish_prep function.")
+
     def prep_data(files):
         all_variables = {}
         
