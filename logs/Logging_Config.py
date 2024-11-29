@@ -13,7 +13,6 @@ def setup_logging():
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG) # LEVEL 
-
   
     if not root_logger.handlers:
 

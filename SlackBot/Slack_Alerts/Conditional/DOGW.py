@@ -5,6 +5,9 @@ from datetime import datetime
 from SlackBot.External import External_Config
 from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
 from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
+# For Directional Open Go With there are multiple types 
+# of directional opens. THis needs to be able to detect those different directional
+# open types in real time as they are in progress, Then fetch the 
 
 logger = logging.getLogger(__name__)
 
@@ -43,19 +46,19 @@ class DOGW(Base_Conditional):
 
 # ---------------------------------- Specific Calculations ------------------------------------ #   
     def exp_range(self):
-        logger.debug(f" PVAT | exp_range | Product: {self.product_name} | Note: Running")
+        logger.debug(f" DOGW | exp_range | Product: {self.product_name} | Note: Running")
 
         # Calculation (product specific or Not)
         if not self.prior_close:
-            logger.error(f" PVAT | exp_range | Product: {self.product_name} | Note: No Close Found")
-            raise ValueError(f" PVAT | exp_range | Product: {self.product_name} | Note: Need Close For Calculation!")
+            logger.error(f" DOGW | exp_range | Product: {self.product_name} | Note: No Close Found")
+            raise ValueError(f" DOGW | exp_range | Product: {self.product_name} | Note: Need Close For Calculation!")
         
         if self.product_name == 'ES':
             exp_range = round(((self.prior_close * (self.es_impvol/100)) * math.sqrt(1/252)) , 2)
             exp_hi = (self.prior_close + exp_range)
             exp_lo = (self.prior_close - exp_range)
             
-            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
+            logger.debug(f" DOGW | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
             return exp_range, exp_hi, exp_lo
         
         elif self.product_name == 'NQ':
@@ -63,7 +66,7 @@ class DOGW(Base_Conditional):
             exp_hi = (self.prior_close + exp_range)
             exp_lo = (self.prior_close - exp_range)
             
-            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
+            logger.debug(f" DOGW | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
             return exp_range, exp_hi, exp_lo
         
         elif self.product_name == 'RTY':
@@ -71,7 +74,7 @@ class DOGW(Base_Conditional):
             exp_hi = (self.prior_close + exp_range)
             exp_lo = (self.prior_close - exp_range)
         
-            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
+            logger.debug(f" DOGW | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
             return exp_range, exp_hi, exp_lo
         
         elif self.product_name == 'CL':
@@ -79,24 +82,24 @@ class DOGW(Base_Conditional):
             exp_hi = (self.prior_close + exp_range)
             exp_lo = (self.prior_close - exp_range)
             
-            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
+            logger.debug(f" DOGW | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
             return exp_range, exp_hi, exp_lo
         
         else:
-            raise ValueError(f" PVAT | exp_range | Product: {self.product_name} | Note: Unknown Product")
+            raise ValueError(f" DOGW | exp_range | Product: {self.product_name} | Note: Unknown Product")
         
     def total_delta(self):
-        logger.debug(f" PVAT | total_delta | Product: {self.product_name} | Note: Running")
+        logger.debug(f" DOGW | total_delta | Product: {self.product_name} | Note: Running")
 
         # Calculation (Product Specific or Not)        
         total_delta = self.total_ovn_delta + self.total_rth_delta
         
-        logger.debug(f" PVAT | total_delta | TOTAL_DELTA: {total_delta}")
+        logger.debug(f" DOGW | total_delta | TOTAL_DELTA: {total_delta}")
         return total_delta   
     
 # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self):
-        logger.debug(f" PVAT | input | Product: {self.product_name} | Note: Running")
+        logger.debug(f" DOGW | input | Product: {self.product_name} | Note: Running")
         
         self.used_atr = self.ib_high - self.ib_low
         self.remaining_atr = max((self.ib_atr - self.used_atr), 0)
@@ -122,13 +125,13 @@ class DOGW(Base_Conditional):
             self.or_condition 
             )    
         
-        logger.debug(f" PVAT | input | Product: {self.product_name} | LOGIC: {logic}")
+        logger.debug(f" DOGW | input | Product: {self.product_name} | LOGIC: {logic}")
         
         return logic
     
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
-        logger.debug(f" PVAT | time_window | Product: {self.product_name} | Note: Running")
+        logger.debug(f" DOGW | time_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
         self.current_datetime = datetime.now(self.est)
@@ -138,25 +141,26 @@ class DOGW(Base_Conditional):
         if self.product_name == 'CL':
             start_time = self.crude_pvat_start
             end_time = self.crude_ib
-            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
+            logger.debug(f" DOGW | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
+            
         elif self.product_name in ['ES', 'RTY', 'NQ']:
             start_time = self.equity_pvat_start
             end_time = self.equity_ib
-            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
+            logger.debug(f" DOGW | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
         else:
-            logger.warning(f" PVAT | time_window | Product: {self.product_name} | No time window defined.")
+            logger.warning(f" DOGW | time_window | Product: {self.product_name} | No time window defined.")
             return False  
         
         # Check if current time is within the window
         if start_time <= self.current_time <= end_time:
-            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Within Window: {self.current_time}.")
+            logger.debug(f" DOGW | time_window | Product: {self.product_name} | Within Window: {self.current_time}.")
             return True
         else:
-            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Outside Window {self.current_time}.")
+            logger.debug(f" DOGW | time_window | Product: {self.product_name} | Outside Window {self.current_time}.")
             return False
 # ---------------------------------- Calculate Criteria ------------------------------------ #      
     def check(self):
-        logger.debug(f" PVAT | check | Product: {self.product_name} | Note: Running")
+        logger.debug(f" DOGW | check | Product: {self.product_name} | Note: Running")
         
         # Define Direction
         self.direction = "short" if self.cpl > self.p_vpoc else "long"
@@ -167,10 +171,10 @@ class DOGW(Base_Conditional):
             
             with last_alerts_lock:
                 last_alert = last_alerts.get(self.product_name)   
-                logger.debug(f" PVAT | check | Product: {self.product_name} | Current Alert: {self.direction} | Last Alert: {last_alert}")
+                logger.debug(f" DOGW | check | Product: {self.product_name} | Current Alert: {self.direction} | Last Alert: {last_alert}")
                 
                 if self.direction != last_alert: 
-                    logger.info(f" PVAT | check | Product: {self.product_name} | Note: Condition Met")
+                    logger.info(f" DOGW | check | Product: {self.product_name} | Note: Condition Met")
                     
                     # Logic For c_within_atr 
                     if self.atr_condition: 
@@ -212,14 +216,14 @@ class DOGW(Base_Conditional):
                         last_alerts[self.product_name] = self.direction
                         self.execute()
                     except Exception as e:
-                        logger.error(f" PVAT | check | Product: {self.product_name} | Note: Failed to send Slack alert: {e}")
+                        logger.error(f" DOGW | check | Product: {self.product_name} | Note: Failed to send Slack alert: {e}")
                 else:
-                    logger.debug(f" PVAT | check | Product: {self.product_name} | Note: Alert: {self.direction} Is Same")
+                    logger.debug(f" DOGW | check | Product: {self.product_name} | Note: Alert: {self.direction} Is Same")
         else:
-            logger.info(f" PVAT | check | Product: {self.product_name} | Note: Condition Not Met")
+            logger.info(f" DOGW | check | Product: {self.product_name} | Note: Condition Not Met")
 # ---------------------------------- Alert Preparation------------------------------------ #  
     def slack_message(self):
-        logger.debug(f" PVAT | slack_message | Product: {self.product_name} | Note: Running")
+        logger.debug(f" DOGW | slack_message | Product: {self.product_name} | Note: Running")
         
         pro_color = self.product_color.get(self.product_name)
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
@@ -241,7 +245,7 @@ class DOGW(Base_Conditional):
 
         settings = direction_settings.get(self.direction)
         if not settings:
-            raise ValueError(f" PVAT | slack_message | Note: Invalid direction '{self.direction}'")
+            raise ValueError(f" DOGW | slack_message | Note: Invalid direction '{self.direction}'")
 
         blocks = []
 
@@ -306,7 +310,7 @@ class DOGW(Base_Conditional):
         return blocks  
     
     def execute(self):
-        logger.debug(f" PVAT | execute | Product: {self.product_name} | Note: Running")
+        logger.debug(f" DOGW | execute | Product: {self.product_name} | Note: Running")
         
         blocks = self.slack_message()
         channel = self.slack_channels_playbook.get(self.product_name)
@@ -315,9 +319,9 @@ class DOGW(Base_Conditional):
             self.slack_client.chat_postMessage(
                 channel=channel,
                 blocks=blocks,
-                text=f"Playbook Alert - PVAT for {self.product_name}"
+                text=f"Playbook Alert - DOGW for {self.product_name}"
             )
-            logger.info(f" PVAT | execute | Product: {self.product_name} | Note: Alert Sent To {channel}")
+            logger.info(f" DOGW | execute | Product: {self.product_name} | Note: Alert Sent To {channel}")
         else:
-            logger.debug(f" PVAT | execute | Product: {self.product_name} | Note: No Slack Channel Configured")
+            logger.debug(f" DOGW | execute | Product: {self.product_name} | Note: No Slack Channel Configured")
             
