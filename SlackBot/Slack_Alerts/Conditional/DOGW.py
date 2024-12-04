@@ -148,7 +148,7 @@ class DOGW(Base_Conditional):
         
         self.used_atr = self.ib_high - self.ib_low
         self.remaining_atr = max((self.ib_atr - self.used_atr), 0)
-        self.target = 
+        self.target = "deez"
         
         # Direction Based Logic
         if self.direction == "short":
