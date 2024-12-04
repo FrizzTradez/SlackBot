@@ -56,6 +56,8 @@ class Base_Conditional:
         # Custom Time Regulations for Playbook
         self.crude_pvat_start = time(9, 2)
         self.equity_pvat_start = time(9, 32)
+        self.crude_dogw_start = time(9, 10)
+        self.equity_dogw_start = time(9, 40)
         
     def send_slack_message(self, channel, message):
         if channel:

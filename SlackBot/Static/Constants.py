@@ -3,6 +3,7 @@ from SlackBot.Slack_Alerts.Conditional.Pvat import PVAT
 from SlackBot.Slack_Alerts.Conditional.PreIB import PRE_IB_BIAS
 from SlackBot.Slack_Alerts.Conditional.Neutral import NEUTRAL
 from SlackBot.Slack_Alerts.Conditional.Datr import DATR
+from SlackBot.Slack_Alerts.Conditional.Dogw import DOGW
 
 external_impvol = [
     {"sheet_name": "ES_Data", "sheet_id": "1miVoDpHI40Nff7PZB5QVKAGaB-QaGEJzijo8uf2wtCU", "row_number": 17, "col_number": 130},
@@ -112,11 +113,38 @@ conditions = [
         "required_files": ["CL_1","CL_2","CL_3","CL_4"],
         "start_time": datetime_time(9, 0), 
         "end_time": datetime_time(14, 30),
-    },     
+    },   
+    
+    
+    {
+        "name": "DOGW_ES",
+        "required_files": [],
+        "start_time": datetime_time(9, 40), 
+        "end_time": datetime_time(16, 0),
+    },   
+    {
+        "name": "DOGW_NQ",
+        "required_files": [],
+        "start_time": datetime_time(9, 40), 
+        "end_time": datetime_time(16, 0),
+    },   
+    {
+        "name": "DOGW_RTY",
+        "required_files": [],
+        "start_time": datetime_time(9, 40), 
+        "end_time": datetime_time(16, 0),
+    },   
+    {
+        "name": "DOGW_CL",
+        "required_files": [],
+        "start_time": datetime_time(9, 10), 
+        "end_time": datetime_time(14, 30),
+    },       
 ]
 condition_functions = {
     "PVAT": PVAT,
     "DATR": DATR,
+    "DOGW": DOGW,
     "PREIB": PRE_IB_BIAS,
     "NEUTRAL": NEUTRAL,
 }
