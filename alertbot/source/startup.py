@@ -3,7 +3,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from slack_sdk import WebClient
 import logging
-from SlackBot.Static.Constants import *
+from alertbot.source.constants import *
 from datetime import datetime, time
 from zoneinfo import ZoneInfo
 import os 

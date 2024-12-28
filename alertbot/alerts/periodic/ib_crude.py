@@ -1,7 +1,7 @@
 import logging
 import math
-from SlackBot.External import External_Config
-from SlackBot.Slack_Alerts.Periodic.Base import Base_Periodic
+from alertbot.alerts.base import Base
+from alertbot.utils import config
 from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
 import threading
 from datetime import datetime
@@ -9,7 +9,7 @@ import time
 
 logger = logging.getLogger(__name__)
 
-class IB_Crude_Alert(Base_Periodic):
+class IB_Crude_Alert(Base):
     def __init__(self, files):
         super().__init__(files)
         
@@ -223,7 +223,7 @@ class IB_Crude_Alert(Base_Periodic):
             eth_vwap = variables.get(f'{product_name}_ETH_VWAP')
             eth_vwap_pt = variables.get(f'{product_name}_ETH_VWAP_P2')
             delta_price = abs(eth_vwap - eth_vwap_pt)            
-            impvol = External_Config.cl_impvol
+            impvol = config.cl_impvol
 
             color = self.product_color.get(product_name)
             current_time = datetime.now(self.est).strftime('%H:%M:%S')

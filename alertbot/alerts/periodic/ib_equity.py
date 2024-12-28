@@ -1,15 +1,15 @@
 import logging
 import math
 from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
-from SlackBot.External import External_Config
-from SlackBot.Slack_Alerts.Periodic.Base import Base_Periodic
+from alertbot.utils import config
+from alertbot.alerts.base import Base
 import threading
 from datetime import datetime
 import time
 
 logger = logging.getLogger(__name__)
 
-class IB_Equity_Alert(Base_Periodic):
+class IB_Equity_Alert(Base):
     def __init__(self, files):
         super().__init__(files)
         
@@ -228,11 +228,11 @@ class IB_Equity_Alert(Base_Periodic):
 
             # Implied volatility specific to the product
             if product_name == 'ES':
-                impvol = External_Config.es_impvol
+                impvol = config.es_impvol
             elif product_name == 'NQ':
-                impvol = External_Config.nq_impvol
+                impvol = config.nq_impvol
             elif product_name == 'RTY':
-                impvol = External_Config.rty_impvol
+                impvol = config.rty_impvol
             else:
                 raise ValueError(f" IB_EQUITY | process_product | Note: {product_name}")
             

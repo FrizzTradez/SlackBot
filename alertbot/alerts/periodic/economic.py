@@ -3,14 +3,14 @@ import pandas as pd
 from slack_sdk.errors import SlackApiError
 from datetime import datetime
 from dotenv import load_dotenv
-from SlackBot.Slack_Alerts.Periodic.Base import Base_Periodic
+from alertbot.alerts.base import Base
 import logging
 
 # Configure logging if not already configured elsewhere
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-class Economic(Base_Periodic):
+class Economic(Base):
     def __init__(self, files):
         super().__init__(files)
 

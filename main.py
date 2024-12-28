@@ -1,12 +1,12 @@
 from watchdog.observers import Observer
-from SlackBot.Source.FileChange import *
-from SlackBot.External import External_Config
-from SlackBot.Source.Startup import *
-from SlackBot.Slack_Alerts.Periodic.Ib_Crude import IB_Crude_Alert
-from SlackBot.Slack_Alerts.Periodic.Ib_Equity import IB_Equity_Alert
-from SlackBot.Slack_Alerts.Periodic.Economic import Economic
-from SlackBot.Slack_Alerts.Mixed.Gap_Equity import Gap_Check_Equity
-from SlackBot.Slack_Alerts.Mixed.Gap_Crude import Gap_Check_Crude
+from alertbot.source.filechange import *
+from alertbot.utils import config
+from alertbot.source.startup import *
+from alertbot.alerts.periodic.ib_crude import IB_Crude_Alert
+from alertbot.alerts.periodic.ib_equity import IB_Equity_Alert
+from alertbot.alerts.periodic.economic import Economic
+from alertbot.alerts.periodic.gap_equity import Gap_Check_Equity
+from alertbot.alerts.periodic.gap_crude import Gap_Check_Crude
 from logs.Logging_Config import setup_logging
 from zoneinfo import ZoneInfo
 import time
@@ -40,10 +40,10 @@ def main():
     logger.debug(" Main | Note: Fetching External Data\n")
     # ------------------------- Startup Processes ------------------------------ #
     es_impvol, nq_impvol, rty_impvol, cl_impvol = initialization.grab_impvol(external_impvol)
-    External_Config.set_impvol(es_impvol, nq_impvol, rty_impvol, cl_impvol)
+    config.set_impvol(es_impvol, nq_impvol, rty_impvol, cl_impvol)
     
     es_bias, nq_bias, rty_bias, cl_bias = initialization.grab_bias(external_bias)
-    External_Config.set_bias(es_bias, nq_bias, rty_bias, cl_bias)
+    config.set_bias(es_bias, nq_bias, rty_bias, cl_bias)
     
     # ---------------------- Publish Prep PDFs to Slack ------------------------ #
     initialization.publish_prep()

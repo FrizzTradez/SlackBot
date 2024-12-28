@@ -1,7 +1,7 @@
 import logging
 import math
-from SlackBot.External import External_Config
-from SlackBot.Slack_Alerts.Periodic.Base import Base_Periodic
+from alertbot.utils import config
+from alertbot.alerts.base import Base
 from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
 import threading
 from datetime import datetime
@@ -9,7 +9,7 @@ import time
 
 logger = logging.getLogger(__name__)
 
-class Gap_Check_Crude(Base_Periodic):
+class Gap_Check_Crude(Base):
     def __init__(self, files):
         super().__init__(files)
         
@@ -88,7 +88,7 @@ class Gap_Check_Crude(Base_Periodic):
             prior_high = round(variables.get(f'{product_name}_PRIOR_HIGH'), 2)
             prior_low = round(variables.get(f'{product_name}_PRIOR_LOW'), 2)
 
-            impvol = External_Config.cl_impvol
+            impvol = config.cl_impvol
 
             color = self.product_color.get(product_name)
             current_time = datetime.now(self.est).strftime('%H:%M:%S')

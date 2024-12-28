@@ -7,8 +7,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-from SlackBot.Source.Startup import Initialization
-from SlackBot.Static.Constants import conditions, condition_functions
+from alertbot.source.startup import Initialization
+from alertbot.source.constants import conditions, condition_functions
 
 logger = logging.getLogger(__name__)
 

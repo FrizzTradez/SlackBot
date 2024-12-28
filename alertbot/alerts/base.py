@@ -1,5 +1,5 @@
 import os
-from slack_sdk import WebClient
+from slack_sdk import WebClient # transition over to discord
 import logging
 from datetime import datetime, time
 from zoneinfo import ZoneInfo
