@@ -1,6 +1,6 @@
 .venv/
 .env
-credentials.json
+alertbot/utils/credentials.json
 __pycache__/
 *.pyc
 *.log
