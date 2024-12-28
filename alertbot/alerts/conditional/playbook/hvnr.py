@@ -2,16 +2,16 @@ import logging
 import math
 import threading
 from datetime import datetime
-from SlackBot.External import External_Config
+from alertbot.utils import config
 from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
-from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
+from alertbot.alerts.base import Base
 
 logger = logging.getLogger(__name__)
 
 last_alerts = {}
 last_alerts_lock = threading.Lock()
 
-class HVNR(Base_Conditional):
+class HVNR(Base):
     def __init__(self, product_name, variables):    
         super().__init__(product_name, variables)
         
@@ -33,10 +33,10 @@ class HVNR(Base_Conditional):
         self.ib_high = round(self.variables.get(f'{product_name}_IB_HIGH'), 2)
         self.ib_low = round(self.variables.get(f'{product_name}_IB_LOW'), 2)
         
-        self.es_impvol = External_Config.es_impvol
-        self.nq_impvol = External_Config.nq_impvol
-        self.rty_impvol = External_Config.rty_impvol
-        self.cl_impvol = External_Config.cl_impvol 
+        self.es_impvol = config.es_impvol
+        self.nq_impvol = config.nq_impvol
+        self.rty_impvol = config.rty_impvol
+        self.cl_impvol = config.cl_impvol 
         
         self.delta = self.total_delta()
         self.exp_rng, self.exp_hi, self.exp_lo = self.exp_range() 

@@ -1,7 +1,7 @@
 import logging
 import threading
 from datetime import datetime
-from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
+from alertbot.alerts.base import Base
 from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
 
 logger = logging.getLogger(__name__)
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 last_alerts = {}
 last_alerts_lock = threading.Lock()
 
-class NEUTRAL(Base_Conditional):
+class NEUTRAL(Base):
     def __init__(self, product_name, variables):    
         super().__init__(product_name, variables)
         

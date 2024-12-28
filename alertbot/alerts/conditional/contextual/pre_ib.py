@@ -1,8 +1,8 @@
 import logging
 import math
 from datetime import datetime
-from SlackBot.External import External_Config
-from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
+from alertbot.utils import config
+from alertbot.alerts.base import Base
 from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
 import threading
 import re
@@ -11,15 +11,15 @@ logger = logging.getLogger(__name__)
 last_alerts = {}
 last_alerts_lock = threading.Lock()
 
-class PRE_IB_BIAS(Base_Conditional):
+class PRE_IB_BIAS(Base):
     def __init__(self, product_name, variables):    
         super().__init__(product_name, variables)
         
         # Variables
-        self.es_bias = External_Config.es_bias
-        self.nq_bias = External_Config.nq_bias
-        self.rty_bias = External_Config.rty_bias
-        self.cl_bias = External_Config.cl_bias
+        self.es_bias = config.es_bias
+        self.nq_bias = config.nq_bias
+        self.rty_bias = config.rty_bias
+        self.cl_bias = config.cl_bias
         self.cpl = round(self.variables.get(f'{self.product_name}_CPL'), 2)
         
 # ---------------------------------- Driving Input Logic ------------------------------------ #         

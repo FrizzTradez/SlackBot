@@ -10,7 +10,7 @@ load_dotenv()
 setup_logging()
 logger = logging.getLogger(__name__)
 
-class Base_Conditional:
+class Base:
     slack_channels_playbook = {
         'ES': 'playbook_es',
         'NQ': 'playbook_nq',

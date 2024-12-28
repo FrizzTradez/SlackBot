@@ -2,16 +2,16 @@ import logging
 import math
 import threading
 from datetime import datetime
-from SlackBot.External import External_Config
+from alertbot.utils import config
 from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
-from SlackBot.Slack_Alerts.Conditional.Base import Base_Conditional
+from alertbot.alerts.base import Base
 
 logger = logging.getLogger(__name__)
 
 last_alerts = {}
 last_alerts_lock = threading.Lock()
 
-class DATR(Base_Conditional):
+class DATR(Base):
     def __init__(self, product_name, variables):    
         super().__init__(product_name, variables)
         
@@ -27,10 +27,10 @@ class DATR(Base_Conditional):
         self.prior_vpoc = round(self.variables.get(f'{self.product_name}_PRIOR_VPOC'), 2)  
         self.eth_vwap = round(self.variables.get(f'{self.product_name}_ETH_VWAP'), 2)       
         self.cpl = round(self.variables.get(f'{self.product_name}_CPL'), 2)
-        self.es_impvol = External_Config.es_impvol
-        self.nq_impvol = External_Config.nq_impvol
-        self.rty_impvol = External_Config.rty_impvol
-        self.cl_impvol = External_Config.cl_impvol 
+        self.es_impvol = config.es_impvol
+        self.nq_impvol = config.nq_impvol
+        self.rty_impvol = config.rty_impvol
+        self.cl_impvol = config.cl_impvol 
         
         self.delta = self.total_delta()
         self.exp_rng = self.exp_range()
