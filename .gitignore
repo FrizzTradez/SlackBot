@@ -1,6 +1,6 @@
 .venv/
 .env
-/SlackBot/External/Credentials.json
+alertbot/utils/credentials.json
 __pycache__/
 *.pyc
 *.log
