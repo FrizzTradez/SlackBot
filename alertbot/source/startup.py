@@ -1,7 +1,8 @@
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-from slack_sdk import WebClient
+from discord_webhook import DiscordWebhook, DiscordEmbed
+from alertbot.alerts.base import Base
 import logging
 from alertbot.source.constants import *
 from datetime import datetime, time
@@ -21,7 +22,7 @@ scopes = ["https://www.googleapis.com/auth/spreadsheets"]
 creds = Credentials.from_service_account_file(r"SlackBot\External\Credentials.json", scopes=scopes)
 client = gspread.authorize(creds)
 
-class Initialization():
+class Initialization(Base):
     def grab_impvol(self, external_impvol):
         logger.debug(f" Startup | grab_impvol | Note: Running")
         
@@ -84,32 +85,22 @@ class Initialization():
         
         logger.info("Startup | publish_prep | Starting publish_prep function.")
         
-        slack_token = os.getenv('SLACK_TOKEN') 
-        if not slack_token:
-            logger.error(" Startup | publish_prep | Note: Slack Token Non existent")
-            
-        client = WebClient(token=slack_token)
-        
         preps = {
             'ES': {
                 'drive_folder_id': '1FjvgLwW4I7lLZmv33IeDcsL1X2urOOSy', 
-                'slack_channel': 'C07RPPLTPKN',  
-                'icon': ':large_blue_square:',
+                'icon': '🔵',
             },
             'NQ': {
                 'drive_folder_id': '10RPtoqSu5okb2g8628avMFj6dNhJztEi', 
-                'slack_channel': 'C07RM6R9N4B',
-                'icon': ':large_green_square:',
+                'icon': '🟢',
             },
             'RTY': {
                 'drive_folder_id': '1PHlBBlnawCpkzEAr_L3Rg5m4wFnpEeyJ', 
-                'slack_channel': 'C07RJDL05A9',  
-                'icon': ':large_orange_square:',
+                'icon': '🟠',
             },
             'CL': {
                 'drive_folder_id': '164e7-8yvec_EoAdG0T4Px36xL2sFxAcz', 
-                'slack_channel': 'C07S001K5GR',  
-                'icon': ':large_purple_square:',
+                'icon': '🟣',
             }
         }
         
@@ -126,7 +117,6 @@ class Initialization():
         
         for product, config in preps.items():
             drive_folder_id = config['drive_folder_id']
-            slack_channel = config['slack_channel']
             icon = config['icon']
             date_str = datetime.now().strftime('%m-%d-%Y')
             filename = f"{product}_PREP_{date_str}.pdf"
@@ -172,15 +162,28 @@ class Initialization():
                 continue
             
             try:
-                upload_file = client.files_upload_v2(
-                    channel= f"{slack_channel}",
-                    title= f"{product} Prep",
-                    file= f"{filename}",
-                    initial_comment= f"{icon} *{product} Prep For {date_str}* {icon}",
+                embed_title = f"{icon} **{product} Prep For {date_str}** {icon}"
+                embed = DiscordEmbed(
+                    title=embed_title,
+                    description=f"{icon} **{product} Prep Report** for {date_str}.",
+                    color=self.get_color()
                 )
+                embed.set_timestamp()
+                webhook_url = self.discord_webhooks_playbook.get(product)
+                self.send_discord_embed_with_file(
+                    webhook_url=webhook_url,
+                    embed=embed,
+                    file_path=filename,
+                    username=None, 
+                    avatar_url=None 
+                )
+                logger.info(f"Startup | publish_prep | Uploaded {filename} to Discord webhook for {product}.") 
+                if not webhook_url:
+                    logger.error(f"Startup | publish_prep | No Discord webhook URL configured for product '{product}'.")
+                    continue                
             except Exception as e:
-                logger.error(f"Failed to upload {product} prep to {slack_channel}")
-            
+                logger.error(f"Startup | publish_prep | Failed to create or send Discord embed for {product}: {e}")
+                continue
             try:
                 os.remove(filename)
                 logger.info(f"Startup | publish_prep | Deleted local file {filename}.")

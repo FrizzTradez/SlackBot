@@ -2,7 +2,7 @@ import logging
 import math
 from alertbot.utils import config
 from alertbot.alerts.base import Base
-from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
+from discord_webhook import DiscordWebhook, DiscordEmbed
 import threading
 from datetime import datetime
 import time
@@ -108,52 +108,38 @@ class Gap_Check_Crude(Base):
                     'Gap Down': ':arrow_down:',
                 }
                 
-                # Build the blocks
-                blocks = []
+                # Build the Discord Embed
+                try:
+                    # Title Construction with Emojis
+                    embed_title = f":large_{color}_square: **{product_name} - Context Alert - Gap** :large_{color}_square:"
+                    embed = DiscordEmbed(
+                        title=embed_title,
+                        description=(
+                            f"**Gap Type**: _{gap}_\n"
+                            f"**Tier**: _{gap_tier}_\n"
+                            f"**Gap Size**: _{gap_size}p_"
+                        ),
+                        color=self.get_color()
+                    )
+                    embed.set_timestamp()  # Automatically sets the timestamp to current time
 
-                # Title Block
-                title_block = SectionBlock(
-                    text=f":large_{color}_square:  *{product_name} - Context Alert - Gap*  :large_{color}_square:"
-                )
-                blocks.append(title_block)
+                    # Add Alert Time
+                    embed.add_embed_field(name=":alarm_clock: Alert Time", value=f"_{current_time}_ EST", inline=False)
 
-                # Divider
-                blocks.append(DividerBlock())
-
-                # Gap Alert Header
-                gap_alert_header = SectionBlock(
-                    text=">:warning:   *GAP*    :warning:"
-                )
-                blocks.append(gap_alert_header)
-
-                # Gap Details
-                gap_details_text = f"- *_{gap_tier}_* Gap {direction_emojis.get(gap)} : {gap_size}p"
-                gap_details_block = SectionBlock(text=gap_details_text)
-                blocks.append(gap_details_block)
-
-                # Divider
-                blocks.append(DividerBlock())
-
-                # Alert Time Context Block
-                alert_time_context = ContextBlock(elements=[
-                    MarkdownTextObject(text=f"*Alert Time*: _{current_time}_ EST")
-                ])
-                blocks.append(alert_time_context)
-
-                # Convert blocks to dicts
-                blocks = [block.to_dict() for block in blocks]
-
-                # Send Slack Alert
-                channel = self.slack_channels_alert.get(product_name)
-                if channel:
-                    self.slack_client.chat_postMessage(
-                        channel=channel,
-                        blocks=blocks,
-                        text=f"Context Alert - Gap for {product_name}"
-                    ) 
-                    logger.info(f" GAP_CRUDE | process_product | Note: Message sent to {channel} for {product_name}")
-                else:
-                    logger.error(f" GAP_CRUDE | process_product | Note: No Slack channel configured for {product_name}")
+                    # Send the embed with the webhook
+                    webhook_url = self.discord_webhooks_alert.get(product_name)
+                    if webhook_url:
+                        webhook = DiscordWebhook(url=webhook_url, username="Gap Checker Alert", content=f"Context Alert - Gap for {product_name}")
+                        webhook.add_embed(embed)
+                        response = webhook.execute()
+                        if response.status_code == 200 or response.status_code == 204:
+                            logger.info(f" GAP_CRUDE | process_product | Note: Message sent to Discord webhook for {product_name}")
+                        else:
+                            logger.error(f" GAP_CRUDE | process_product | Note: Failed to send message to Discord webhook for {product_name} | Status Code: {response.status_code}")
+                    else:
+                        logger.error(f" GAP_CRUDE | process_product | Note: No Discord webhook configured for {product_name}")
+                except Exception as e:
+                    logger.error(f" GAP_CRUDE | process_product | Product: {product_name} | Error sending Discord message: {e}")
             else:
                 logger.info(f" GAP_CRUDE | process_product | Product: {product_name} | Note: No Gap detected, message not sent.")
         except Exception as e:

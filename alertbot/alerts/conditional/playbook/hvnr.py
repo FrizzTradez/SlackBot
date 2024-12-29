@@ -3,7 +3,7 @@ import math
 import threading
 from datetime import datetime
 from alertbot.utils import config
-from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
+from discord_webhook import DiscordEmbed
 from alertbot.alerts.base import Base
 
 logger = logging.getLogger(__name__)
@@ -43,60 +43,43 @@ class HVNR(Base):
 
 # ---------------------------------- Specific Calculations ------------------------------------ #   
     def exp_range(self):
-        logger.debug(f" PVAT | exp_range | Product: {self.product_name} | Note: Running")
+        logger.debug(f" HVNR | exp_range | Product: {self.product_name} | Note: Running")
 
         # Calculation (product specific or Not)
         if not self.prior_close:
-            logger.error(f" PVAT | exp_range | Product: {self.product_name} | Note: No Close Found")
-            raise ValueError(f" PVAT | exp_range | Product: {self.product_name} | Note: Need Close For Calculation!")
+            logger.error(f" HVNR | exp_range | Product: {self.product_name} | Note: No Close Found")
+            raise ValueError(f" HVNR | exp_range | Product: {self.product_name} | Note: Need Close For Calculation!")
         
-        if self.product_name == 'ES':
-            exp_range = round(((self.prior_close * (self.es_impvol/100)) * math.sqrt(1/252)) , 2)
-            exp_hi = (self.prior_close + exp_range)
-            exp_lo = (self.prior_close - exp_range)
-            
-            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
-            return exp_range, exp_hi, exp_lo
+        impvol = {
+            'ES': self.es_impvol,
+            'NQ': self.nq_impvol,
+            'RTY': self.rty_impvol,
+            'CL': self.cl_impvol
+        }.get(self.product_name)
+
+        if impvol is None:
+            raise ValueError(f"HVNR | exp_range | Product: {self.product_name} | Note: Unknown Product")
+
+        exp_range = round(((self.prior_close * (impvol / 100)) * math.sqrt(1/252)), 2)
+        exp_hi = round(self.prior_close + exp_range, 2)
+        exp_lo = round(self.prior_close - exp_range, 2)
         
-        elif self.product_name == 'NQ':
-            exp_range = round(((self.prior_close * (self.nq_impvol/100)) * math.sqrt(1/252)) , 2)
-            exp_hi = (self.prior_close + exp_range)
-            exp_lo = (self.prior_close - exp_range)
-            
-            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
-            return exp_range, exp_hi, exp_lo
+        logger.debug(f" HVNR | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
+        return exp_range, exp_hi, exp_lo
         
-        elif self.product_name == 'RTY':
-            exp_range = round(((self.prior_close * (self.rty_impvol/100)) * math.sqrt(1/252)) , 2)
-            exp_hi = (self.prior_close + exp_range)
-            exp_lo = (self.prior_close - exp_range)
-        
-            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
-            return exp_range, exp_hi, exp_lo
-        
-        elif self.product_name == 'CL':
-            exp_range = round(((self.prior_close * (self.cl_impvol/100)) * math.sqrt(1/252)) , 2)
-            exp_hi = (self.prior_close + exp_range)
-            exp_lo = (self.prior_close - exp_range)
-            
-            logger.debug(f" PVAT | exp_range | Product: {self.product_name} | EXP_RNG: {exp_range} | EXP_HI: {exp_hi} | EXP_LO: {exp_lo}")
-            return exp_range, exp_hi, exp_lo
-        
-        else:
-            raise ValueError(f" PVAT | exp_range | Product: {self.product_name} | Note: Unknown Product")
         
     def total_delta(self):
-        logger.debug(f" PVAT | total_delta | Product: {self.product_name} | Note: Running")
+        logger.debug(f" HVNR | total_delta | Product: {self.product_name} | Note: Running")
 
         # Calculation (Product Specific or Not)        
         total_delta = self.total_ovn_delta + self.total_rth_delta
         
-        logger.debug(f" PVAT | total_delta | TOTAL_DELTA: {total_delta}")
+        logger.debug(f" HVNR | total_delta | TOTAL_DELTA: {total_delta}")
         return total_delta   
     
 # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self):
-        logger.debug(f" PVAT | input | Product: {self.product_name} | Note: Running")
+        logger.debug(f" HVNR | input | Product: {self.product_name} | Note: Running")
         
         self.used_atr = self.ib_high - self.ib_low
         self.remaining_atr = max((self.ib_atr - self.used_atr), 0)
@@ -122,13 +105,13 @@ class HVNR(Base):
             self.or_condition 
             )    
         
-        logger.debug(f" PVAT | input | Product: {self.product_name} | LOGIC: {logic}")
+        logger.debug(f" HVNR | input | Product: {self.product_name} | LOGIC: {logic}")
         
         return logic
     
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
-        logger.debug(f" PVAT | time_window | Product: {self.product_name} | Note: Running")
+        logger.debug(f" HVNR | time_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
         self.current_datetime = datetime.now(self.est)
@@ -138,25 +121,25 @@ class HVNR(Base):
         if self.product_name == 'CL':
             start_time = self.crude_pvat_start
             end_time = self.crude_ib
-            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
+            logger.debug(f" HVNR | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
         elif self.product_name in ['ES', 'RTY', 'NQ']:
             start_time = self.equity_pvat_start
             end_time = self.equity_ib
-            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
+            logger.debug(f" HVNR | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
         else:
-            logger.warning(f" PVAT | time_window | Product: {self.product_name} | No time window defined.")
+            logger.warning(f" HVNR | time_window | Product: {self.product_name} | No time window defined.")
             return False  
         
         # Check if current time is within the window
         if start_time <= self.current_time <= end_time:
-            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Within Window: {self.current_time}.")
+            logger.debug(f" HVNR | time_window | Product: {self.product_name} | Within Window: {self.current_time}.")
             return True
         else:
-            logger.debug(f" PVAT | time_window | Product: {self.product_name} | Outside Window {self.current_time}.")
+            logger.debug(f" HVNR | time_window | Product: {self.product_name} | Outside Window {self.current_time}.")
             return False
 # ---------------------------------- Calculate Criteria ------------------------------------ #      
     def check(self):
-        logger.debug(f" PVAT | check | Product: {self.product_name} | Note: Running")
+        logger.debug(f" HVNR | check | Product: {self.product_name} | Note: Running")
         
         # Define Direction
         self.direction = "short" if self.cpl > self.p_vpoc else "long"
@@ -167,10 +150,10 @@ class HVNR(Base):
             
             with last_alerts_lock:
                 last_alert = last_alerts.get(self.product_name)   
-                logger.debug(f" PVAT | check | Product: {self.product_name} | Current Alert: {self.direction} | Last Alert: {last_alert}")
+                logger.debug(f" HVNR | check | Product: {self.product_name} | Current Alert: {self.direction} | Last Alert: {last_alert}")
                 
                 if self.direction != last_alert: 
-                    logger.info(f" PVAT | check | Product: {self.product_name} | Note: Condition Met")
+                    logger.info(f" HVNR | check | Product: {self.product_name} | Note: Condition Met")
                     
                     # Logic For c_within_atr 
                     if self.atr_condition: 
@@ -212,16 +195,15 @@ class HVNR(Base):
                         last_alerts[self.product_name] = self.direction
                         self.execute()
                     except Exception as e:
-                        logger.error(f" PVAT | check | Product: {self.product_name} | Note: Failed to send Slack alert: {e}")
+                        logger.error(f" HVNR | check | Product: {self.product_name} | Note: Failed to send Slack alert: {e}")
                 else:
-                    logger.debug(f" PVAT | check | Product: {self.product_name} | Note: Alert: {self.direction} Is Same")
+                    logger.debug(f" HVNR | check | Product: {self.product_name} | Note: Alert: {self.direction} Is Same")
         else:
-            logger.info(f" PVAT | check | Product: {self.product_name} | Note: Condition Not Met")
+            logger.info(f" HVNR | check | Product: {self.product_name} | Note: Condition Not Met")
 # ---------------------------------- Alert Preparation------------------------------------ #  
-    def slack_message(self):
-        logger.debug(f" PVAT | slack_message | Product: {self.product_name} | Note: Running")
+    def discord_message(self):
+        logger.debug(f" HVNR | discord_message | Product: {self.product_name} | Note: Running")
         
-        pro_color = self.product_color.get(self.product_name)
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
         
         direction_settings = {
@@ -229,96 +211,69 @@ class HVNR(Base):
                 "pv_indicator": "^",
                 "c_euro_ib_text": "Above Euro IBH",
                 "c_or_text": "Above 30 Sec Opening Range High",
-                "large": "large_"
+                "emoji_indicator": "🔼",
+                "color_circle": "🔵"
             },
             "short": {
                 "pv_indicator": "v",
                 "c_euro_ib_text": "Below Euro IBL",
                 "c_or_text": "Below 30 Sec Opening Range Low",
-                "large": ""
+                "emoji_indicator": "🔽",
+                "color_circle": "🔴"
             }
         }
 
         settings = direction_settings.get(self.direction)
         if not settings:
-            raise ValueError(f" PVAT | slack_message | Note: Invalid direction '{self.direction}'")
+            raise ValueError(f" HVNR | discord_message | Note: Invalid direction '{self.direction}'")
+        
+        # Title Construction with Emojis
+        title = f"{settings['color_circle']} **{self.product_name} - Playbook Alert** {settings['emoji_indicator']} **PVAT {settings['pv_indicator']}**"
 
-        blocks = []
-
-        # Title Block
-        title_text = f":large_{pro_color}_square: *{self.product_name} - Playbook Alert -* :{settings['large']}{self.color}_circle: *PVAT {settings['pv_indicator']}*"
-        title_block = SectionBlock(text=title_text)
-        blocks.append(title_block)
-
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Description Block
-        description_text = (
-            f"*Destination*: _{self.p_vpoc} (Prior Session Vpoc)_\n"
-            f"*Risk*: _Wrong if auction fails to complete PVPOC test before IB, or accepts away from value_\n"
-            f"*Driving Input*: _Auction opening in range or slightly outside range, divergent from prior session Vpoc_\n"
+        embed = DiscordEmbed(
+            title=title,
+            description=(
+                f"**Destination**: _{self.p_vpoc} (Prior Session Vpoc)_\n"
+                f"**Risk**: _Wrong if auction fails to complete PVPOC test before IB, or accepts away from value_\n"
+                f"**Driving Input**: _Auction opening in range or slightly outside range, divergent from prior session Vpoc_\n"
+            ),
+            color=self.get_color()
         )
-        description_block = SectionBlock(text=description_text)
-        blocks.append(description_block)
-
-        # Divider
-        blocks.append(DividerBlock())
+        embed.set_timestamp()  # Automatically sets the timestamp to current time
 
         # Criteria Header
-        criteria_header = SectionBlock(text=">*Criteria*")
-        blocks.append(criteria_header)
+        embed.add_embed_field(name="**Criteria**", value="\u200b", inline=False)
 
         # Criteria Details
-        criteria_text = (
-            f"*[{self.c_within_atr}]* Target Within ATR Of IB\n"
-            f"*[{self.c_orderflow}]* Orderflow In Direction Of Target (*_{self.delta}_*)\n"
-            f"*[{self.c_euro_ib}]* {settings['c_euro_ib_text']}\n"
-            f"*[{self.c_or}]* {settings['c_or_text']}\n"
-            f"\n*[{self.c_between}]* Between DVWAP and PVPOC\n"
-            "Or\n"
-            f"*[{self.c_align}]* DVWAP and PVPOC aligned\n"
+        criteria = (
+            f"• **[{self.c_within_atr}]** Target Within ATR Of IB\n"
+            f"• **[{self.c_orderflow}]** Orderflow In Direction Of Target (_{self.delta}_) \n"
+            f"• **[{self.c_euro_ib}]** {settings['c_euro_ib_text']}\n"
+            f"• **[{self.c_or}]** {settings['c_or_text']}\n"
+            f"\n• **[{self.c_between}]** Between DVWAP and PVPOC\n"
+            f"Or\n"
+            f"• **[{self.c_align}]** DVWAP and PVPOC aligned\n"
         )
-        criteria_block = SectionBlock(text=criteria_text)
-        blocks.append(criteria_block)
+        embed.add_embed_field(name="\u200b", value=criteria, inline=False)
 
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Playbook Score Block
-        score_text = f">*Playbook Score*: _{self.score} / 5_\n"
-        score_block = SectionBlock(text=score_text)
-        blocks.append(score_block)
+        # Playbook Score
+        embed.add_embed_field(name="**Playbook Score**", value=f"_{self.score} / 5_", inline=False)
         
-        # Alert Time and Price Context Block
-        alert_time_text = f"*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_"
-        alert_time_block = ContextBlock(elements=[
-            MarkdownTextObject(text=alert_time_text)
-        ])
-        blocks.append(alert_time_block)
+        # Alert Time and Price Context
+        alert_time_text = f"**Alert Time / Price**: _{alert_time_formatted} EST | {self.cpl}_"
+        embed.add_embed_field(name="\u200b", value=alert_time_text, inline=False)
 
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Convert blocks to dicts
-        blocks = [block.to_dict() for block in blocks]
-
-        return blocks  
+        return embed 
     
     def execute(self):
-        logger.debug(f" PVAT | execute | Product: {self.product_name} | Note: Running")
+        logger.debug(f" HVNR | execute | Product: {self.product_name} | Note: Running")
         
-        blocks = self.slack_message()
-        channel = self.slack_channels_playbook.get(self.product_name)
+        embed = self.discord_message()
+        webhook_url = self.discord_webhooks_playbook.get(self.product_name)
         
-        if channel:
-            self.slack_client.chat_postMessage(
-                channel=channel,
-                blocks=blocks,
-                text=f"Playbook Alert - PVAT for {self.product_name}"
-            )
-            logger.info(f" PVAT | execute | Product: {self.product_name} | Note: Alert Sent To {channel}")
+        if webhook_url:
+            self.send_playbook_embed(embed)  # Omitting username and avatar_url to use webhook's defaults
+            logger.info(f" HVNR | execute | Product: {self.product_name} | Note: Alert Sent To Playbook Webhook")
         else:
-            logger.debug(f" PVAT | execute | Product: {self.product_name} | Note: No Slack Channel Configured")
-            
+            logger.debug(f" HVNR | execute | Product: {self.product_name} | Note: No Discord Webhook Configured")
             

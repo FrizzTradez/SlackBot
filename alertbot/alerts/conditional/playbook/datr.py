@@ -3,7 +3,7 @@ import math
 import threading
 from datetime import datetime
 from alertbot.utils import config
-from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
+from discord_webhook import DiscordEmbed
 from alertbot.alerts.base import Base
 
 logger = logging.getLogger(__name__)
@@ -270,8 +270,8 @@ class DATR(Base):
         else:
             logger.info(f" DATR | check | Product: {self.product_name} | Note: Condition Not Met")
 # ---------------------------------- Alert Preparation------------------------------------ #  
-    def slack_message(self):
-        logger.debug(f" DATR | slack_message | Product: {self.product_name} | Note: Running")
+    def discord_message(self):
+        logger.debug(f" DATR | discord_message | Product: {self.product_name} | Note: Running")
         
         pro_color = self.product_color.get(self.product_name)
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
@@ -299,82 +299,53 @@ class DATR(Base):
 
         settings = direction_settings.get(self.direction)
         if not settings:
-            raise ValueError(f" DATR | slack_message | Note: Invalid direction '{self.direction}'")
+            raise ValueError(f" DATR | discord_message | Note: Invalid direction '{self.direction}'")
 
-        blocks = []
+        # Title Construction with Emojis
+        title = f":large_{pro_color}_square: **{self.product_name} - Playbook Alert** :{settings['large']}{self.color}_circle: **DATR {settings['pv_indicator']}**"
 
-        # Title Block
-        title_text = f":large_{pro_color}_square: *{self.product_name} - Playbook Alert -* :{settings['large']}{self.color}_circle: *DATR {settings['pv_indicator']}*"
-        title_block = SectionBlock(text=title_text)
-        blocks.append(title_block)
-
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Description Block
-        description_text = (
-            f"*Destination*: _{self.prior_low} (Prior Session Low)_\n"
-            f"*Risk*: _Wrong if price accepts {settings['risk']} HWB of prior session_\n"
-            f"*Driving Input*: _Prior Day was a trend {settings['trend']}_\n"
+        embed = DiscordEmbed(
+            title=title,
+            description=(
+                f"**Destination**: _{self.prior_low} (Prior Session Low)_\n"
+                f"**Risk**: _Wrong if price accepts {settings['risk']} HWB of prior session_\n"
+                f"**Driving Input**: _Prior Day was a trend {settings['trend']}_\n"
+            ),
+            color=self.get_color()
         )
-        description_block = SectionBlock(text=description_text)
-        blocks.append(description_block)
-
-        # Divider
-        blocks.append(DividerBlock())
+        embed.set_timestamp()  # Automatically sets the timestamp to current time
 
         # Criteria Header
-        criteria_header = SectionBlock(text=">*Criteria*")
-        blocks.append(criteria_header)
+        embed.add_embed_field(name="**Criteria**", value="\u200b", inline=False)
 
         # Criteria Details
-        criteria_text = (
-            f"*[{self.c_trend}]* Prior Day was Trend Day\n"
-            f"*[{self.c_open}]* Open Inside of Prior Range\n"
-            f"*[{self.c_hwb}]* {settings['c_hwb']} HWB of Prior Day Range\n"
-            f"*[{self.c_prior_vpoc}]* Prior Day VPOC {settings['c_prior_vpoc']} HWB of Prior Day Range\n"
-            f"*[{self.c_vwap}]* {settings['c_vwap']} ETH VWAP\n"
-            f"*[{self.c_orderflow}]* Supportive Cumulative Delta (*_{self.delta}_*)\n"
+        criteria = (
+            f"• **[{self.c_trend}]** Prior Day was Trend Day\n"
+            f"• **[{self.c_open}]** Open Inside of Prior Range\n"
+            f"• **[{self.c_hwb}]** {settings['c_hwb']} HWB of Prior Day Range\n"
+            f"• **[{self.c_prior_vpoc}]** Prior Day VPOC {settings['c_prior_vpoc']} HWB of Prior Day Range\n"
+            f"• **[{self.c_vwap}]** {settings['c_vwap']} ETH VWAP\n"
+            f"• **[{self.c_orderflow}]** Supportive Cumulative Delta (*_{self.delta}_*)\n"
         )
-        criteria_block = SectionBlock(text=criteria_text)
-        blocks.append(criteria_block)
+        embed.add_embed_field(name="\u200b", value=criteria, inline=False)
 
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Playbook Score Block
-        score_text = f">*Playbook Score*: _{self.score} / 6_\n"
-        score_block = SectionBlock(text=score_text)
-        blocks.append(score_block)
+        # Playbook Score
+        embed.add_embed_field(name="**Playbook Score**", value=f"_{self.score} / 6_", inline=False)
         
-        # Alert Time and Price Context Block
-        alert_time_text = f"*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_"
-        alert_time_block = ContextBlock(elements=[
-            MarkdownTextObject(text=alert_time_text)
-        ])
-        blocks.append(alert_time_block)
+        # Alert Time and Price Context
+        embed.add_embed_field(name="**Alert Time / Price**", value=f"_{alert_time_formatted}_ EST | {self.cpl}_", inline=False)
 
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Convert blocks to dicts
-        blocks = [block.to_dict() for block in blocks]
-
-        return blocks  
+        return embed   
     
     def execute(self):
         logger.debug(f" DATR | execute | Product: {self.product_name} | Note: Running")
         
-        blocks = self.slack_message()
-        channel = self.slack_channels_playbook.get(self.product_name)
+        embed = self.discord_message()
+        webhook_url = self.discord_webhooks_playbook.get(self.product_name)
         
-        if channel:
-            self.slack_client.chat_postMessage(
-                channel=channel,
-                blocks=blocks,
-                text=f"Playbook Alert - DATR for {self.product_name}"
-            )
-            logger.info(f" DATR | execute | Product: {self.product_name} | Note: Alert Sent To {channel}")
+        if webhook_url:
+            self.send_playbook_embed(embed)  # Omitting username and avatar_url to use webhook's defaults
+            logger.info(f" DATR | execute | Product: {self.product_name} | Note: Alert Sent To Playbook Webhook")
         else:
-            logger.debug(f" DATR | execute | Product: {self.product_name} | Note: No Slack Channel Configured")
+            logger.debug(f" DATR | execute | Product: {self.product_name} | Note: No Discord Webhook Configured")
             

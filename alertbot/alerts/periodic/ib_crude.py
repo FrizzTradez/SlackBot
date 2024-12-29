@@ -1,8 +1,8 @@
 import logging
 import math
-from alertbot.alerts.base import Base
+from discord_webhook import DiscordWebhook, DiscordEmbed
 from alertbot.utils import config
-from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
+from alertbot.alerts.base import Base
 import threading
 from datetime import datetime
 import time
@@ -248,69 +248,55 @@ class IB_Crude_Alert(Base):
                 delta_price, scale_price=1.0, scale_time=1.0
                 )
                         
-            # Build the blocks
-            blocks = []
+            # Build the Discord Embed
+            try:
+                embed_title = f":large_{color}_square: **{product_name} - Context - IB Check-In** :loudspeaker:"
+                embed = DiscordEmbed(
+                    title=embed_title,
+                    description=(
+                        f"**Open Type**: _{open_type}_\n"
+                        f"**{ib_type}**: _{ib_range}p_ = _{round(ib_vatr, 2)}%_ of Avg\n"
+                        f"**Vwap {vwap_type}**: _{vwap_slope}°_\n"
+                    ),
+                    color=self.get_color()
+                )
+                embed.set_timestamp()  # Automatically sets the timestamp to current time
 
-            # Title block
-            title_block = SectionBlock(
-                text=f":large_{color}_square:  *{product_name} - Context - IB Check-In*  :loudspeaker:"
-            )
-            blocks.append(title_block)
-
-            # Divider
-            blocks.append(DividerBlock())
-
-            # Session Stats Header
-            session_stats_header = SectionBlock(text=">              *Session Stats*")
-            blocks.append(session_stats_header)
-
-            # Session Stats Text
-            session_stats_text = f"*Open Type*: _{open_type}_\n" \
-                                f"*{ib_type}*: _{ib_range}p_ = _{ib_vatr}%_ of Avg\n" \
-                               f"*Vwap {vwap_type}*: _{vwap_slope}°_\n"                                    
-            if gap != 'No Gap':
-                session_stats_text += f"*{gap}*: _{gap_size}_ = _{gap_tier}_\n"
+                # Add Gap Information if applicable
+                if gap != 'No Gap':
+                    embed.add_embed_field(name=f":warning: {gap}", value=f"_Size_: {gap_size} | _Tier_: {gap_tier}", inline=False)
                 
-            if day_high < overnight_high and day_low > overnight_low:
-                session_stats_text += f"*Overnight Stat*: _In Play_\n"
+                # Add Overnight Stat if applicable
+                if day_high < overnight_high and day_low > overnight_low:
+                    embed.add_embed_field(name=":night_with_stars: Overnight Stat", value="_In Play_", inline=False)
                 
-            session_stats_text += f"*Rvol*: _{rvol}%_\n" \
-                                f"*Current Posture*: _{posture}_"
+                # Add Rvol and Posture
+                embed.add_embed_field(name=":chart_with_upwards_trend: Rvol", value=f"_{rvol}%_", inline=True)
+                embed.add_embed_field(name=":balance_scale: Current Posture", value=f"_{posture}_", inline=True)
 
-            session_stats_block = SectionBlock(text=session_stats_text)
-            blocks.append(session_stats_block)
+                # Expected Range Section
+                embed.add_embed_field(name=":bar_chart: Expected Range", value=(
+                    f"**Rng Used**: _{exhausted}_ | _{range_used}%_ Used\n"
+                    f"**Range Left Up**: _{range_up}{'' if range_up == 'Exhausted' else '%'}_\n"
+                    f"**Range Left Down**: _{range_down}{'' if range_down == 'Exhausted' else '%'}_"
+                ), inline=False)
+                
+                # Alert Time
+                embed.add_embed_field(name=":alarm_clock: Alert Time", value=f"_{current_time}_ EST", inline=False)
 
-            # Expected Range Header
-            expected_range_header = SectionBlock(text=">           *Expected Range*")
-            blocks.append(expected_range_header)
-
-            # Expected Range Text
-            expected_range_text = f"*Rng Used*: _{exhausted}_ | _{range_used}%_ Used\n" \
-                                f"*Range Left Up*: _{range_up}{'' if range_up == 'Exhausted' else '%'}_\n" \
-                                f"*Range Left Down*: _{range_down}{'' if range_down == 'Exhausted' else '%'}_"
-
-            expected_range_block = SectionBlock(text=expected_range_text)
-            blocks.append(expected_range_block)
-            
-            # Alert Time Block
-            alert_time_context = ContextBlock(elements=[
-                MarkdownTextObject(text=f"*Alert Time*: _{current_time}_ EST\n")
-            ])
-            blocks.append(alert_time_context)
-            
-            # Divider
-            blocks.append(DividerBlock())
-
-            # Convert blocks to dicts
-            blocks = [block.to_dict() for block in blocks]
-
-            # Send Slack Alert
-            channel = self.slack_channels_alert.get(product_name)
-            
-            if channel:
-                self.slack_client.chat_postMessage(channel=channel, blocks=blocks, text=f"Alert for {product_name}") 
-                logger.info(f" IB_CRUDE | process_product | Note: Message sent to {channel} for {product_name}")
-            else:
-                logger.error(f" IB_CRUDE | process_product | Note: No Slack channel configured for {product_name}")
+                # Send the embed with the webhook
+                webhook_url = self.discord_webhooks_playbook.get(product_name)
+                if webhook_url:
+                    webhook = DiscordWebhook(url=webhook_url, username="IB Equity Alert", content=f"Alert for {product_name}")
+                    webhook.add_embed(embed)
+                    response = webhook.execute()
+                    if response.status_code == 200 or response.status_code == 204:
+                        logger.info(f" IB_CRUDE | process_product | Note: Message sent to Discord webhook for {product_name}")
+                    else:
+                        logger.error(f" IB_CRUDE | process_product | Note: Failed to send message to Discord webhook for {product_name} | Status Code: {response.status_code}")
+                else:
+                    logger.error(f" IB_CRUDE | process_product | Note: No Discord webhook configured for {product_name}")
+            except Exception as e:
+                logger.error(f" IB_CRUDE | process_product | Product: {product_name} | Error sending Discord message: {e}")
         except Exception as e:
             logger.error(f" IB_CRUDE | process_product | Product: {product_name} | Error processing: {e}")

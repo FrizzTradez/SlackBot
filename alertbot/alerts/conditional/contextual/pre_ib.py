@@ -3,7 +3,7 @@ import math
 from datetime import datetime
 from alertbot.utils import config
 from alertbot.alerts.base import Base
-from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
+from discord_webhook import DiscordEmbed, DiscordWebhook
 import threading
 import re
 logger = logging.getLogger(__name__)
@@ -134,10 +134,10 @@ class PRE_IB_BIAS(Base):
         else:
             logger.info(f" PRE_IB | check | Product: {self.product_name} | Note: Condition Not Met Or No Bias")
 # ---------------------------------- Alert Preparation------------------------------------ #  
-    def slack_message(self):
-        logger.debug(f" PRE_IB | slack_message | Product: {self.product_name} | Note: Running")
+    def discord_message(self):
+        logger.debug(f" PRE_IB | discord_message | Product: {self.product_name} | Note: Running")
         
-        pro_color = self.product_color.get(self.product_name)
+        pro_color = self.product_color.get(self.product_name, 0x808080)  # Default to grey if not found
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
         
         direction_settings = {
@@ -151,56 +151,34 @@ class PRE_IB_BIAS(Base):
 
         settings = direction_settings.get(self.direction)
         if not settings:
-            raise ValueError(f" PRE_IB | slack_message | Note: Invalid direction '{self.direction}'")
+            raise ValueError(f" PRE_IB | discord_message | Note: Invalid direction '{self.direction}'")
 
-        blocks = []
+        # Title Construction with Emojis
+        title = f":large_{pro_color}_square: **{self.product_name} - Context Alert - Bias** :large_{pro_color}_square: **{self.direction.capitalize()} {settings['text']}**"
 
-        # Title Block
-        title_text = f":large_{pro_color}_square:  *{self.product_name} - Context Alert - Bias*  :large_{pro_color}_square:"
-        title_block = SectionBlock(text=title_text)
-        blocks.append(title_block)
+        embed = DiscordEmbed(
+            title=title,
+            description=(
+                f"> :warning:   **VIOLATION**    :warning:\n"
+                f"- Price Trading {settings['text']} *_{self.price}_*!"
+            ),
+            color=self.get_color()
+        )
+        embed.set_timestamp()  # Automatically sets the timestamp to current time
 
-        # Divider
-        blocks.append(DividerBlock())
+        # Alert Time Context
+        embed.add_embed_field(name="**Alert Time**", value=f"_{alert_time_formatted}_ EST", inline=False)
 
-        # Violation Block
-        violation_text = f"> :warning:   *VIOLATION*    :warning:"
-        violation_block = SectionBlock(text=violation_text)
-        blocks.append(violation_block)
-
-        # Price Trading Block
-        price_text = f"- Price Trading {settings['text']} *_{self.price}_*!"
-        price_block = SectionBlock(text=price_text)
-        blocks.append(price_block)
-        
-        # Alert Time Context Block
-        alert_time_text = f"*Alert Time*: _{alert_time_formatted}_ EST"
-        alert_time_block = ContextBlock(elements=[
-            MarkdownTextObject(text=alert_time_text)
-        ])
-        blocks.append(alert_time_block)
-        
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Convert blocks to dicts
-        blocks = [block.to_dict() for block in blocks]
-
-        return blocks  
-
+        return embed 
+    
     def execute(self):
         logger.debug(f" PRE_IB | execute | Product: {self.product_name} | Note: Running")
         
-        blocks = self.slack_message()
-        channel = self.slack_channels_alert.get(self.product_name)
+        embed = self.discord_message()
         
-        if channel:
-            self.slack_client.chat_postMessage(
-                channel=channel,
-                blocks=blocks,
-                text=f"Context Alert - Bias for {self.product_name}"
-            )
-            logger.info(f" PRE_IB | execute | Product: {self.product_name} | Note: Alert Sent To {channel}")
-        else:
-            logger.debug(f" PRE_IB | execute | Product: {self.product_name} | Note: No Slack Channel Configured")
-    
+        try:
+            # Send the embed using the alert webhook
+            self.send_alert_embed(embed, username=None, avatar_url=None)
+            logger.info(f" PRE_IB | execute | Product: {self.product_name} | Note: Alert Sent To Discord Webhook")
+        except Exception as e:
+            logger.error(f" PRE_IB | execute | Product: {self.product_name} | Note: Error sending Discord message: {e}")

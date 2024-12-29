@@ -1,13 +1,16 @@
+import logging
+import math
+from alertbot.utils import config
+from alertbot.alerts.base import Base
+import threading
+from datetime import datetime
+import time
+from discord_webhook import DiscordWebhook, DiscordEmbed
 import investpy
 import pandas as pd
-from slack_sdk.errors import SlackApiError
-from datetime import datetime
-from dotenv import load_dotenv
-from alertbot.alerts.base import Base
-import logging
+import os
 
 # Configure logging if not already configured elsewhere
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 class Economic(Base):
@@ -78,48 +81,36 @@ class Economic(Base):
             formatted_events = ["No significant events today."]
             logger.debug(" ECON | send_alert | No events found. Using default message.")
 
-        slack_channel = "#econ_outlook" 
+        discord_webhook_url = os.getenv('DISCORD_ECON_WEBHOOK')  # Adjust as per your Base class
+
         events_text = "\n".join(formatted_events)
-        logger.debug(f" ECON | send_alert | Events text prepared for Slack.")
+        logger.debug(f" ECON | send_alert | Events text prepared for Discord.")
 
-        block = []
-
-        block.append({
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": f" :black_large_square:  Economic Events for {today_str}  :black_large_square:",
-                "emoji": True
-            }
-        })
-        block.append({"type": "divider"})
-        block.append({
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": events_text
-            }
-        })
-        block.append({"type": "divider"})
-        block.append({
-            "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": "`Control Risk and Trade Well!`"
-                }
-            ]
-        })
-
+        # Build the Discord Embed
         try:
-            response = self.slack_client.chat_postMessage(
-                channel=slack_channel,
-                blocks=block,
-                text=f"Economic Events for {today_str}"  # Fallback text
+            embed_title = f":black_large_square: **Economic Events for {today_str}** :black_large_square:"
+            embed = DiscordEmbed(
+                title=embed_title,
+                description=events_text,
+                color=self.get_color()  
             )
-            logger.info(f" ECON | send_alert | Channel: {slack_channel} | Note: Message Sent")
-        except SlackApiError as e:
-            logger.error(f" ECON | send_alert | Channel: {slack_channel} | Note: Error Sending Message: {e}")
+            embed.set_timestamp()  
+
+            embed.add_embed_field(name=":information_source: Note", value="`Control Risk and Trade Well!`", inline=False)
+
+            # Send the embed with the webhook
+            if discord_webhook_url:
+                webhook = DiscordWebhook(url=discord_webhook_url, username=None, content=f"Economic Events for {today_str}")
+                webhook.add_embed(embed)
+                response = webhook.execute()
+                if response.status_code == 200 or response.status_code == 204:
+                    logger.info(f" ECON | send_alert | Note: Message sent to Discord webhook for economic events.")
+                else:
+                    logger.error(f" ECON | send_alert | Note: Failed to send message to Discord webhook | Status Code: {response.status_code}")
+            else:
+                logger.error(f" ECON | send_alert | Note: No Discord webhook URL configured.")
+        except Exception as e:
+            logger.error(f" ECON | send_alert | Error sending Discord message: {e}")
                 
     def format_event(self, row):
         logger.debug(" ECON | format_event | Note: Running")

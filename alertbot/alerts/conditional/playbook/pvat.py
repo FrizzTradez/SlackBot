@@ -3,7 +3,7 @@ import math
 import threading
 from datetime import datetime
 from alertbot.utils import config
-from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
+from discord_webhook import DiscordEmbed, DiscordWebhook
 from alertbot.alerts.base import Base
 
 logger = logging.getLogger(__name__)
@@ -218,8 +218,8 @@ class PVAT(Base):
         else:
             logger.info(f" PVAT | check | Product: {self.product_name} | Note: Condition Not Met")
 # ---------------------------------- Alert Preparation------------------------------------ #  
-    def slack_message(self):
-        logger.debug(f" PVAT | slack_message | Product: {self.product_name} | Note: Running")
+    def discord_message(self):
+        logger.debug(f" PVAT | discord_message | Product: {self.product_name} | Note: Running")
         
         pro_color = self.product_color.get(self.product_name)
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
@@ -229,95 +229,68 @@ class PVAT(Base):
                 "pv_indicator": "^",
                 "c_euro_ib_text": "Above Euro IBH",
                 "c_or_text": "Above 30 Sec Opening Range High",
-                "large": "large_"
+                "emoji_indicator": "🔼",
+                "color_circle": "🔵"
             },
             "short": {
                 "pv_indicator": "v",
                 "c_euro_ib_text": "Below Euro IBL",
                 "c_or_text": "Below 30 Sec Opening Range Low",
-                "large": ""
+                "emoji_indicator": "🔽",
+                "color_circle": "🔴"
             }
         }
 
         settings = direction_settings.get(self.direction)
         if not settings:
-            raise ValueError(f" PVAT | slack_message | Note: Invalid direction '{self.direction}'")
+            raise ValueError(f" PVAT | discord_message | Note: Invalid direction '{self.direction}'")
+        
+        # Title Construction with Emojis
+        title = f"{settings['color_circle']} **{self.product_name} - Playbook Alert** {settings['emoji_indicator']} **PVAT {settings['pv_indicator']}**"
 
-        blocks = []
-
-        # Title Block
-        title_text = f":large_{pro_color}_square: *{self.product_name} - Playbook Alert -* :{settings['large']}{self.color}_circle: *PVAT {settings['pv_indicator']}*"
-        title_block = SectionBlock(text=title_text)
-        blocks.append(title_block)
-
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Description Block
-        description_text = (
-            f"*Destination*: _{self.p_vpoc} (Prior Session Vpoc)_\n"
-            f"*Risk*: _Wrong if auction fails to complete PVPOC test before IB, or accepts away from value_\n"
-            f"*Driving Input*: _Auction opening in range or slightly outside range, divergent from prior session Vpoc_\n"
+        embed = DiscordEmbed(
+            title=title,
+            description=(
+                f"**Destination**: _{self.p_vpoc} (Prior Session Vpoc)_\n"
+                f"**Risk**: _Wrong if auction fails to complete PVPOC test before IB, or accepts away from value_\n"
+                f"**Driving Input**: _Auction opening in range or slightly outside range, divergent from prior session Vpoc_\n"
+            ),
+            color=self.get_color()
         )
-        description_block = SectionBlock(text=description_text)
-        blocks.append(description_block)
-
-        # Divider
-        blocks.append(DividerBlock())
+        embed.set_timestamp()  # Automatically sets the timestamp to current time
 
         # Criteria Header
-        criteria_header = SectionBlock(text=">*Criteria*")
-        blocks.append(criteria_header)
+        embed.add_embed_field(name="**Criteria**", value="\u200b", inline=False)
 
         # Criteria Details
-        criteria_text = (
-            f"*[{self.c_within_atr}]* Target Within ATR Of IB\n"
-            f"*[{self.c_orderflow}]* Orderflow In Direction Of Target (*_{self.delta}_*)\n"
-            f"*[{self.c_euro_ib}]* {settings['c_euro_ib_text']}\n"
-            f"*[{self.c_or}]* {settings['c_or_text']}\n"
-            f"\n*[{self.c_between}]* Between DVWAP and PVPOC\n"
-            "Or\n"
-            f"*[{self.c_align}]* DVWAP and PVPOC aligned\n"
+        criteria = (
+            f"• **[{self.c_within_atr}]** Target Within ATR Of IB\n"
+            f"• **[{self.c_orderflow}]** Orderflow In Direction Of Target (_{self.delta}_) \n"
+            f"• **[{self.c_euro_ib}]** {settings['c_euro_ib_text']}\n"
+            f"• **[{self.c_or}]** {settings['c_or_text']}\n"
+            f"\n• **[{self.c_between}]** Between DVWAP and PVPOC\n"
+            f"Or\n"
+            f"• **[{self.c_align}]** DVWAP and PVPOC aligned\n"
         )
-        criteria_block = SectionBlock(text=criteria_text)
-        blocks.append(criteria_block)
+        embed.add_embed_field(name="\u200b", value=criteria, inline=False)
 
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Playbook Score Block
-        score_text = f">*Playbook Score*: _{self.score} / 5_\n"
-        score_block = SectionBlock(text=score_text)
-        blocks.append(score_block)
+        # Playbook Score
+        embed.add_embed_field(name="**Playbook Score**", value=f"_{self.score} / 5_", inline=False)
         
-        # Alert Time and Price Context Block
-        alert_time_text = f"*Alert Time / Price*: _{alert_time_formatted} EST | {self.cpl}_"
-        alert_time_block = ContextBlock(elements=[
-            MarkdownTextObject(text=alert_time_text)
-        ])
-        blocks.append(alert_time_block)
+        # Alert Time and Price Context
+        embed.add_embed_field(name="**Alert Time / Price**", value=f"_{alert_time_formatted}_ EST | {self.cpl}_", inline=False)
 
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Convert blocks to dicts
-        blocks = [block.to_dict() for block in blocks]
-
-        return blocks  
+        return embed 
     
     def execute(self):
-        logger.debug(f" PVAT | execute | Product: {self.product_name} | Note: Running")
+        logger.debug(f" XTFD | execute | Product: {self.product_name} | Note: Running")
         
-        blocks = self.slack_message()
-        channel = self.slack_channels_playbook.get(self.product_name)
+        embed = self.discord_message()
+        webhook_url = self.discord_webhooks_playbook.get(self.product_name)
         
-        if channel:
-            self.slack_client.chat_postMessage(
-                channel=channel,
-                blocks=blocks,
-                text=f"Playbook Alert - PVAT for {self.product_name}"
-            )
-            logger.info(f" PVAT | execute | Product: {self.product_name} | Note: Alert Sent To {channel}")
+        if webhook_url:
+            self.send_playbook_embed(embed)  # Omitting username and avatar_url to use webhook's defaults
+            logger.info(f" XTFD | execute | Product: {self.product_name} | Note: Alert Sent To Playbook Webhook")
         else:
-            logger.debug(f" PVAT | execute | Product: {self.product_name} | Note: No Slack Channel Configured")
+            logger.debug(f" XTFD | execute | Product: {self.product_name} | Note: No Discord Webhook Configured")
             

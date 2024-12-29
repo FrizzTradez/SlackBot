@@ -1,10 +1,12 @@
 import os
-import discord
 import logging
+from discord_webhook import DiscordWebhook, DiscordEmbed
 from datetime import datetime, time
 from zoneinfo import ZoneInfo
 from logs.Logging_Config import setup_logging
 from dotenv import load_dotenv
+from alertbot.source.startup import Initialization
+from typing import Optional
 
 load_dotenv()
 setup_logging()
@@ -24,15 +26,16 @@ class Base:
         'CL': os.getenv("DISCORD_CONTEXT_CL_WEBHOOK")
     }
     product_color = {
-        'ES': 'blue',
-        'NQ': 'green',
-        'RTY': 'orange',
-        'CL': 'purple'
+        'ES': 0x0000FF,   # Blue
+        'NQ': 0x008000,   # Green
+        'RTY': 0xFFA500,  # Orange
+        'CL': 0x800080,   # Purple
     }
     
-    def __init__(self, product_name, variables):
+    def __init__(self, product_name, variables, files: Optional[str] = None):
         self.product_name = product_name
         self.variables = variables
+        self.files = files
         
         # TimeZone Setup
         self.est = ZoneInfo('America/New_York')
@@ -57,33 +60,41 @@ class Base:
         self.crude_dogw_start = time(9, 10)
         self.equity_dogw_start = time(9, 40)
         
-    def send_discord_message(self, webhook_url, message, username="Notifier", avatar_url=None):
-        """
-        Sends a message to a Discord channel via a webhook.
-
-        :param webhook_url: The Discord webhook URL.
-        :param message: The message to send.
-        :param username: The display name of the webhook.
-        :param avatar_url: The avatar image URL of the webhook.
-        """
+    def fetch_latest_variables(self, product_name):
+        all_variables = Initialization.prep_data(self.files)
+        
+        return all_variables.get(product_name)        
+    def send_discord_embed(self, webhook_url, embed, username=None, avatar_url=None):
         if webhook_url:
             try:
-                webhook = discord.Webhook.from_url(webhook_url, adapter=discord.RequestsWebhookAdapter())
-                embed = discord.Embed(description=message, color=self.get_color())
-                webhook.send(embed=embed, username=username, avatar_url=avatar_url)
-                logger.info(f"Message sent to Discord webhook: {webhook_url}")
+                webhook = DiscordWebhook(url=webhook_url, username=username, avatar_url=avatar_url)
+                webhook.add_embed(embed)
+                response = webhook.execute()
+                logger.info(f"Message sent to Discord webhook: {webhook_url} | Response Code: {response.status_code}")
             except Exception as e:
                 logger.error(f"Failed to send message to Discord webhook: {e}")
         else:
             logger.warning(f"No Discord webhook URL configured for the product '{self.product_name}'.")
-        
-    def send_playbook_message(self, message):
+            
+    def send_discord_embed_with_file(self, webhook_url, embed, file_path, username=None, avatar_url=None):
+        if webhook_url:
+            try:
+                webhook = DiscordWebhook(url=webhook_url, username=username, avatar_url=avatar_url)
+                webhook.add_embed(embed)
+                with open(file_path, "rb") as f:
+                    webhook.add_file(file=f.read(), filename=os.path.basename(file_path))
+                response = webhook.execute()
+                logger.info(f"Embed with file sent to Discord webhook: {webhook_url} | Response Code: {response.status_code}")
+            except Exception as e:
+                logger.error(f"Failed to send embed with file to Discord webhook: {e}")
+        else:
+            logger.warning(f"No Discord webhook URL configured for the product '{self.product_name}'.")
+            
+    def send_playbook_embed(self, embed, username=None, avatar_url=None):
         webhook_url = self.discord_webhooks_playbook.get(self.product_name)
-        self.send_discord_message(webhook_url, message)
-
-    def send_context_message(self, message):
+        self.send_discord_embed(webhook_url, embed, username=username, avatar_url=avatar_url)
+    def send_alert_embed(self, embed, username=None, avatar_url=None):
         webhook_url = self.discord_webhooks_alert.get(self.product_name)
-        self.send_discord_message(webhook_url, message)
-    def send_economic_message(self, message):
-        webhook_url = os.getenv("DISCORD_ECON_WEBHOOK")
-        self.send_discord_message(webhook_url, message)
+        self.send_discord_embed(webhook_url, embed, username=username, avatar_url=avatar_url)
+    def get_color(self):
+        return self.product_color.get(self.product_name, 0x808080)     

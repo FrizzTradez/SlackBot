@@ -2,8 +2,7 @@ import logging
 import threading
 from datetime import datetime
 from alertbot.alerts.base import Base
-from slack_sdk.models.blocks import SectionBlock, DividerBlock, ContextBlock, MarkdownTextObject
-
+from discord_webhook import DiscordEmbed
 logger = logging.getLogger(__name__)
 
 last_alerts = {}
@@ -113,66 +112,42 @@ class NEUTRAL(Base):
         else:
             logger.debug(f" NEUTRAL | check | Product: {self.product_name} | Note: No alert sent")
 # ---------------------------------- Alert Preparation------------------------------------ # 
-    def slack_message(self):
-        logger.debug(f" NEUTRAL | slack_message | Product: {self.product_name} | Note: Running")
+    def discord_message(self):
+        logger.debug(f" NEUTRAL | discord_message | Product: {self.product_name} | Note: Running")
         
-        pro_color = self.product_color.get(self.product_name)
+        pro_color = self.product_color.get(self.product_name, 0x808080)  # Default to grey if not found
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
 
         direction_emojis = {
-            'Higher': ':arrow_up:',
-            'Lower': ':arrow_down:',
+            'Higher': '🔼',
+            'Lower': '🔽',
         }
 
-        arrow = direction_emojis.get(self.neutral_type)
+        arrow = direction_emojis.get(self.neutral_type, '')
 
-        blocks = []
+        embed = DiscordEmbed(
+            title=f":large_square: **{self.product_name} - Context Alert - IB** :large_square:",
+            description=(
+                f"> {arrow}   **NEUTRAL**    {arrow}\n"
+                f"- Neutral Activity: IB Extension {arrow}!"
+            ),
+            color=self.get_color()
+        )
+        embed.set_timestamp()  # Automatically sets the timestamp to current time
 
-        # Title Block
-        title_text = f":large_{pro_color}_square:  *{self.product_name} - Context Alert - IB*  :large_{pro_color}_square:"
-        title_block = SectionBlock(text=title_text)
-        blocks.append(title_block)
+        # Alert Time Context
+        embed.add_embed_field(name="**Alert Time**", value=f"_{alert_time_formatted}_ EST", inline=False)
 
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Neutral Block
-        neutral_text = f"> {arrow}   *NEUTRAL*    {arrow}"
-        neutral_block = SectionBlock(text=neutral_text)
-        blocks.append(neutral_block)
-
-        # Neutral Activity Block
-        activity_text = f"- Neutral Activity: IB Extension {arrow}!"
-        activity_block = SectionBlock(text=activity_text)
-        blocks.append(activity_block)
-        
-        # Alert Time Context Block
-        alert_time_text = f"*Alert Time*: _{alert_time_formatted}_ EST"
-        alert_time_block = ContextBlock(elements=[
-            MarkdownTextObject(text=alert_time_text)
-        ])
-        blocks.append(alert_time_block)
-        
-        # Divider
-        blocks.append(DividerBlock())
-
-        # Convert blocks to dicts
-        blocks = [block.to_dict() for block in blocks]
-
-        return blocks  
-
+        return embed 
+    
     def execute(self):
         logger.debug(f" NEUTRAL | execute | Product: {self.product_name} | Note: Running")
         
-        blocks = self.slack_message()
-        channel = self.slack_channels_alert.get(self.product_name)
+        embed = self.discord_message()
         
-        if channel:
-            self.slack_client.chat_postMessage(
-                channel=channel,
-                blocks=blocks,
-                text=f"Context Alert - IB for {self.product_name}"
-            )
-            logger.info(f" NEUTRAL | execute | Product: {self.product_name} | Note: Alert Sent To {channel}")
-        else:
-            logger.debug(f" NEUTRAL | execute | Product: {self.product_name} | Note: No Slack Channel Configured")
+        try:
+            # Send the embed using the alert webhook
+            self.send_alert_embed(embed, username="NEUTRAL Alert Bot")
+            logger.info(f" NEUTRAL | execute | Product: {self.product_name} | Note: Alert Sent To Discord Webhook")
+        except Exception as e:
+            logger.error(f" NEUTRAL | execute | Product: {self.product_name} | Note: Error sending Discord message: {e}")
