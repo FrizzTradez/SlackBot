@@ -1,5 +1,5 @@
 import os
-from slack_sdk import WebClient # transition over to discord
+import discord
 import logging
 from datetime import datetime, time
 from zoneinfo import ZoneInfo
@@ -11,17 +11,17 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 class Base:
-    slack_channels_playbook = {
-        'ES': 'playbook_es',
-        'NQ': 'playbook_nq',
-        'RTY': 'playbook_rty',
-        'CL': 'playbook_cl'
+    discord_webhooks_playbook = {
+        'ES': os.getenv("DISCORD_PLAYBOOK_ES_WEBHOOK"),
+        'NQ': os.getenv("DISCORD_PLAYBOOK_NQ_WEBHOOK"),
+        'RTY': os.getenv("DISCORD_PLAYBOOK_RTY_WEBHOOK"),
+        'CL': os.getenv("DISCORD_PLAYBOOK_CL_WEBHOOK")
     }
-    slack_channels_alert = {
-        'ES': 'alert_es',
-        'NQ': 'alert_nq',
-        'RTY': 'alert_rty',
-        'CL': 'alert_cl'
+    discord_webhooks_alert = {
+        'ES': os.getenv("DISCORD_CONTEXT_ES_WEBHOOK"),
+        'NQ': os.getenv("DISCORD_CONTEXT_NQ_WEBHOOK"),
+        'RTY': os.getenv("DISCORD_CONTEXT_RTY_WEBHOOK"),
+        'CL': os.getenv("DISCORD_CONTEXT_CL_WEBHOOK")
     }
     product_color = {
         'ES': 'blue',
@@ -33,8 +33,6 @@ class Base:
     def __init__(self, product_name, variables):
         self.product_name = product_name
         self.variables = variables
-        slack_token = os.getenv("SLACK_TOKEN") 
-        self.slack_client = WebClient(token=slack_token)
         
         # TimeZone Setup
         self.est = ZoneInfo('America/New_York')
@@ -59,13 +57,33 @@ class Base:
         self.crude_dogw_start = time(9, 10)
         self.equity_dogw_start = time(9, 40)
         
-    def send_slack_message(self, channel, message):
-        if channel:
+    def send_discord_message(self, webhook_url, message, username="Notifier", avatar_url=None):
+        """
+        Sends a message to a Discord channel via a webhook.
+
+        :param webhook_url: The Discord webhook URL.
+        :param message: The message to send.
+        :param username: The display name of the webhook.
+        :param avatar_url: The avatar image URL of the webhook.
+        """
+        if webhook_url:
             try:
-                response = self.slack_client.chat_postMessage(channel=channel, text=message) 
-                logger.info(f"| Slack Response: {response['ts']}|")
-                
+                webhook = discord.Webhook.from_url(webhook_url, adapter=discord.RequestsWebhookAdapter())
+                embed = discord.Embed(description=message, color=self.get_color())
+                webhook.send(embed=embed, username=username, avatar_url=avatar_url)
+                logger.info(f"Message sent to Discord webhook: {webhook_url}")
             except Exception as e:
-                logger.error(f"Failed to send message to {channel}: {e}")
+                logger.error(f"Failed to send message to Discord webhook: {e}")
         else:
-            logger.warning(f"No Slack channel configured for the product.")
+            logger.warning(f"No Discord webhook URL configured for the product '{self.product_name}'.")
+        
+    def send_playbook_message(self, message):
+        webhook_url = self.discord_webhooks_playbook.get(self.product_name)
+        self.send_discord_message(webhook_url, message)
+
+    def send_context_message(self, message):
+        webhook_url = self.discord_webhooks_alert.get(self.product_name)
+        self.send_discord_message(webhook_url, message)
+    def send_economic_message(self, message):
+        webhook_url = os.getenv("DISCORD_ECON_WEBHOOK")
+        self.send_discord_message(webhook_url, message)
