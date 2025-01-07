@@ -13,7 +13,7 @@ last_alerts_lock = threading.Lock()
 
 class HVNR(Base):
     def __init__(self, product_name, variables):    
-        super().__init__(product_name, variables)
+        super().__init__(product_name=product_name, variables=variables)
         
         # Variables (Round All Variables)
         self.p_vpoc = round(self.variables.get(f'{self.product_name}_PRIOR_VPOC'), 2)

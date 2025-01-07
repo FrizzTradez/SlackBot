@@ -10,7 +10,7 @@ last_alerts_lock = threading.Lock()
 
 class NEUTRAL(Base):
     def __init__(self, product_name, variables):    
-        super().__init__(product_name, variables)
+        super().__init__(product_name=product_name, variables=variables)
         
         # Variables (Round All Variables)
         self.cpl = round(self.variables.get(f'{self.product_name}_CPL'), 2)

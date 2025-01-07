@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class IB_Equity_Alert(Base):
     def __init__(self, files):
-        super().__init__(files)
+        super().__init__(files=files)
         
     # ---------------------- Specific Calculations ------------------------- #
     def ib_info(self, ib_high, ib_low, ib_atr):

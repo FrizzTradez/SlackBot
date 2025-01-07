@@ -1,11 +1,10 @@
 import os
 import logging
-from discord_webhook import DiscordWebhook, DiscordEmbed
+from discord_webhook import DiscordWebhook
 from datetime import datetime, time
 from zoneinfo import ZoneInfo
 from logs.Logging_Config import setup_logging
 from dotenv import load_dotenv
-from alertbot.source.startup import Initialization
 from typing import Optional
 
 load_dotenv()
@@ -25,6 +24,12 @@ class Base:
         'RTY': os.getenv("DISCORD_CONTEXT_RTY_WEBHOOK"),
         'CL': os.getenv("DISCORD_CONTEXT_CL_WEBHOOK")
     }
+    discord_webhooks_preps = {
+        'ES': os.getenv("DISCORD_PREP_ES_WEBHOOK"),
+        'NQ': os.getenv("DISCORD_PREP_NQ_WEBHOOK"),
+        'RTY': os.getenv("DISCORD_PREP_RTY_WEBHOOK"),
+        'CL': os.getenv("DISCORD_PREP_CL_WEBHOOK")
+    }
     product_color = {
         'ES': 0x0000FF,   # Blue
         'NQ': 0x008000,   # Green
@@ -32,7 +37,7 @@ class Base:
         'CL': 0x800080,   # Purple
     }
     
-    def __init__(self, product_name, variables, files: Optional[str] = None):
+    def __init__(self, product_name: Optional[str] = None, variables: Optional[str] = None, files: Optional[str] = None):
         self.product_name = product_name
         self.variables = variables
         self.files = files
@@ -61,6 +66,7 @@ class Base:
         self.equity_dogw_start = time(9, 40)
         
     def fetch_latest_variables(self, product_name):
+        from alertbot.source.startup import Initialization
         all_variables = Initialization.prep_data(self.files)
         
         return all_variables.get(product_name)        

@@ -13,7 +13,7 @@ last_alerts_lock = threading.Lock()
 
 class DATR(Base):
     def __init__(self, product_name, variables):    
-        super().__init__(product_name, variables)
+        super().__init__(product_name=product_name, variables=variables)
         
         # Variables specific to the product
         self.prior_close = round(self.variables.get(f'{self.product_name}_PRIOR_CLOSE'), 2)

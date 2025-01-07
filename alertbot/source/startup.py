@@ -1,17 +1,14 @@
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-from discord_webhook import DiscordWebhook, DiscordEmbed
-from alertbot.alerts.base import Base
+from discord_webhook import DiscordEmbed
 import logging
 from alertbot.source.constants import *
+from alertbot.alerts.base import Base
 from datetime import datetime, time
 from zoneinfo import ZoneInfo
 import os 
-import pickle
-import requests
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
+from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 import io
@@ -19,10 +16,11 @@ import io
 logger = logging.getLogger(__name__)
 
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-creds = Credentials.from_service_account_file(r"SlackBot\External\Credentials.json", scopes=scopes)
+creds = Credentials.from_service_account_file(r"alertbot\utils\credentials.json", scopes=scopes)
 client = gspread.authorize(creds)
 
 class Initialization(Base):
+    
     def grab_impvol(self, external_impvol):
         logger.debug(f" Startup | grab_impvol | Note: Running")
         
@@ -106,8 +104,8 @@ class Initialization(Base):
         
         try:
             creds = Credentials.from_service_account_file(
-                r"SlackBot\External\Credentials.json",
-                scopes=['https://www.googleapis.com/auth/drive.readonly']
+                r"alertbot\utils\credentials.json",
+                scopes=['https://www.googleapis.com/auth/drive']
             )
             drive_service = build('drive', 'v3', credentials=creds)
             logger.info("Startup | publish_prep | Google Drive API client initialized.")
@@ -118,7 +116,8 @@ class Initialization(Base):
         for product, config in preps.items():
             drive_folder_id = config['drive_folder_id']
             icon = config['icon']
-            date_str = datetime.now().strftime('%m-%d-%Y')
+            now = datetime.now()
+            date_str = f"{now.month}-{now.day}-{now.year}"
             filename = f"{product}_PREP_{date_str}.pdf"
             
             logger.info(f"Startup | publish_prep | Processing {product} prep.")
@@ -129,7 +128,7 @@ class Initialization(Base):
                 results = drive_service.files().list(
                     q=query,
                     spaces='drive',
-                    fields='files(id, name)',
+                    fields='files(id, name, webViewLink)',
                     pageSize=1
                 ).execute()
                 files = results.get('files', [])
@@ -138,58 +137,74 @@ class Initialization(Base):
                     logger.error(f"Startup | publish_prep | File {filename} not found in Drive folder {drive_folder_id}.")
                     continue
                 
-                file_id = files[0]['id']
-                logger.info(f"Startup | publish_prep | Found file {filename} with ID {file_id}.")
-            except Exception as e:
-                logger.error(f"Startup | publish_prep | Error searching for file {filename}: {e}")
+                file = files[0]
+                file_id = file['id']
+                web_view_link = file.get('webViewLink')
+                logger.info(f"Startup | publish_prep | Retrived webViewLink for {filename}: {web_view_link}.")
+            except HttpError as e:
+                logger.error(f"Startup | publish_prep | Failed to retrieve webViewLink for {filename}: {e}")
                 continue
+            try:
+                permission = {
+                    'type': 'anyone',
+                    'role': 'reader'    
+                }
+                drive_service.permissions().create(
+                    fileId=file_id,
+                    body=permission,
+                    fields='id'
+                ).execute()
+                logger.info(f"Startup | publish_prep | Set permissions for {filename} to 'anyone with the link can view'.")
+            except HttpError as e:
+                logger.error(f"Startup | publish_prep | Failed to create permission for {filename}: {e}")
 
             try:
-                request = drive_service.files().get_media(fileId=file_id)
-                fh = io.BytesIO()
-                downloader = MediaIoBaseDownload(fh, request)
-                done = False
-                while not done:
-                    status, done = downloader.next_chunk()
-                    if status:
-                        logger.debug(f"Startup | publish_prep | Downloading {filename}: {int(status.progress() * 100)}%.")
-                fh.seek(0)
-                with open(filename, 'wb') as f:
-                    f.write(fh.read())
-                logger.info(f"Startup | publish_prep | Downloaded {filename} successfully.")
-            except Exception as e:
-                logger.error(f"Startup | publish_prep | Error downloading file {filename}: {e}")
+                # Retrieve the updated webViewLink after setting permissions
+                file = drive_service.files().get(
+                    fileId=file_id,
+                    fields='webViewLink'
+                ).execute()
+                web_view_link = file.get('webViewLink')
+                logger.info(f"Startup | publish_prep | Retrieved webViewLink for {filename}: {web_view_link}")
+            except HttpError as e:
+                logger.error(f"Startup | publish_prep | Failed to retrieve webViewLink for {filename}: {e}")
                 continue
             
             try:
-                embed_title = f"{icon} **{product} Prep For {date_str}** {icon}"
+                embed_title = f"{product} Auction Prep For **{date_str}**"
                 embed = DiscordEmbed(
                     title=embed_title,
-                    description=f"{icon} **{product} Prep Report** for {date_str}.",
-                    color=self.get_color()
+                    color=self.product_color.get(product, 0x000000)
                 )
                 embed.set_timestamp()
-                webhook_url = self.discord_webhooks_playbook.get(product)
-                self.send_discord_embed_with_file(
+                
+                # Add a field with the link to view the PDF
+                if web_view_link:
+                    embed.add_embed_field(
+                        name="📄 Auction Prep PDF",
+                        value=f"View Prep [Here]({web_view_link})",
+                        inline=False
+                    )
+                else:
+                    logger.warning(f"Startup | publish_prep | No webViewLink available for {filename}.")
+                
+                webhook_url = self.discord_webhooks_preps.get(product)
+                if not webhook_url:
+                    logger.error(f"Startup | publish_prep | No Discord webhook URL configured for product '{product}'.")
+                    continue
+
+                self.send_discord_embed(
                     webhook_url=webhook_url,
                     embed=embed,
-                    file_path=filename,
                     username=None, 
                     avatar_url=None 
                 )
-                logger.info(f"Startup | publish_prep | Uploaded {filename} to Discord webhook for {product}.") 
-                if not webhook_url:
-                    logger.error(f"Startup | publish_prep | No Discord webhook URL configured for product '{product}'.")
-                    continue                
+                logger.info(f"Startup | publish_prep | Sent Discord embed with link for {filename} to webhook for {product}.")
+                
             except Exception as e:
                 logger.error(f"Startup | publish_prep | Failed to create or send Discord embed for {product}: {e}")
                 continue
-            try:
-                os.remove(filename)
-                logger.info(f"Startup | publish_prep | Deleted local file {filename}.")
-            except Exception as e:
-                logger.warning(f"Startup | publish_prep | Could not delete local file {filename}: {e}")
-        
+            
         logger.info("Startup | publish_prep | Completed publish_prep function.")
 
     def prep_data(files):

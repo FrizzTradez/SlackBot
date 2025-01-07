@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class Gap_Check_Equity(Base):
     def __init__(self, files):
-        super().__init__(files)
+        super().__init__(files=files)
         
     # ---------------------- Specific Calculations ------------------------- #
     def exp_range(self, prior_close, impvol):

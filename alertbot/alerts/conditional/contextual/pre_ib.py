@@ -13,7 +13,7 @@ last_alerts_lock = threading.Lock()
 
 class PRE_IB_BIAS(Base):
     def __init__(self, product_name, variables):    
-        super().__init__(product_name, variables)
+        super().__init__(product_name=product_name, variables=variables)
         
         # Variables
         self.es_bias = config.es_bias

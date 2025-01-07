@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class Economic(Base):
     def __init__(self, files):
-        super().__init__(files)
+        super().__init__(files=files)
 
     def send_alert(self):
         logger.debug(" ECON | send_alert | Note: Running")
