@@ -125,8 +125,6 @@ conditions = [
         "start_time": datetime_time(9, 0), 
         "end_time": datetime_time(14, 30),
     },   
-    
-    
     {
         "name": "DOGW_ES",
         "required_files": [],
