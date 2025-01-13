@@ -36,7 +36,6 @@ class Base:
         'RTY': 0xFFA500,  # Orange
         'CL': 0x800080,   # Purple
     }
-    
     def __init__(self, product_name: Optional[str] = None, variables: Optional[str] = None, files: Optional[str] = None):
         self.product_name = product_name
         self.variables = variables
@@ -64,11 +63,9 @@ class Base:
         self.equity_pvat_start = time(9, 32)
         self.crude_dogw_start = time(9, 10)
         self.equity_dogw_start = time(9, 40)
-        
     def fetch_latest_variables(self, product_name):
         from alertbot.source.startup import Initialization
         all_variables = Initialization.prep_data(self.files)
-        
         return all_variables.get(product_name)        
     def send_discord_embed(self, webhook_url, embed, username=None, avatar_url=None):
         if webhook_url:
@@ -81,7 +78,6 @@ class Base:
                 logger.error(f"Failed to send message to Discord webhook: {e}")
         else:
             logger.warning(f"No Discord webhook URL configured for the product '{self.product_name}'.")
-            
     def send_discord_embed_with_file(self, webhook_url, embed, file_path, username=None, avatar_url=None):
         if webhook_url:
             try:
@@ -95,7 +91,6 @@ class Base:
                 logger.error(f"Failed to send embed with file to Discord webhook: {e}")
         else:
             logger.warning(f"No Discord webhook URL configured for the product '{self.product_name}'.")
-            
     def send_playbook_embed(self, embed, username=None, avatar_url=None):
         webhook_url = self.discord_webhooks_playbook.get(self.product_name)
         self.send_discord_embed(webhook_url, embed, username=username, avatar_url=avatar_url)

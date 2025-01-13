@@ -146,17 +146,16 @@ class IB_Crude_Alert(Base):
 
         return posture
         
-    def open_type(self, a_high, a_low, b_high, b_low, day_open, orh, orl, prior_high, prior_low):
-        logger.debug(f" IB_CRUDE | open_type | Note: Running")
+    def open_type(self, a_high, a_low, b_high, b_low, day_open, orh, orl, prior_high, prior_low, day_high, day_low):
+        logger.debug(f" IB_EQUITY | open_type | Note: Running")
         
         a_period_mid = round(((a_high + a_low) / 2), 2)
-        a_period_range = (a_high - a_low)
-        overlap = max(0, min(max(a_high, b_high), prior_high) - max(min(a_low, b_low), prior_low))
-        total_range = max(a_high, b_high) - min(a_low, b_low)
-        
-        if (abs(day_open - a_high) <= 0.025 * a_period_range) and (b_high < a_period_mid):
+        overlap = max(0, min(day_high, prior_high) - max(day_low, prior_low))
+        total_range = day_high - day_low
+
+        if day_open == a_high and (b_high < a_period_mid):
             open_type = "OD v"
-        elif (abs(day_open - a_low) <= 0.025 * a_period_range) and (b_low > a_period_mid):
+        elif day_open == a_low and (b_low > a_period_mid):
             open_type = "OD ^"
         elif (day_open > a_period_mid) and (b_high < a_period_mid):
             open_type = "OTD v"
