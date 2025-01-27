@@ -28,13 +28,15 @@ class Base:
         'ES': os.getenv("DISCORD_PREP_ES_WEBHOOK"),
         'NQ': os.getenv("DISCORD_PREP_NQ_WEBHOOK"),
         'RTY': os.getenv("DISCORD_PREP_RTY_WEBHOOK"),
-        'CL': os.getenv("DISCORD_PREP_CL_WEBHOOK")
+        'CL': os.getenv("DISCORD_PREP_CL_WEBHOOK"),
+        'QuickSheet': os.getenv("DISCORD_QUICKSHEET_WEBHOOK")
     }
     product_color = {
         'ES': 0x0000FF,   # Blue
         'NQ': 0x008000,   # Green
         'RTY': 0xFFA500,  # Orange
         'CL': 0x800080,   # Purple
+        'QuickSheet': 0xFF0000, # Red
     }
     def __init__(self, product_name: Optional[str] = None, variables: Optional[str] = None, files: Optional[str] = None):
         self.product_name = product_name

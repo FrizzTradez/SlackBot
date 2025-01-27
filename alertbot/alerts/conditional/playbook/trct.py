@@ -79,6 +79,12 @@ class TRCT(Base):
     
 # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self):
+        # Critical Criteria Includes the following:
+        # 1. One Time Framing for 4 prior periods or more
+        # 2. CPL within trending channel
+        # 3. CPL within ATR of IB
+        # 4. Value Following Price (How to detect this)
+        # 5. Perhaps we need to hold within trending channel for a given period of time?
         logger.debug(f" TRCT | input | Product: {self.product_name} | Note: Running")
         
         self.used_atr = self.ib_high - self.ib_low
@@ -155,12 +161,12 @@ class TRCT(Base):
                 if self.direction != last_alert: 
                     logger.info(f" TRCT | check | Product: {self.product_name} | Note: Condition Met")
                     
-                    # Logic For c_within_atr 
+                    # Logic For Trend Day or Strong Trending
                     if self.atr_condition: 
                         self.c_within_atr = "x" 
                     else:
                         self.c_within_atr = "  "
-                    # Logic For c_orderflow
+                    # Logic For c_One-Time Framing (4 or more)
                     self.c_orderflow = "  "
                     if self.direction == "short" and self.delta < 0:
                         self.c_orderflow = "x"

@@ -21,7 +21,7 @@ client = gspread.authorize(creds)
 
 class Initialization(Base):
     
-    def grab_impvol(self, external_impvol):
+    def grab_impvol(self, external_impvol): 
         logger.debug(f" Startup | grab_impvol | Note: Running")
         
         output_impvol = {}
@@ -41,7 +41,7 @@ class Initialization(Base):
                 output_impvol['rty_impvol'] = cell_value
             elif "CL" in task["sheet_name"]:
                 output_impvol['cl_impvol'] = cell_value
-                
+        
         es_impvol = float(output_impvol['es_impvol'].strip('%'))
         nq_impvol = float(output_impvol['nq_impvol'].strip('%'))
         rty_impvol = float(output_impvol['rty_impvol'].strip('%'))
@@ -61,7 +61,7 @@ class Initialization(Base):
             cell_value = sheet.cell(task["row_number"], task["col_number"]).value
             
             logger.debug(f" Startup | grab_bias | Sheet: {task['sheet_name']} | Row: {task['row_number']}  | Column: {task['col_number']}")
-            
+         
             if "ES" in task["sheet_name"]:
                 output_bias['es_bias'] = cell_value
             elif "NQ" in task["sheet_name"]:
@@ -99,7 +99,11 @@ class Initialization(Base):
             'CL': {
                 'drive_folder_id': '164e7-8yvec_EoAdG0T4Px36xL2sFxAcz', 
                 'icon': '🟣',
-            }
+            },
+            'QuickSheet': {
+                'drive_folder_id': '1_3bDtMevegvk9M8W2LPXq8_vT1v2wom5', 
+                'icon': '🔴',
+            }            
         }
         
         try:
@@ -171,7 +175,7 @@ class Initialization(Base):
                 continue
             
             try:
-                embed_title = f"{product} Auction Prep For **{date_str}**"
+                embed_title = f"{product} Prep For **{date_str}**"
                 embed = DiscordEmbed(
                     title=embed_title,
                     color=self.product_color.get(product, 0x000000)

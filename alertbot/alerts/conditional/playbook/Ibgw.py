@@ -32,6 +32,14 @@ class IBGW(Base):
         self.prior_close = round(self.variables.get(f'{self.product_name}_PRIOR_CLOSE'), 2)
         self.ib_high = round(self.variables.get(f'{product_name}_IB_HIGH'), 2)
         self.ib_low = round(self.variables.get(f'{product_name}_IB_LOW'), 2)
+        self.a_high = round(variables.get(f'{product_name}_A_HIGH'), 2)
+        self.a_low = round(variables.get(f'{product_name}_A_LOW'), 2)
+        self.b_high = round(variables.get(f'{product_name}_B_HIGH'), 2)
+        self.b_low = round(variables.get(f'{product_name}_B_LOW'), 2)        
+        self.day_high = round(variables.get(f'{product_name}_DAY_HIGH'), 2)
+        self.day_low = round(variables.get(f'{product_name}_DAY_LOW'), 2)        
+        self.eth_vwap = variables.get(f'{product_name}_ETH_VWAP')
+        self.eth_vwap_pt = variables.get(f'{product_name}_ETH_VWAP_P2')         
         
         self.es_impvol = config.es_impvol
         self.nq_impvol = config.nq_impvol
@@ -42,6 +50,57 @@ class IBGW(Base):
         self.exp_rng, self.exp_hi, self.exp_lo = self.exp_range() 
 
 # ---------------------------------- Specific Calculations ------------------------------------ #   
+    def open_type(self):
+        logger.debug(f" IBGW | open_type | Note: Running")
+        a_period_mid = round(((self.a_high + self.a_low) / 2), 2)
+        overlap = max(0, min(self.day_high, self.p_high) - max(self.day_low, self.p_low))
+        total_range = self.day_high - self.day_low
+        if self.day_open == self.a_high and (self.b_high < a_period_mid):
+            open_type = "OD v"
+        elif self.day_open == self.a_low and (self.b_low > a_period_mid):
+            open_type = "OD ^"
+        elif (self.day_open > a_period_mid) and (self.b_high < a_period_mid):
+            open_type = "OTD v"
+        elif (self.day_open < a_period_mid) and (self.b_low > a_period_mid):
+            open_type = "OTD ^"
+        elif (self.day_open > a_period_mid) and (self.b_low > a_period_mid) and (self.b_high > self.orh):
+            open_type = "ORR ^"
+        elif (self.day_open < a_period_mid) and (self.b_high < a_period_mid) and (self.b_low < self.orl):
+            open_type = "ORR v"
+        elif overlap >= 0.5 * total_range:
+            open_type = "OAIR"
+        elif (overlap < 0.5 * total_range) and (self.day_open >= self.p_high):
+            open_type = "OAOR ^"
+        elif (overlap < 0.5 * total_range) and (self.day_open <= self.p_low):
+            open_type = "OAOR v"
+        else:
+            open_type = "Other"
+        return open_type 
+    
+    def prior_session_type(self):
+        return
+    
+    def slope_to_vwap(self):
+        # Need to come up with a better solution to estimate VWAP SLOPE
+        logger.debug(f" IB_EQUITY | slope_to_vwap | Note: Running")
+        scale_time = 1.0
+        scale_price = 1.0
+        delta_price = abs(self.eth_vwap - self.eth_vwap_pt)
+        delta_time = 0.1
+        
+        delta_y = delta_price * scale_price
+        delta_x = delta_time * scale_time
+        slope = delta_y / delta_x
+        
+        theta_radians = math.atan(slope)
+        theta_degrees = round((math.degrees(theta_radians)), 2)
+        if theta_degrees >= 10:
+            vwap_type = 'Strong' 
+        else:
+            vwap_type = 'Flat'
+        logger.debug(f" IB_EQUITY | slope_to_vwap | delta_x: {delta_price} | delta_y: {delta_y} | slope: {slope} | theta_degrees: {theta_degrees} | Note: Complete")
+        return theta_degrees, vwap_type    
+    
     def exp_range(self):
         logger.debug(f" IBGW | exp_range | Product: {self.product_name} | Note: Running")
 
@@ -80,7 +139,10 @@ class IBGW(Base):
 # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self):
         logger.debug(f" IBGW | input | Product: {self.product_name} | Note: Running")
-        
+        # Some of the IBGW Critical Criteria Include the Following:
+        # 1. IB is narrow to average (below 90% of the IB ATR) 
+        # 2. Have not traded 1.5x IB
+        # 3. Handle Neutral Scenarios 
         self.used_atr = self.ib_high - self.ib_low
         self.remaining_atr = max((self.ib_atr - self.used_atr), 0)
         
@@ -119,12 +181,12 @@ class IBGW(Base):
         
         # Define time windows based on product type
         if self.product_name == 'CL':
-            start_time = self.crude_pvat_start
-            end_time = self.crude_ib
+            start_time = self.crude_ib
+            end_time = self.crude_close
             logger.debug(f" IBGW | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
         elif self.product_name in ['ES', 'RTY', 'NQ']:
-            start_time = self.equity_pvat_start
-            end_time = self.equity_ib
+            start_time = self.equity_ib
+            end_time = self.equity_close
             logger.debug(f" IBGW | time_window | Product: {self.product_name} | Time Window: {start_time} - {end_time}")
         else:
             logger.warning(f" IBGW | time_window | Product: {self.product_name} | No time window defined.")
@@ -155,40 +217,65 @@ class IBGW(Base):
                 if self.direction != last_alert: 
                     logger.info(f" IBGW | check | Product: {self.product_name} | Note: Condition Met")
                     
-                    # Logic For c_within_atr 
+                    # Logic For c_50%_expected range left (Use static not directional)
                     if self.atr_condition: 
                         self.c_within_atr = "x" 
                     else:
                         self.c_within_atr = "  "
-                    # Logic For c_orderflow
+                    # Logic For one time framing (past 3-4 30 min periods)
                     self.c_orderflow = "  "
                     if self.direction == "short" and self.delta < 0:
                         self.c_orderflow = "x"
                     elif self.direction == "long" and self.delta > 0:
                         self.c_orderflow = "x"
-                    # Logic for c_euro IB
+                    # logic for clear_magnet (pull from value references and check if they are within 2x IB)
                     self.c_euro_ib = "  "
                     if self.direction == "short" and self.cpl < self.euro_ibl:
                         self.c_euro_ib = "x"
                     elif self.direction == "long" and self.cpl > self.euro_ibh:
                         self.c_euro_ib = "x"
-                    # Logic for c_or
+                    # logic for not hit 1.5x IB
+                    self.c_euro_ib = "  "
+                    if self.direction == "short" and self.cpl < self.euro_ibl:
+                        self.c_euro_ib = "x"
+                    elif self.direction == "long" and self.cpl > self.euro_ibh:
+                        self.c_euro_ib = "x"                        
+                    # Logic for SUPPORTIVE directional open
                     self.c_or = "  "
                     if self.direction == "short" and self.cpl < self.orl:
                         self.c_or = "x"
                     elif self.direction == "long" and self.cpl > self.orh:
                         self.c_or = "x"
-                    # Logic for c_between
+                    # Logic for IB is narrow to average
                     self.c_between = "  "
                     if self.direction == "short" and self.p_vpoc < self.cpl < self.eth_vwap:
                         self.c_between = "x"
                     elif self.direction == "long" and self.eth_vwap < self.cpl < self.p_vpoc:
                         self.c_between = "x"
-                    # Logic for c_align
+                    # Logic for c_euro IB
+                    self.c_euro_ib = "  "
+                    if self.direction == "short" and self.cpl < self.euro_ibl:
+                        self.c_euro_ib = "x"
+                    elif self.direction == "long" and self.cpl > self.euro_ibh:
+                        self.c_euro_ib = "x"                        
+                    # Logic for skew in profile towards IB extreme
                     if abs(self.eth_vwap - self.p_vpoc) <= (self.exp_rng * 0.05):
                         self.c_align = "x"
                     else: 
                         self.c_align = "  "
+                    # Logic for IB broke from composite reference, must be 5d, 20d, or 90d (for now)
+                    self.c_between = "  "
+                    if self.direction == "short" and self.p_vpoc < self.cpl < self.eth_vwap:
+                        self.c_between = "x"
+                    elif self.direction == "long" and self.eth_vwap < self.cpl < self.p_vpoc:
+                        self.c_between = "x"   
+                    # Logic for is prior session balanced
+                    self.c_between = "  "
+                    if self.direction == "short" and self.p_vpoc < self.cpl < self.eth_vwap:
+                        self.c_between = "x"
+                    elif self.direction == "long" and self.eth_vwap < self.cpl < self.p_vpoc:
+                        self.c_between = "x"                          
+                                             
                     # Logic for Score 
                     self.score = sum(1 for condition in [self.c_within_atr, self.c_orderflow, self.c_euro_ib, self.c_or, self.c_between, self.c_align] if condition == "x")   
                     try:

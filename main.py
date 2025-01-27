@@ -27,6 +27,8 @@ import os
 # IBGW
 # IBGP
 # XTFD
+# Add playbook logging (So we can see what is being sent to discord)
+# Dont Bake in Narrative into playbook logic
 # ------------------------------------------------------------ #
 
 def main():

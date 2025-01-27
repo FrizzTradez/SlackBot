@@ -17,10 +17,10 @@ from alertbot.alerts.conditional.contextual.neutral import NEUTRAL
 from alertbot.alerts.conditional.contextual.pre_ib import PRE_IB_BIAS
 
 external_impvol = [
-    {"sheet_name": "ES_Data", "sheet_id": "1miVoDpHI40Nff7PZB5QVKAGaB-QaGEJzijo8uf2wtCU", "row_number": 17, "col_number": 130},
-    {"sheet_name": "NQ_Data", "sheet_id": "1sypXFWOHl5-wBihCBSLDMv0Z-wYUoU-QoUXXfKfqB7Y", "row_number": 17, "col_number": 130},
-    {"sheet_name": "RTY_Data", "sheet_id": "1G-gnb5ZYEnQdd9nJyraguPhlnLYMA09Cpz9EH-_8nkM", "row_number": 17, "col_number": 130},
-    {"sheet_name": "CL_Data", "sheet_id": "1SFfvZyBj5XvCuzx8bodqQ29yWtuIoTrPqmmCBaHGRzY", "row_number": 17, "col_number": 130}
+    {"sheet_name": "ES_Data", "sheet_id": "1miVoDpHI40Nff7PZB5QVKAGaB-QaGEJzijo8uf2wtCU", "row_number": 3, "col_number": 132},
+    {"sheet_name": "NQ_Data", "sheet_id": "1sypXFWOHl5-wBihCBSLDMv0Z-wYUoU-QoUXXfKfqB7Y", "row_number": 4, "col_number": 132},
+    {"sheet_name": "RTY_Data", "sheet_id": "1G-gnb5ZYEnQdd9nJyraguPhlnLYMA09Cpz9EH-_8nkM", "row_number": 5, "col_number": 132},
+    {"sheet_name": "CL_Data", "sheet_id": "1SFfvZyBj5XvCuzx8bodqQ29yWtuIoTrPqmmCBaHGRzY", "row_number": 7, "col_number": 132}
 ] 
 external_bias = [
     {"sheet_name": "ES_PREP", "sheet_id": "1miVoDpHI40Nff7PZB5QVKAGaB-QaGEJzijo8uf2wtCU", "row_number": 52, "col_number": 3},
