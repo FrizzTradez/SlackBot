@@ -51,7 +51,6 @@ class IBGW(Base):
 
 # ---------------------------------- Specific Calculations ------------------------------------ #   
     def open_type(self):
-        logger.debug(f" IBGW | open_type | Note: Running")
         a_period_mid = round(((self.a_high + self.a_low) / 2), 2)
         overlap = max(0, min(self.day_high, self.p_high) - max(self.day_low, self.p_low))
         total_range = self.day_high - self.day_low
@@ -82,7 +81,6 @@ class IBGW(Base):
     
     def slope_to_vwap(self):
         # Need to come up with a better solution to estimate VWAP SLOPE
-        logger.debug(f" IB_EQUITY | slope_to_vwap | Note: Running")
         scale_time = 1.0
         scale_price = 1.0
         delta_price = abs(self.eth_vwap - self.eth_vwap_pt)
@@ -102,7 +100,6 @@ class IBGW(Base):
         return theta_degrees, vwap_type    
     
     def exp_range(self):
-        logger.debug(f" IBGW | exp_range | Product: {self.product_name} | Note: Running")
 
         # Calculation (product specific or Not)
         if not self.prior_close:
@@ -128,7 +125,6 @@ class IBGW(Base):
         
         
     def total_delta(self):
-        logger.debug(f" IBGW | total_delta | Product: {self.product_name} | Note: Running")
 
         # Calculation (Product Specific or Not)        
         total_delta = self.total_ovn_delta + self.total_rth_delta
@@ -138,7 +134,6 @@ class IBGW(Base):
     
 # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self):
-        logger.debug(f" IBGW | input | Product: {self.product_name} | Note: Running")
         # Some of the IBGW Critical Criteria Include the Following:
         # 1. IB is narrow to average (below 90% of the IB ATR) 
         # 2. Have not traded 1.5x IB
@@ -173,7 +168,6 @@ class IBGW(Base):
     
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
-        logger.debug(f" IBGW | time_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
         self.current_datetime = datetime.now(self.est)
@@ -201,7 +195,6 @@ class IBGW(Base):
             return False
 # ---------------------------------- Calculate Criteria ------------------------------------ #      
     def check(self):
-        logger.debug(f" IBGW | check | Product: {self.product_name} | Note: Running")
         
         # Define Direction
         self.direction = "short" if self.cpl > self.p_vpoc else "long"
@@ -286,10 +279,9 @@ class IBGW(Base):
                 else:
                     logger.debug(f" IBGW | check | Product: {self.product_name} | Note: Alert: {self.direction} Is Same")
         else:
-            logger.info(f" IBGW | check | Product: {self.product_name} | Note: Condition Not Met")
+            logger.debug(f" IBGW | check | Product: {self.product_name} | Note: Condition Not Met")
 # ---------------------------------- Alert Preparation------------------------------------ #  
     def discord_message(self):
-        logger.debug(f" IBGW | discord_message | Product: {self.product_name} | Note: Running")
         
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
         
@@ -353,7 +345,6 @@ class IBGW(Base):
         return embed 
     
     def execute(self):
-        logger.debug(f" IBGW | execute | Product: {self.product_name} | Note: Running")
         
         embed = self.discord_message()
         webhook_url = self.discord_webhooks_playbook.get(self.product_name)

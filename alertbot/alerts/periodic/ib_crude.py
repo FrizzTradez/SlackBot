@@ -15,76 +15,54 @@ class IB_Crude_Alert(Base):
         
     # ---------------------- Specific Calculations ------------------------- #
     def ib_info(self, ib_high, ib_low, ib_atr):
-        logger.debug(f" IB_CRUDE | ib_info | Note: Running")
-        
         ib_range = round((ib_high - ib_low), 2)
         ib_vatr = round((ib_range / ib_atr), 2)
-       
         if ib_vatr > 1.1:
             ib_type = "Wide IB"
         elif ib_vatr < 0.85:
             ib_type = "Narrow IB"
         elif 0.85 <= ib_vatr <= 1.1:
             ib_type = "Average IB"
-        
         return ib_range, ib_type, round((ib_vatr*100), 2)
-        
     def exp_range_info(self, prior_close, cpl, ovn_to_ibh, ovn_to_ibl, impvol):
-        logger.debug(f" IB_CRUDE | exp_range_info | Note: Running")
-        
         exp_range = round(((prior_close * (impvol / 100)) * math.sqrt(1 / 252)), 2)
         exp_hi = (prior_close + exp_range)
         exp_lo = (prior_close - exp_range)
         range_used = round(((ovn_to_ibh - ovn_to_ibl) / exp_range), 2)
-
         if abs(range_used) >= 1:
             exhausted = "Exhausted"
         elif abs(range_used) <= 0.55:
             exhausted = "Below Avg"
         else:
             exhausted = "Nominal"
-
         if cpl > exp_hi:
             range_up = "Exhausted"
         else:
             range_up = round(abs((exp_hi - cpl) / (exp_range * 2) * 100), 2)
-
         if cpl < exp_lo:
             range_down = "Exhausted"
         else:
             range_down = round(abs((exp_lo - cpl) / (exp_range * 2)* 100), 2)
-        
         return exhausted, range_used*100, range_up, range_down, exp_range
-    
     def slope_to_vwap(self, delta_price, scale_price, scale_time):
         delta_time = 0.5
-        
         delta_y = delta_price * scale_price
         delta_x = delta_time * scale_time
-        
         slope = delta_y / delta_x
-        
         theta_radians = math.atan(slope)
         theta_degrees = round((math.degrees(theta_radians)), 2)
-        
         if theta_degrees >= 10:
             vwap_type = 'Strong' 
         else:
             vwap_type = 'Flat'
-            
         return theta_degrees, vwap_type
-    
     def gap_info(self, day_open, prior_high, prior_low, exp_range):
-        logger.debug(f" IB_CRUDE | gap_info | Note: Running")
-        
         gap = ""
         gap_tier = ""
         gap_size = 0
-        
         if day_open > prior_high:
             gap_size = round((day_open - prior_high), 2)
             gap = "Gap Up"
-            
             if exp_range == 0:
                 gap_tier = "Undefined"  
             else:
@@ -95,11 +73,9 @@ class IB_Crude_Alert(Base):
                     gap_tier = "Tier 2"
                 else:
                     gap_tier = "Tier 3"
-        
         elif day_open < prior_low:
             gap_size = round((prior_low - day_open), 2)
             gap = "Gap Down"
-            
             if exp_range == 0:
                 gap_tier = "Undefined" 
             else:
@@ -110,19 +86,13 @@ class IB_Crude_Alert(Base):
                     gap_tier = "Tier 2"
                 else:
                     gap_tier = "Tier 3"
-        
         else:
             gap = "No Gap"
             gap_tier = "Tier 0"
             gap_size = 0
-        
         return gap, gap_tier, gap_size
-
     def posture(self, cpl, fd_vpoc, td_vpoc, exp_range):
-        logger.debug(f" IB_CRUDE | posture | Note: Running")
-        
         threshold = round((exp_range * 0.68), 2)
-
         if (abs(cpl - fd_vpoc) <= threshold) and (abs(fd_vpoc - td_vpoc) <= threshold):
             posture = "PRICE=5D=20D"
         elif (cpl > fd_vpoc + threshold) and (fd_vpoc > td_vpoc + threshold):
@@ -143,16 +113,11 @@ class IB_Crude_Alert(Base):
             posture = "PRICEv5D^20D"
         else:
             posture = "Other"
-
         return posture
-        
     def open_type(self, a_high, a_low, b_high, b_low, day_open, orh, orl, prior_high, prior_low, day_high, day_low):
-        logger.debug(f" IB_EQUITY | open_type | Note: Running")
-        
         a_period_mid = round(((a_high + a_low) / 2), 2)
         overlap = max(0, min(day_high, prior_high) - max(day_low, prior_low))
         total_range = day_high - day_low
-
         if day_open == a_high and (b_high < a_period_mid):
             open_type = "OD v"
         elif day_open == a_low and (b_low > a_period_mid):
@@ -173,7 +138,6 @@ class IB_Crude_Alert(Base):
             open_type = "OAOR v"
         else:
             open_type = "Other"
-
         return open_type
     # ---------------------- Alert Preparation ------------------------- #
     def send_alert(self):
@@ -183,18 +147,15 @@ class IB_Crude_Alert(Base):
             thread.start()
             threads.append(thread)
             time.sleep(1)
-
         # Optionally wait for all threads to complete
         for thread in threads:
             thread.join()
-
     def process_product(self, product_name):
         try:
             variables = self.fetch_latest_variables(product_name)
             if not variables:
                 logger.error(f" IB_CRUDE | process_product | Product: {product_name} |  Note: No data available ")
                 return
-            
             # Variables specific to the product
             ib_atr = round(variables.get(f'{product_name}_IB_ATR'), 2)
             ib_high = round(variables.get(f'{product_name}_IB_HIGH'), 2)
@@ -223,7 +184,6 @@ class IB_Crude_Alert(Base):
             eth_vwap_pt = variables.get(f'{product_name}_ETH_VWAP_P2')
             delta_price = abs(eth_vwap - eth_vwap_pt)            
             impvol = config.cl_impvol
-
             color = self.product_color.get(product_name)
             current_time = datetime.now(self.est).strftime('%H:%M:%S')
             
@@ -246,7 +206,7 @@ class IB_Crude_Alert(Base):
             vwap_slope, vwap_type = self.slope_to_vwap(
                 delta_price, scale_price=1.0, scale_time=1.0
                 )
-                        
+            
             # Build the Discord Embed
             try:
                 embed_title = f":large_{color}_square: **{product_name} - Context - IB Check-In** :loudspeaker:"
@@ -284,7 +244,7 @@ class IB_Crude_Alert(Base):
                 embed.add_embed_field(name=":alarm_clock: Alert Time", value=f"_{current_time}_ EST", inline=False)
 
                 # Send the embed with the webhook
-                webhook_url = self.discord_webhooks_playbook.get(product_name)
+                webhook_url = self.discord_webhooks_alert.get(product_name)
                 if webhook_url:
                     webhook = DiscordWebhook(url=webhook_url, username="IB Equity Alert", content=f"Alert for {product_name}")
                     webhook.add_embed(embed)
@@ -299,3 +259,4 @@ class IB_Crude_Alert(Base):
                 logger.error(f" IB_CRUDE | process_product | Product: {product_name} | Error sending Discord message: {e}")
         except Exception as e:
             logger.error(f" IB_CRUDE | process_product | Product: {product_name} | Error processing: {e}")
+            

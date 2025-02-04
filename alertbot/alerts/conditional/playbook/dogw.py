@@ -51,7 +51,6 @@ class DOGW(Base):
 
     # ---------------------------------- Specific Calculations ------------------------------------ #   
     def open_type_algorithm(self):
-        logger.debug(f"DOGW | open_type_algorithm | Note: Running")
         a_period_mid = round(((self.a_high + self.a_low) / 2), 2)
         a_period_range = self.a_high - self.a_low
         five_pct = 0.05 * a_period_range
@@ -151,7 +150,6 @@ class DOGW(Base):
         return open_type    
         
     def exp_range(self):
-        logger.debug(f"DOGW | exp_range | Product: {self.product_name} | Note: Running")
 
         # Calculation (product specific or Not)
         if not self.prior_close:
@@ -219,7 +217,6 @@ class DOGW(Base):
         
     # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self): # This is where the critical criteria go
-        logger.debug(f"DOGW | input | Product: {self.product_name} | Note: Running")
         
         self.used_atr = self.ib_high - self.ib_low
         self.remaining_atr = max((self.ib_atr - self.used_atr), 0)
@@ -251,7 +248,6 @@ class DOGW(Base):
     
     # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
-        logger.debug(f"DOGW | time_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
         self.current_datetime = datetime.now(self.est)
@@ -281,7 +277,6 @@ class DOGW(Base):
     
     # ---------------------------------- Calculate Criteria ------------------------------------ #      
     def check(self):
-        logger.debug(f"DOGW | check | Product: {self.product_name} | Note: Running")
         
         # Define Direction
         self.direction = "short" if self.opentype in ["OD v", "OTD v", "ORR v", "OAOR v"] else "long"
@@ -341,11 +336,10 @@ class DOGW(Base):
                 else:
                     logger.debug(f"DOGW | check | Product: {self.product_name} | Note: Alert: {self.direction} Is Same")
         else:
-            logger.info(f"DOGW | check | Product: {self.product_name} | Note: Condition Not Met")
+            logger.debug(f"DOGW | check | Product: {self.product_name} | Note: Condition Not Met")
     
     # ---------------------------------- Alert Preparation------------------------------------ #  
     def discord_message(self):
-        logger.debug(f"PVAT | discord_message | Product: {self.product_name} | Note: Running")
         
         pro_color = self.product_color.get(self.product_name)
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
@@ -405,7 +399,6 @@ class DOGW(Base):
 
         return embed 
     def execute(self):
-        logger.debug(f"DOGW | execute | Product: {self.product_name} | Note: Running")
         
         embed = self.discord_message()
         webhook_url = self.discord_webhooks_playbook.get(self.product_name)

@@ -39,7 +39,6 @@ class DATR(Base):
 
 # ---------------------------------- Specific Calculations ------------------------------------ #   
     def exp_range(self):
-        logger.debug(f" DATR | exp_range | Product: {self.product_name} | Note: Running")
 
         # Calculation (product specific or Not)
         if not self.prior_close:
@@ -81,7 +80,6 @@ class DATR(Base):
             raise ValueError(f" DATR | exp_range | Product: {self.product_name} | Note: Unknown Product")
         
     def total_delta(self):
-        logger.debug(f" DATR | total_delta | Product: {self.product_name} | Note: Running")
 
         # Calculation (Product Specific or Not)        
         total_delta = self.total_ovn_delta + self.total_rth_delta
@@ -91,7 +89,6 @@ class DATR(Base):
       
     def prior_day(self):
         
-        logger.debug(f" DATR | prior_day | Note: Running")
         
         if self.prior_high <= self.prior_ibh and self.prior_low >= self.prior_ibl:
             day_type = "Non-Trend"
@@ -152,7 +149,6 @@ class DATR(Base):
     
 # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self):
-        logger.debug(f" DATR | input | Product: {self.product_name} | Note: Running")
         
         tolerance = (self.exp_rng * 0.15)
         prior_mid = ((self.prior_high + self.prior_low) / 2)
@@ -178,7 +174,6 @@ class DATR(Base):
     
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
-        logger.debug(f" DATR | time_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
         self.current_datetime = datetime.now(self.est)
@@ -206,7 +201,6 @@ class DATR(Base):
             return False
 # ---------------------------------- Calculate Criteria ------------------------------------ #      
     def check(self):
-        logger.debug(f" DATR | check | Product: {self.product_name} | Note: Running")
         
         # Define Direction
         self.direction = None
@@ -268,10 +262,9 @@ class DATR(Base):
                 else:
                     logger.debug(f" DATR | check | Product: {self.product_name} | Note: Alert: {self.direction} Is Same")
         else:
-            logger.info(f" DATR | check | Product: {self.product_name} | Note: Condition Not Met")
+            logger.debug(f" DATR | check | Product: {self.product_name} | Note: Condition Not Met")
 # ---------------------------------- Alert Preparation------------------------------------ #  
     def discord_message(self):
-        logger.debug(f" DATR | discord_message | Product: {self.product_name} | Note: Running")
         
         pro_color = self.product_color.get(self.product_name)
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
@@ -338,7 +331,6 @@ class DATR(Base):
         return embed   
     
     def execute(self):
-        logger.debug(f" DATR | execute | Product: {self.product_name} | Note: Running")
         
         embed = self.discord_message()
         webhook_url = self.discord_webhooks_playbook.get(self.product_name)

@@ -21,7 +21,6 @@ class NEUTRAL(Base):
         
 # ---------------------------------- Driving Input Logic ------------------------------------ #      
     def input(self, last_state):
-        logger.debug(f" NEUTRAL | input | Product: {self.product_name} | Note: Running")
 
         # Initialize variables to keep track of alerts
         has_alerted_neutral_lower = last_state.get('has_alerted_neutral_lower', False)
@@ -56,7 +55,6 @@ class NEUTRAL(Base):
         return logic
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
-        logger.debug(f" NEUTRAL | time_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
         self.current_datetime = datetime.now(self.est)
@@ -84,7 +82,6 @@ class NEUTRAL(Base):
             return False
 # ---------------------------------- Main Function ------------------------------------ #      
     def check(self):
-        logger.debug(f" NEUTRAL | check | Product: {self.product_name} | Note: Running")
         logic = False
 
         with last_alerts_lock:
@@ -113,8 +110,6 @@ class NEUTRAL(Base):
             logger.debug(f" NEUTRAL | check | Product: {self.product_name} | Note: No alert sent")
 # ---------------------------------- Alert Preparation------------------------------------ # 
     def discord_message(self):
-        logger.debug(f" NEUTRAL | discord_message | Product: {self.product_name} | Note: Running")
-        
         pro_color = self.product_color.get(self.product_name, 0x808080)  # Default to grey if not found
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
 
@@ -141,8 +136,6 @@ class NEUTRAL(Base):
         return embed 
     
     def execute(self):
-        logger.debug(f" NEUTRAL | execute | Product: {self.product_name} | Note: Running")
-        
         embed = self.discord_message()
         
         try:

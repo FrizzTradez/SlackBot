@@ -24,7 +24,6 @@ class PRE_IB_BIAS(Base):
         
 # ---------------------------------- Driving Input Logic ------------------------------------ #         
     def input(self):
-        logger.debug(f" PRE_IB | input | Product: {self.product_name} | Note: Running")
         
         self.bias_string = ''
         if self.product_name == 'ES':
@@ -84,7 +83,6 @@ class PRE_IB_BIAS(Base):
         return logic
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
-        logger.debug(f" PRE_IB | time_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
         self.current_datetime = datetime.now(self.est)
@@ -112,7 +110,6 @@ class PRE_IB_BIAS(Base):
             return False   
 # ---------------------------------- Main Function ------------------------------------ #                  
     def check(self):
-        logger.debug(f" PRE_IB | check | Product: {self.product_name} | Note: Running")
         
         # Driving Input
         if self.input() and self.time_window():
@@ -132,10 +129,9 @@ class PRE_IB_BIAS(Base):
                 else:
                     logger.debug(f" PRE_IB | check | Product: {self.product_name} | Note: Alert Already Sent Today")
         else:
-            logger.info(f" PRE_IB | check | Product: {self.product_name} | Note: Condition Not Met Or No Bias")
+            logger.debug(f" PRE_IB | check | Product: {self.product_name} | Note: Condition Not Met Or No Bias")
 # ---------------------------------- Alert Preparation------------------------------------ #  
     def discord_message(self):
-        logger.debug(f" PRE_IB | discord_message | Product: {self.product_name} | Note: Running")
         
         pro_color = self.product_color.get(self.product_name, 0x808080)  # Default to grey if not found
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
@@ -172,7 +168,6 @@ class PRE_IB_BIAS(Base):
         return embed 
     
     def execute(self):
-        logger.debug(f" PRE_IB | execute | Product: {self.product_name} | Note: Running")
         
         embed = self.discord_message()
         

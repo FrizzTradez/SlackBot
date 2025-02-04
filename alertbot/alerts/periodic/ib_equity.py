@@ -15,7 +15,6 @@ class IB_Equity_Alert(Base):
         
     # ---------------------- Specific Calculations ------------------------- #
     def ib_info(self, ib_high, ib_low, ib_atr):
-        logger.debug(f" IB_EQUITY | ib_info | Note: Running")
         
         ib_range = round((ib_high - ib_low), 2)
         ib_vatr = round((ib_range / ib_atr), 2)
@@ -30,7 +29,6 @@ class IB_Equity_Alert(Base):
         return ib_range, ib_type, round((ib_vatr*100), 2)
 
     def slope_to_vwap(self, delta_price, scale_price=1.0, scale_time=1.0):
-        logger.debug(f" IB_EQUITY | slope_to_vwap | delta_price: {delta_price} | Note: Running")
         delta_time = 0.5
         
         delta_y = delta_price * scale_price
@@ -50,7 +48,6 @@ class IB_Equity_Alert(Base):
         return theta_degrees, vwap_type
         
     def exp_range_info(self, prior_close, cpl, ovn_to_ibh, ovn_to_ibl, impvol):
-        logger.debug(f" IB_EQUITY | exp_range_info | Note: Running")
         
         exp_range = round(((prior_close * (impvol / 100)) * math.sqrt(1 / 252)), 2)
         exp_hi = (prior_close + exp_range)
@@ -77,7 +74,6 @@ class IB_Equity_Alert(Base):
         return exhausted, range_used*100, range_up, range_down, exp_range
 
     def gap_info(self, day_open, prior_high, prior_low, exp_range):
-        logger.debug(f" IB_EQUITY | gap_info | Note: Running")
         
         gap = ""
         gap_tier = ""
@@ -121,7 +117,6 @@ class IB_Equity_Alert(Base):
         return gap, gap_tier, gap_size
 
     def posture(self, cpl, fd_vpoc, td_vpoc, exp_range):
-        logger.debug(f" IB_EQUITY | posture | Note: Running")
         
         threshold = round((exp_range * 0.68), 2)
 
@@ -149,7 +144,6 @@ class IB_Equity_Alert(Base):
         return posture
         
     def open_type(self, a_high, a_low, b_high, b_low, day_open, orh, orl, prior_high, prior_low, day_high, day_low):
-        logger.debug(f" IB_EQUITY | open_type | Note: Running")
         
         a_period_mid = round(((a_high + a_low) / 2), 2)
         overlap = max(0, min(day_high, prior_high) - max(day_low, prior_low))

@@ -15,14 +15,12 @@ class Gap_Check_Equity(Base):
         
     # ---------------------- Specific Calculations ------------------------- #
     def exp_range(self, prior_close, impvol):
-        logger.debug(f" GAP_EQUITY | exp_range | Note: Running")
         
         exp_range = round(((prior_close * (impvol / 100)) * math.sqrt(1 / 252)), 2)
         
         return exp_range
 
     def gap_info(self, day_open, prior_high, prior_low, exp_range):
-        logger.debug(f" GAP_EQUITY | gap_info | Note: Running")
         
         gap = ""
         gap_tier = ""

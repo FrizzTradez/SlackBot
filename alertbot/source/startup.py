@@ -14,15 +14,14 @@ from googleapiclient.http import MediaIoBaseDownload
 import io
 
 logger = logging.getLogger(__name__)
-
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+
 creds = Credentials.from_service_account_file(r"alertbot\utils\credentials.json", scopes=scopes)
 client = gspread.authorize(creds)
 
 class Initialization(Base):
     
     def grab_impvol(self, external_impvol): 
-        logger.debug(f" Startup | grab_impvol | Note: Running")
         
         output_impvol = {}
 
@@ -51,17 +50,12 @@ class Initialization(Base):
         return es_impvol, nq_impvol, rty_impvol, cl_impvol
     
     def grab_bias(self, external_bias):
-        logger.debug(f" Startup | grab_impvol | Note: Running")
-        
         output_bias = {}
-
         for task in external_bias:
             workbook = client.open_by_key(task["sheet_id"])
             sheet = workbook.worksheet(task["sheet_name"])
             cell_value = sheet.cell(task["row_number"], task["col_number"]).value
-            
             logger.debug(f" Startup | grab_bias | Sheet: {task['sheet_name']} | Row: {task['row_number']}  | Column: {task['col_number']}")
-         
             if "ES" in task["sheet_name"]:
                 output_bias['es_bias'] = cell_value
             elif "NQ" in task["sheet_name"]:
@@ -70,19 +64,14 @@ class Initialization(Base):
                 output_bias['rty_bias'] = cell_value
             elif "CL" in task["sheet_name"]:
                 output_bias['cl_bias'] = cell_value
-                
         es_bias = output_bias['es_bias']
         nq_bias = output_bias['nq_bias']
         rty_bias = output_bias['rty_bias']
         cl_bias = output_bias['cl_bias']
- 
         logger.debug(f" Startup | grab_bias | ES_Bias: {es_bias} | NQ_Bias: {nq_bias} | RTY_Bias: {rty_bias} | CL_Bias: {cl_bias}")
         return es_bias, nq_bias, rty_bias, cl_bias
     
     def publish_prep(self):
-        
-        logger.info("Startup | publish_prep | Starting publish_prep function.")
-        
         preps = {
             'ES': {
                 'drive_folder_id': '1FjvgLwW4I7lLZmv33IeDcsL1X2urOOSy', 
@@ -105,28 +94,24 @@ class Initialization(Base):
                 'icon': '🔴',
             }            
         }
-        
         try:
             creds = Credentials.from_service_account_file(
                 r"alertbot\utils\credentials.json",
                 scopes=['https://www.googleapis.com/auth/drive']
             )
             drive_service = build('drive', 'v3', credentials=creds)
-            logger.info("Startup | publish_prep | Google Drive API client initialized.")
+            logger.debug("Startup | publish_prep | Google Drive API client initialized.")
         except Exception as e:
             logger.error(f"Startup | publish_prep | Failed to initialize Google Drive API client: {e}")
             return
-        
         for product, config in preps.items():
             drive_folder_id = config['drive_folder_id']
             icon = config['icon']
             now = datetime.now()
             date_str = f"{now.month}-{now.day}-{now.year}"
             filename = f"{product}_PREP_{date_str}.pdf"
-            
-            logger.info(f"Startup | publish_prep | Processing {product} prep.")
+            logger.debug(f"Startup | publish_prep | Processing {product} prep.")
             logger.debug(f"Startup | publish_prep | Expected filename: {filename}")
-            
             query = f"name='{filename}' and '{drive_folder_id}' in parents and trashed=false"
             try:
                 results = drive_service.files().list(
@@ -136,15 +121,13 @@ class Initialization(Base):
                     pageSize=1
                 ).execute()
                 files = results.get('files', [])
-                
                 if not files:
                     logger.error(f"Startup | publish_prep | File {filename} not found in Drive folder {drive_folder_id}.")
                     continue
-                
                 file = files[0]
                 file_id = file['id']
                 web_view_link = file.get('webViewLink')
-                logger.info(f"Startup | publish_prep | Retrived webViewLink for {filename}: {web_view_link}.")
+                logger.debug(f"Startup | publish_prep | Retrived webViewLink for {filename}: {web_view_link}.")
             except HttpError as e:
                 logger.error(f"Startup | publish_prep | Failed to retrieve webViewLink for {filename}: {e}")
                 continue
@@ -158,10 +141,9 @@ class Initialization(Base):
                     body=permission,
                     fields='id'
                 ).execute()
-                logger.info(f"Startup | publish_prep | Set permissions for {filename} to 'anyone with the link can view'.")
+                logger.debug(f"Startup | publish_prep | Set permissions for {filename} to 'anyone with the link can view'.")
             except HttpError as e:
                 logger.error(f"Startup | publish_prep | Failed to create permission for {filename}: {e}")
-
             try:
                 # Retrieve the updated webViewLink after setting permissions
                 file = drive_service.files().get(
@@ -169,11 +151,10 @@ class Initialization(Base):
                     fields='webViewLink'
                 ).execute()
                 web_view_link = file.get('webViewLink')
-                logger.info(f"Startup | publish_prep | Retrieved webViewLink for {filename}: {web_view_link}")
+                logger.debug(f"Startup | publish_prep | Retrieved webViewLink for {filename}: {web_view_link}")
             except HttpError as e:
                 logger.error(f"Startup | publish_prep | Failed to retrieve webViewLink for {filename}: {e}")
                 continue
-            
             try:
                 embed_title = f"{product} Prep For **{date_str}**"
                 embed = DiscordEmbed(
@@ -181,7 +162,6 @@ class Initialization(Base):
                     color=self.product_color.get(product, 0x000000)
                 )
                 embed.set_timestamp()
-                
                 # Add a field with the link to view the PDF
                 if web_view_link:
                     embed.add_embed_field(
@@ -191,12 +171,10 @@ class Initialization(Base):
                     )
                 else:
                     logger.warning(f"Startup | publish_prep | No webViewLink available for {filename}.")
-                
                 webhook_url = self.discord_webhooks_preps.get(product)
                 if not webhook_url:
                     logger.error(f"Startup | publish_prep | No Discord webhook URL configured for product '{product}'.")
                     continue
-
                 self.send_discord_embed(
                     webhook_url=webhook_url,
                     embed=embed,
@@ -204,16 +182,12 @@ class Initialization(Base):
                     avatar_url=None 
                 )
                 logger.info(f"Startup | publish_prep | Sent Discord embed with link for {filename} to webhook for {product}.")
-                
             except Exception as e:
                 logger.error(f"Startup | publish_prep | Failed to create or send Discord embed for {product}: {e}")
                 continue
-            
         logger.info("Startup | publish_prep | Completed publish_prep function.")
-
     def prep_data(files):
         all_variables = {}
-        
         period_equity = {
             'A': time(9, 30),
             'B': time(10, 0),
@@ -242,13 +216,10 @@ class Initialization(Base):
             'J': time(13, 30),
             'K': time(14, 0),        
         }        
-        
         for task in files:  
-            
             est = ZoneInfo('America/New_York')
             now = datetime.now(est).time()
             process_task = False
-            
             if "CL" in task["name"]:
                 start_time = time(9, 0)
                 end_time = time(14, 30)
@@ -264,10 +235,8 @@ class Initialization(Base):
             else:
                 process_task = False
                 logger.debug(f" Startup | prep_data | Task: {task["name"]} | Process: {process_task} | Note: Out of Time Range For Product")
-                
             if not process_task:
                 continue
-            
             if task["header_row"] == 1:
                 data = pd.read_csv(task["filepath"], delimiter='\t', header=None)
             elif task["header_row"] == 0:
@@ -275,31 +244,25 @@ class Initialization(Base):
                 data = data.reset_index()
             else:
                 raise ValueError("header_row should be either 0 or 1")
-            
             # Set Header and Configure DF
             pd.options.mode.copy_on_write = True
             data.columns = data.iloc[task["iloc1"]]
             data = data[task["iloc2"]:]
-            
             # Drop Unwanted Columns and N/A
             existing_columns_to_drop = [col for col in columns_to_drop if col in data.columns]
             data = data.drop(columns=existing_columns_to_drop)
             df_cleaned = data.loc[:, data.columns.notna()]
             data = df_cleaned
             data = data.dropna()
-            
             # Set Date-Time As Index
             if 'Date Time' in data.columns:
                 data['Date Time'] = pd.to_datetime(data['Date Time'], errors='coerce')
                 data.set_index('Date Time', inplace=True)
-              
             # Converting Columns to float
             for columns in task["columns"]:
                 data[columns] = data[columns].str.replace(',', '.').astype(float)
-                
             logger.debug(f" Startup | prep_data | Task: {task["name"]} | Data-Frame: \n{data.head()}")
             variables = {}
-            
             match task["name"]:
                 case "ES_1":
                     # ------------------- Use Integer Based iLoc ----------------------- #
@@ -426,11 +389,9 @@ class Initialization(Base):
                     # ---------------------- Use Date Date Time Loc ------------------------- #
                     latest_date = data.index.max().date()
                     period_datetimes = {}
-
                     for period_label, period_time in period_equity.items():
                         specific_datetime = datetime.combine(latest_date, period_time)
                         period_datetimes[period_label] = specific_datetime
-
                     for period_label, specific_datetime in period_datetimes.items():    
                         if specific_datetime in data.index:
                             match period_label:
@@ -497,7 +458,6 @@ class Initialization(Base):
                     variables['NQ_P_MCLOSE'] = float(data.iloc[0]['[ID8.SG4] P_MCLOSE'])
                     variables['NQ_P_MVPOC'] = float(data.iloc[0]['[ID12.SG1] P_MVPOC'])
                     variables['NQ_MVWAP'] = float(data.iloc[0]['[ID1.SG1] MVWAP'])
-               
                 case "NQ_3":
                     variables['NQ_IB_ATR'] = float(data.iloc[1]['[ID2.SG1] IB ATR'])
                     variables['NQ_IB_HIGH'] = float(data.iloc[0]['[ID1.SG2] IBH'])
@@ -508,19 +468,15 @@ class Initialization(Base):
                     variables['NQ_OVNH'] = float(data.iloc[0]['[ID1.SG2] OVN H'])
                     variables['NQ_OVNL'] = float(data.iloc[0]['[ID1.SG3] OVN L'])
                     variables['NQ_TOTAL_OVN_DELTA'] = float(data.iloc[0]['[ID3.SG4] OVN Total'])
-                
                 case "NQ_5":
                     variables['NQ_OVNTOIB_HI'] = float(data.iloc[0]['[ID1.SG2] OVNTOIB_HI'])
                     variables['NQ_OVNTOIB_LO'] = float(data.iloc[0]['[ID1.SG3] OVNTOIB_LO'])
-                
                 case "NQ_6":
                     variables['NQ_EURO_IBH'] = float(data.iloc[0]['[ID1.SG2] EURO IBH'])
                     variables['NQ_EURO_IBL'] = float(data.iloc[0]['[ID1.SG3] EURO IBL'])
-                
                 case "NQ_7":
                     variables['NQ_ORH'] = float(data.iloc[0]['[ID1.SG2] ORH'])
                     variables['NQ_ORL'] = float(data.iloc[0]['[ID1.SG3] ORL'])
-                
                 case "RTY_1":
                     # ------------------- Use Integer Based iLoc ----------------------- #
                     variables['RTY_DAY_OPEN'] = float(data.iloc[0]['[ID2.SG1] Day_Open'])
@@ -609,7 +565,6 @@ class Initialization(Base):
                     variables['RTY_P_MCLOSE'] = float(data.iloc[0]['[ID8.SG4] P_MCLOSE'])
                     variables['RTY_P_MVPOC'] = float(data.iloc[0]['[ID12.SG1] P_MVPOC'])
                     variables['RTY_MVWAP'] = float(data.iloc[0]['[ID1.SG1] MVWAP'])
-               
                 case "RTY_3":
                     variables['RTY_IB_ATR'] = float(data.iloc[1]['[ID2.SG1] IB ATR'])
                     variables['RTY_IB_HIGH'] = float(data.iloc[0]['[ID1.SG2] IBH'])
@@ -620,19 +575,15 @@ class Initialization(Base):
                     variables['RTY_OVNH'] = float(data.iloc[0]['[ID1.SG2] OVN H'])
                     variables['RTY_OVNL'] = float(data.iloc[0]['[ID1.SG3] OVN L'])
                     variables['RTY_TOTAL_OVN_DELTA'] = float(data.iloc[0]['[ID3.SG4] OVN Total'])
-                
                 case "RTY_5":
                     variables['RTY_OVNTOIB_HI'] = float(data.iloc[0]['[ID1.SG2] OVNTOIB_HI'])
                     variables['RTY_OVNTOIB_LO'] = float(data.iloc[0]['[ID1.SG3] OVNTOIB_LO'])
-                
                 case "RTY_6":
                     variables['RTY_EURO_IBH'] = float(data.iloc[0]['[ID1.SG2] EURO IBH'])
                     variables['RTY_EURO_IBL'] = float(data.iloc[0]['[ID1.SG3] EURO IBL'])
-                
                 case "RTY_7":
                     variables['RTY_ORH'] = float(data.iloc[0]['[ID1.SG2] ORH'])
                     variables['RTY_ORL'] = float(data.iloc[0]['[ID1.SG3] ORL'])
-                
                 case "CL_1":
                     # ------------------- Use Integer Based iLoc ----------------------- #
                     variables['CL_DAY_OPEN'] = float(data.iloc[0]['[ID2.SG1] Day_Open'])

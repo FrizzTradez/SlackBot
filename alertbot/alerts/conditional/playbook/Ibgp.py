@@ -43,7 +43,6 @@ class IBGP(Base):
 
 # ---------------------------------- Specific Calculations ------------------------------------ #   
     def exp_range(self):
-        logger.debug(f" IBGP | exp_range | Product: {self.product_name} | Note: Running")
 
         # Calculation (product specific or Not)
         if not self.prior_close:
@@ -69,7 +68,6 @@ class IBGP(Base):
         
         
     def total_delta(self):
-        logger.debug(f" IBGP | total_delta | Product: {self.product_name} | Note: Running")
 
         # Calculation (Product Specific or Not)        
         total_delta = self.total_ovn_delta + self.total_rth_delta
@@ -79,7 +77,6 @@ class IBGP(Base):
     
 # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self):
-        logger.debug(f" IBGP | input | Product: {self.product_name} | Note: Running")
         
         self.used_atr = self.ib_high - self.ib_low
         self.remaining_atr = max((self.ib_atr - self.used_atr), 0)
@@ -111,7 +108,6 @@ class IBGP(Base):
     
 # ---------------------------------- Opportunity Window ------------------------------------ #   
     def time_window(self):
-        logger.debug(f" IBGP | time_window | Product: {self.product_name} | Note: Running")
         
         # Update current time
         self.current_datetime = datetime.now(self.est)
@@ -139,7 +135,6 @@ class IBGP(Base):
             return False
 # ---------------------------------- Calculate Criteria ------------------------------------ #      
     def check(self):
-        logger.debug(f" IBGP | check | Product: {self.product_name} | Note: Running")
         
         # Define Direction
         self.direction = "short" if self.cpl > self.p_vpoc else "long"
@@ -202,7 +197,6 @@ class IBGP(Base):
             logger.info(f" IBGP | check | Product: {self.product_name} | Note: Condition Not Met")
 # ---------------------------------- Alert Preparation------------------------------------ #  
     def discord_message(self):
-        logger.debug(f" IBGP | discord_message | Product: {self.product_name} | Note: Running")
         
         alert_time_formatted = self.current_datetime.strftime('%H:%M:%S') 
         
@@ -266,7 +260,6 @@ class IBGP(Base):
         return embed 
     
     def execute(self):
-        logger.debug(f" IBGP | execute | Product: {self.product_name} | Note: Running")
         
         embed = self.discord_message()
         webhook_url = self.discord_webhooks_playbook.get(self.product_name)

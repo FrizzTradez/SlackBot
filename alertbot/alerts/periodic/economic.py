@@ -18,7 +18,6 @@ class Economic(Base):
         super().__init__(files=files)
 
     def send_alert(self):
-        logger.debug(" ECON | send_alert | Note: Running")
         today = datetime.now()
         today_str = today.strftime('%m/%d/%Y')
         logger.debug(f" ECON | send_alert | Note: Fetching economic data for {today_str}...")
@@ -113,7 +112,6 @@ class Economic(Base):
             logger.error(f" ECON | send_alert | Error sending Discord message: {e}")
                 
     def format_event(self, row):
-        logger.debug(" ECON | format_event | Note: Running")
         
         event_time = row.get('time', 'N/A')
         event_name = row.get('event', 'N/A')
