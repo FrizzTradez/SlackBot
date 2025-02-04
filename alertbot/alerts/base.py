@@ -12,33 +12,33 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 class Base:
-    discord_webhooks_playbook = {
-        'ES': os.getenv("DISCORD_PLAYBOOK_ES_WEBHOOK"),
-        'NQ': os.getenv("DISCORD_PLAYBOOK_NQ_WEBHOOK"),
-        'RTY': os.getenv("DISCORD_PLAYBOOK_RTY_WEBHOOK"),
-        'CL': os.getenv("DISCORD_PLAYBOOK_CL_WEBHOOK")
-    }
-    discord_webhooks_alert = {
-        'ES': os.getenv("DISCORD_CONTEXT_ES_WEBHOOK"),
-        'NQ': os.getenv("DISCORD_CONTEXT_NQ_WEBHOOK"),
-        'RTY': os.getenv("DISCORD_CONTEXT_RTY_WEBHOOK"),
-        'CL': os.getenv("DISCORD_CONTEXT_CL_WEBHOOK")
-    }
-    discord_webhooks_preps = {
-        'ES': os.getenv("DISCORD_PREP_ES_WEBHOOK"),
-        'NQ': os.getenv("DISCORD_PREP_NQ_WEBHOOK"),
-        'RTY': os.getenv("DISCORD_PREP_RTY_WEBHOOK"),
-        'CL': os.getenv("DISCORD_PREP_CL_WEBHOOK"),
-        'QuickSheet': os.getenv("DISCORD_QUICKSHEET_WEBHOOK")
-    }
-    product_color = {
-        'ES': 0x0000FF,   # Blue
-        'NQ': 0x008000,   # Green
-        'RTY': 0xFFA500,  # Orange
-        'CL': 0x800080,   # Purple
-        'QuickSheet': 0xFF0000, # Red
-    }
     def __init__(self, product_name: Optional[str] = None, variables: Optional[str] = None, files: Optional[str] = None):
+        self.discord_webhooks_playbook = {
+            'ES': os.getenv("DISCORD_PLAYBOOK_ES_WEBHOOK"),
+            'NQ': os.getenv("DISCORD_PLAYBOOK_NQ_WEBHOOK"),
+            'RTY': os.getenv("DISCORD_PLAYBOOK_RTY_WEBHOOK"),
+            'CL': os.getenv("DISCORD_PLAYBOOK_CL_WEBHOOK")
+        }
+        self.discord_webhooks_alert = {
+            'ES': os.getenv("DISCORD_CONTEXT_ES_WEBHOOK"),
+            'NQ': os.getenv("DISCORD_CONTEXT_NQ_WEBHOOK"),
+            'RTY': os.getenv("DISCORD_CONTEXT_RTY_WEBHOOK"),
+            'CL': os.getenv("DISCORD_CONTEXT_CL_WEBHOOK")
+        }
+        self.discord_webhooks_preps = {
+            'ES': os.getenv("DISCORD_PREP_ES_WEBHOOK"),
+            'NQ': os.getenv("DISCORD_PREP_NQ_WEBHOOK"),
+            'RTY': os.getenv("DISCORD_PREP_RTY_WEBHOOK"),
+            'CL': os.getenv("DISCORD_PREP_CL_WEBHOOK"),
+            'QuickSheet': os.getenv("DISCORD_QUICKSHEET_WEBHOOK")
+        }
+        self.product_color = {
+            'ES': 0x0000FF,   # Blue
+            'NQ': 0x008000,   # Green
+            'RTY': 0xFFA500,  # Orange
+            'CL': 0x800080,   # Purple
+            'QuickSheet': 0xFF0000, # Red
+        }
         self.product_name = product_name
         self.variables = variables
         self.files = files
@@ -97,7 +97,9 @@ class Base:
         webhook_url = self.discord_webhooks_playbook.get(self.product_name)
         self.send_discord_embed(webhook_url, embed, username=username, avatar_url=avatar_url)
     def send_alert_embed(self, embed, username=None, avatar_url=None):
+        logger.info(f"Product name: {self.product_name}")
         webhook_url = self.discord_webhooks_alert.get(self.product_name)
+        logger.info(f"webhook {webhook_url}")
         self.send_discord_embed(webhook_url, embed, username=username, avatar_url=avatar_url)
     def get_color(self):
         return self.product_color.get(self.product_name, 0x808080)     

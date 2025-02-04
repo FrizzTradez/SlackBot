@@ -149,10 +149,9 @@ class DATR(Base):
     
 # ---------------------------------- Driving Input Logic ------------------------------------ #   
     def input(self):
-        
         tolerance = (self.exp_rng * 0.15)
         prior_mid = ((self.prior_high + self.prior_low) / 2)
-        
+        logic = False
         if (self.prior_high - tolerance) > self.day_open > (self.prior_low + tolerance):
             if self.direction == 'Higher':
                 logic = (
@@ -166,8 +165,6 @@ class DATR(Base):
                     and 
                     self.prior_vpoc < ((self.prior_low + prior_mid) / 2)
                 )
-        else: 
-            logic = False
             
         logger.debug(f" DATR | input | Product: {self.product_name} | LOGIC: {logic}")
         return logic
